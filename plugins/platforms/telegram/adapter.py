@@ -1602,6 +1602,30 @@ class TelegramAdapter(BasePlatformAdapter):
             return self.RICH_MESSAGE_MAX_CHARS
         return None
 
+    # Premium custom emoji used in Telegram Rich Message replies.  The input is
+    # normal Unicode text; this map upgrades those glyphs to the Bot API rich
+    # Markdown ``tg://emoji`` entities without making the model emit syntax.
+    _RICH_PREMIUM_EMOJI_IDS = {
+        "📝": "5334882760735598374",
+        "🛡": "4958900559139570572",
+        "📊": "5431577498364158238",
+        "💬": "5449509905947967949",
+        "⚠": "5447644880824181073",
+        "🤩": "5190683945351535076",
+        "🤔": "5296739894914207637",
+        "🧐": "5384182985224374928",
+        "🧠": "5447595110743168717",
+        "💰": "5317054012187499321",
+        "📅": "5192784923093652913",
+    }
+
+    @classmethod
+    def _rich_promote_premium_emoji(cls, content: str) -> str:
+        """Encode configured Unicode glyphs as premium rich Markdown entities."""
+        for emoji, emoji_id in cls._RICH_PREMIUM_EMOJI_IDS.items():
+            content = content.replace(emoji, f"![{emoji}](tg://emoji?id={emoji_id})")
+        return content
+
     def _rich_message_payload(
         self, content: str, *, skip_entity_detection: bool = False
     ) -> Dict[str, Any]:
@@ -1614,7 +1638,10 @@ class TelegramAdapter(BasePlatformAdapter):
         multi-line content (slash-command lists, etc.) renders correctly
         in the rich-message path.  See ``_rich_normalize_linebreaks``.
         """
-        payload: Dict[str, Any] = {"markdown": _rich_normalize_linebreaks(content)}
+        rich_markdown = _rich_normalize_linebreaks(content)
+        payload: Dict[str, Any] = {
+            "markdown": self._rich_promote_premium_emoji(rich_markdown)
+        }
         if skip_entity_detection:
             payload["skip_entity_detection"] = True
         return payload

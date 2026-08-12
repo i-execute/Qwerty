@@ -126,6 +126,22 @@ async def test_rich_happy_path_sends_raw_markdown():
     adapter._bot.send_message.assert_not_called()
 
 
+def test_rich_payload_promotes_configured_unicode_emoji_to_premium_entities():
+    """Rich replies encode the user's selected emoji as Telegram custom emoji.
+
+    The input remains readable Markdown, while Telegram's rich parser receives
+    its documented ``tg://emoji`` form rather than a bare Unicode fallback.
+    """
+    adapter = _make_adapter()
+
+    payload = adapter._rich_message_payload("📝 Готово: 🤩")
+
+    assert payload["markdown"] == (
+        "![📝](tg://emoji?id=5334882760735598374) Готово: "
+        "![🤩](tg://emoji?id=5190683945351535076)"
+    )
+
+
 @pytest.mark.asyncio
 async def test_details_with_math_skips_rich_send_to_avoid_tdesktop_crash():
     adapter = _make_adapter()
@@ -283,9 +299,8 @@ async def test_rich_messages_can_be_opted_out():
 
 
 @pytest.mark.asyncio
-async def test_plain_markdown_stays_on_legacy_path():
-    """Ordinary replies (no table/task-list/details/math) stay on the legacy
-    MarkdownV2 path for consistent client rendering, even with rich enabled."""
+async def test_plain_markdown_uses_rich_path_when_rich_is_enabled():
+    """The fork's all-replies policy sends ordinary answers as rich messages."""
     adapter = _make_adapter()
 
     result = await adapter.send("12345", "Hello **there**\n\nA normal reply.")
@@ -293,8 +308,8 @@ async def test_plain_markdown_stays_on_legacy_path():
     assert result.success is True
     bot = adapter._bot
     assert bot is not None
-    bot.do_api_request.assert_not_called()
-    bot.send_message.assert_awaited()
+    bot.do_api_request.assert_awaited_once()
+    bot.send_message.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -854,9 +869,8 @@ async def test_finalize_edit_uses_rich_for_table_content():
 
 
 @pytest.mark.asyncio
-async def test_finalize_edit_plain_content_stays_legacy():
-    """Finalizing plain content (no table/task-list/details/math) uses the
-    legacy MarkdownV2 edit_message_text path, not the rich edit endpoint."""
+async def test_finalize_edit_plain_content_uses_rich_path():
+    """The fork's all-replies policy also finalizes plain content as rich."""
     adapter = _make_adapter()
 
     result = await adapter.edit_message(
@@ -864,17 +878,22 @@ async def test_finalize_edit_plain_content_stays_legacy():
     )
 
     assert result.success is True
-    adapter._bot.do_api_request.assert_not_called()
-    adapter._bot.edit_message_text.assert_awaited()
+    adapter._bot.do_api_request.assert_awaited_once()
+    adapter._bot.edit_message_text.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_legacy_edit_error_logs_redacted_bot_token_without_traceback(monkeypatch, caplog):
+async def test_rich_edit_error_logs_redacted_bot_token_without_traceback(monkeypatch, caplog):
     import agent.redact as redact
 
     monkeypatch.setattr(redact, "_REDACT_ENABLED", False)
     token = "123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
     adapter = _make_adapter()
+    adapter._bot.do_api_request = AsyncMock(
+        side_effect=BadRequest(
+            f"Bad Request: https://api.telegram.org/bot{token}/editMessageText"
+        )
+    )
     adapter._bot.edit_message_text = AsyncMock(
         side_effect=BadRequest(
             f"Bad Request: https://api.telegram.org/bot{token}/editMessageText"
