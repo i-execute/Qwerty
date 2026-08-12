@@ -658,6 +658,21 @@ class CredentialPool:
             return None
         return next((entry for entry in self._entries if entry.id == self._current_id), None)
 
+    def entry_id_for_api_key(self, api_key_hint: Any = None) -> Optional[str]:
+        """Return the stable id for the credential currently in use."""
+        current = self.current()
+        if current is not None and (
+            api_key_hint is None or current.runtime_api_key == api_key_hint
+        ):
+            return current.id
+        if api_key_hint is None:
+            return None
+        matches = [
+            entry for entry in self._entries
+            if entry.runtime_api_key == api_key_hint
+        ]
+        return matches[0].id if len(matches) == 1 else None
+
     def _replace_entry(self, old: PooledCredential, new: PooledCredential) -> None:
         """Swap an entry in-place by id, preserving sort order."""
         for idx, entry in enumerate(self._entries):

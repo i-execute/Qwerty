@@ -768,6 +768,19 @@ def strip_think_blocks(agent, content: str) -> str:
 
 
 
+def sync_credential_pool_entry_id(agent) -> None:
+    """Bind the agent's runtime credential to its stable pool-entry id."""
+    pool = getattr(agent, "_credential_pool", None)
+    try:
+        agent._credential_pool_entry_id = (
+            pool.entry_id_for_api_key(getattr(agent, "api_key", None))
+            if pool is not None
+            else None
+        )
+    except Exception:
+        agent._credential_pool_entry_id = None
+
+
 def recover_with_credential_pool(
     agent,
     *,
