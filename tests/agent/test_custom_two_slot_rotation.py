@@ -56,6 +56,26 @@ def test_custom_key_second_429_after_cooldown_becomes_exhausted(monkeypatch):
     assert pool.entries()[0].last_status == STATUS_EXHAUSTED
 
 
+def test_full_ring_probe_marks_only_429_keys_exhausted(monkeypatch):
+    """The decisive all-key probe must not return a 429 key to rotation."""
+    pool = CredentialPool("custom:pool", [_entry(1), _entry(2)])
+    monkeypatch.setattr(pool, "_persist", lambda **_kwargs: None)
+    calls = iter([False, True])
+    monkeypatch.setattr(
+        "agent.credential_pool._probe_custom_api_key",
+        lambda _entry, _model: next(calls),
+    )
+
+    live, live_count, dead_count = pool.probe_custom_keys("selected-model")
+
+    assert live.id == "key-2"
+    assert (live_count, dead_count) == (1, 1)
+    first, second = pool.entries()
+    assert first.last_status == STATUS_EXHAUSTED
+    assert first.last_error_code == 429
+    assert second.last_status is None
+
+
 def test_wraparound_probes_all_keys_and_uses_live_key(monkeypatch):
     pool = MagicMock()
     pool.provider = "custom:pool"

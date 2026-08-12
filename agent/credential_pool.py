@@ -1836,11 +1836,34 @@ class CredentialPool:
                 live.append(entry)
             else:
                 dead += 1
-                self._mark_exhausted(entry, 429, {"message": "429 during pool quota probe"})
+                # A full-ring ``hi`` probe is the terminal verdict requested
+                # by the custom-key flow.  It follows a wrap-around of normal
+                # traffic and has already given every configured key a turn;
+                # unlike an individual first 429, a 429 here must keep this
+                # entry out of selection until the user resets the pool.
+                # Do not call _mark_exhausted(): that intentionally assigns a
+                # first custom 429 a 65-second cooldown and would leave a
+                # key that just failed the decisive probe selectable again.
+                self._mark_custom_probe_exhausted(entry)
         if live:
             with self._lock:
                 self._current_id = live[0].id
         return (live[0] if live else None), len(live), dead
+
+    def _mark_custom_probe_exhausted(self, entry: PooledCredential) -> None:
+        """Persist a conclusive 429 from a complete custom-pool probe."""
+        updated = replace(
+            entry,
+            last_status=STATUS_EXHAUSTED,
+            last_status_at=time.time(),
+            last_error_code=429,
+            last_error_reason=None,
+            last_error_message="429 during pool quota probe",
+            last_error_reset_at=None,
+        )
+        with self._lock:
+            self._replace_entry(entry, updated)
+            self._persist()
 
     def mark_exhausted_and_rotate(
         self,
