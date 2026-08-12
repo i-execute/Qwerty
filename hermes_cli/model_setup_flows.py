@@ -23,7 +23,6 @@ from __future__ import annotations
 import argparse
 import os
 import subprocess
-import urllib.parse
 
 from hermes_cli.config import clear_model_endpoint_credentials
 
@@ -834,13 +833,7 @@ def _model_flow_custom(config):
     """
     from hermes_cli.main import _auto_provider_name, _prompt_custom_api_mode_selection, _save_custom_provider
     from hermes_cli.auth import _save_model_choice, deactivate_provider
-    from hermes_cli.config import (
-        custom_endpoint_key_env,
-        get_env_value,
-        load_config,
-        save_config,
-        save_env_value,
-    )
+    from hermes_cli.config import get_env_value, load_config, save_config
     from hermes_cli.secret_prompt import masked_secret_prompt
 
     current_url = get_env_value("OPENAI_BASE_URL") or ""
@@ -857,9 +850,18 @@ def _model_flow_custom(config):
         base_url = input(
             f"API base URL [{current_url or 'e.g. https://api.example.com/v1'}]: "
         ).strip()
+        use_rotation = input("Use API-key rotation? [y/N]: ").strip().lower() in {"y", "yes"}
         api_key = masked_secret_prompt(
             f"API key [{current_key[:8] + '...' if current_key else 'optional'}]: "
         ).strip()
+        rotation_keys = []
+        if use_rotation:
+            print("Enter every additional API key now. Press Enter on an empty key when finished.")
+            while True:
+                extra_key = masked_secret_prompt("Additional API key [Enter to finish]: ").strip()
+                if not extra_key:
+                    break
+                rotation_keys.append(extra_key)
     except (KeyboardInterrupt, EOFError):
         print("\nCancelled.")
         return
@@ -995,18 +997,6 @@ def _model_flow_custom(config):
             print(f"Invalid context length: {context_length_str} — will auto-detect.")
             context_length = None
 
-    # The key goes to .env and config.yaml only references it (#69449). Keyed
-    # on host:port so two servers on one machine keep separate credentials.
-    custom_key_env = ""
-    if effective_key:
-        _parsed = urllib.parse.urlparse(effective_url)
-        _identity = _parsed.hostname or ""
-        if _parsed.port:
-            _identity = f"{_identity}_{_parsed.port}"
-        custom_key_env = custom_endpoint_key_env(_identity)
-        save_env_value(custom_key_env, effective_key)
-        print(f"  API key saved to .env as {custom_key_env}")
-
     if model_name:
         _save_model_choice(model_name)
 
@@ -1018,8 +1008,8 @@ def _model_flow_custom(config):
             cfg["model"] = model
         model["provider"] = "custom"
         model["base_url"] = effective_url
-        if custom_key_env:
-            model["api_key"] = f"${{{custom_key_env}}}"
+        if effective_key:
+            model["api_key"] = effective_key
         if api_mode:
             model["api_mode"] = api_mode
         else:
@@ -1044,8 +1034,8 @@ def _model_flow_custom(config):
             _caller_model = {"default": _caller_model} if _caller_model else {}
         _caller_model["provider"] = "custom"
         _caller_model["base_url"] = effective_url
-        if custom_key_env:
-            _caller_model["api_key"] = f"${{{custom_key_env}}}"
+        if effective_key:
+            _caller_model["api_key"] = effective_key
         if api_mode:
             _caller_model["api_mode"] = api_mode
         else:
@@ -1061,12 +1051,51 @@ def _model_flow_custom(config):
         context_length=context_length,
         name=display_name,
         api_mode=api_mode,
-        key_env=custom_key_env,
     )
     _prune_replaced_custom_model_config_credentials(
         effective_url,
         provider_name=display_name,
     )
+
+    # The primary key remains in config.yaml for backwards compatibility.
+    # Further keys belong only in the existing persistent credential pool, so
+    # the runtime can quarantine a rejected/rate-limited key and select the
+    # next one without changing the custom_providers schema.
+    try:
+        from agent.credential_pool import (
+            AUTH_TYPE_API_KEY,
+            SOURCE_MANUAL,
+            PooledCredential,
+            get_custom_provider_pool_key,
+            load_pool,
+        )
+        import uuid
+
+        pool_key = get_custom_provider_pool_key(
+            effective_url,
+            provider_name=display_name,
+        )
+        if pool_key:
+            pool = load_pool(pool_key)
+            for extra_key in rotation_keys:
+                if extra_key == effective_key or any(
+                    entry.runtime_api_key == extra_key for entry in pool.entries()
+                ):
+                    continue
+                pool.add_entry(PooledCredential(
+                    provider=pool_key,
+                    id=uuid.uuid4().hex[:6],
+                    label=f"API key {len(pool.entries()) + 1}",
+                    auth_type=AUTH_TYPE_API_KEY,
+                    priority=0,
+                    source=SOURCE_MANUAL,
+                    access_token=extra_key,
+                    base_url=effective_url,
+                ))
+    except Exception:
+        # Configuring the selected endpoint must not fail merely because an
+        # optional additional key could not be persisted.
+        return
 
 
 def _model_flow_azure_foundry(config, current_model=""):

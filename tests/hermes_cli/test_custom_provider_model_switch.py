@@ -32,6 +32,65 @@ def config_home(tmp_path, monkeypatch):
 class TestCustomProviderModelSwitch:
     """Ensure _model_flow_named_custom always probes and shows menu."""
 
+    def test_custom_flow_adds_extra_api_keys_to_rotation_pool(self, config_home):
+        """The new-endpoint wizard keeps the primary key in config and pools extras."""
+        import yaml
+        from agent.credential_pool import load_pool
+        from hermes_cli.main import _model_flow_custom
+
+        with patch(
+            "hermes_cli.models.probe_api_models",
+            return_value={
+                "models": ["test-model"],
+                "used_fallback": False,
+                "probed_url": "https://keys.example.test/v1/models",
+            },
+        ), \
+             patch(
+                 "hermes_cli.secret_prompt.masked_secret_prompt",
+                 side_effect=["primary-key", "second-key", "third-key", ""],
+             ), \
+             patch("hermes_cli.main._prompt_custom_api_mode_selection", return_value=""), \
+             patch(
+                 "builtins.input",
+                 side_effect=[
+                     "https://keys.example.test/v1",  # URL
+                     "y",  # enable rotation
+                     "",  # use detected model
+                     "",  # context length
+                     "Key Pool",  # display name
+                 ],
+             ), \
+             patch("builtins.print"):
+            _model_flow_custom({})
+
+        cfg = yaml.safe_load((config_home / "config.yaml").read_text()) or {}
+        assert cfg["model"]["api_key"] == "primary-key"
+        assert cfg["custom_providers"][0]["api_key"] == "primary-key"
+        extras = [entry for entry in load_pool("custom:key-pool").entries() if entry.source == "manual"]
+        assert [entry.access_token for entry in extras] == ["second-key", "third-key"]
+        assert all(entry.base_url == "https://keys.example.test/v1" for entry in extras)
+
+    def test_custom_flow_does_not_create_manual_key_when_declined(self, config_home):
+        """Declining the additional-key question preserves the old one-key setup."""
+        from agent.credential_pool import load_pool
+        from hermes_cli.main import _model_flow_custom
+
+        with patch(
+            "hermes_cli.models.probe_api_models",
+            return_value={"models": ["test-model"], "used_fallback": False},
+        ), \
+             patch("hermes_cli.secret_prompt.masked_secret_prompt", return_value="primary-key"), \
+             patch("hermes_cli.main._prompt_custom_api_mode_selection", return_value=""), \
+             patch(
+                 "builtins.input",
+                 side_effect=["https://one.example.test/v1", "n", "", "", "One Key"],
+             ), \
+             patch("builtins.print"):
+            _model_flow_custom({})
+
+        assert not [entry for entry in load_pool("custom:one-key").entries() if entry.source == "manual"]
+
     def test_custom_endpoint_switch_prunes_stale_model_config_pool_entry(
         self,
         config_home,
@@ -92,6 +151,7 @@ class TestCustomProviderModelSwitch:
                  "builtins.input",
                  side_effect=[
                      "https://new.example.test/v1",
+                     "n",
                      "",
                      "",
                      "New Endpoint",

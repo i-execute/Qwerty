@@ -63,7 +63,12 @@ def _load_config_safe() -> Optional[dict]:
 # --- Status and type constants ---
 
 STATUS_OK = "ok"
+# A short per-key 429 window.  Custom endpoint keys are kept out of selection
+# for 65 seconds, then deliberately re-tried once.  A second 429 after that
+# window means this key's longer quota is depleted and it becomes exhausted.
+STATUS_COOLDOWN = "cooldown"
 STATUS_EXHAUSTED = "exhausted"
+CUSTOM_429_COOLDOWN_SECONDS = 65
 # Terminal failure — the credential will never recover on its own.  Used for
 # upstream-permanent OAuth states like ``token_invalidated`` / ``token_revoked``
 # where retrying after a TTL cooldown is guaranteed to fail.  ``DEAD`` entries
@@ -293,6 +298,21 @@ def _exhausted_ttl(error_code: Optional[int]) -> int:
     if error_code == 429:
         return EXHAUSTED_TTL_429_SECONDS
     return EXHAUSTED_TTL_DEFAULT_SECONDS
+
+
+def _custom_pool(provider: str) -> bool:
+    return str(provider or "").strip().lower().startswith(CUSTOM_POOL_PREFIX)
+
+
+def _custom_key_is_second_429(entry: PooledCredential) -> bool:
+    """True when a custom key was already released from its 65s 429 cooldown."""
+    return (
+        _custom_pool(entry.provider)
+        and entry.last_status == STATUS_COOLDOWN
+        and entry.last_error_code == 429
+        and bool(entry.last_status_at)
+        and time.time() >= entry.last_status_at + CUSTOM_429_COOLDOWN_SECONDS
+    )
 
 
 def _parse_absolute_timestamp(value: Any) -> Optional[float]:
@@ -579,6 +599,34 @@ def _write_through_provider_state_to_global_root(
         )
 
 
+def _probe_custom_api_key(entry: PooledCredential, model: str) -> bool:
+    """Return whether a custom API key accepts a minimal completion request."""
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(
+            api_key=entry.runtime_api_key,
+            base_url=(entry.runtime_base_url or entry.base_url or "").rstrip("/"),
+            max_retries=0,
+            timeout=15,
+        )
+        try:
+            client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": "hi"}],
+                max_tokens=1,
+            )
+        finally:
+            client.close()
+        return True
+    except Exception as exc:
+        status = getattr(exc, "status_code", None)
+        response = getattr(exc, "response", None)
+        if status is None:
+            status = getattr(response, "status_code", None)
+        return status != 429
+
+
 class CredentialPool:
     def __init__(self, provider: str, entries: List[PooledCredential]):
         self.provider = provider
@@ -594,63 +642,21 @@ class CredentialPool:
         # Re-armed to None on every successful selection so a recover→re-exhaust
         # transition logs promptly instead of being swallowed by a stale window.
         self._last_no_entries_log_at: Optional[float] = None
-        # #70401: consecutive mark_exhausted_and_rotate() calls whose supplied
-        # credential identity matched no pool entry (OAuth wrappers whose
-        # runtime key rotates, entries pruned by another process, ...).  These
-        # rotations mark nothing exhausted, so without a cap the pool can
-        # never converge to "no available entries" and the caller's 401 retry
-        # loop runs unbounded and non-interruptible.  Reset whenever a real
-        # entry is identified or an escape path returns None.
-        self._unmatched_rotation_streak: int = 0
 
     def has_credentials(self) -> bool:
-        with self._lock:
-            return bool(self._entries)
+        return bool(self._entries)
 
     def has_available(self) -> bool:
         """True if at least one entry is not currently in exhaustion cooldown."""
-        # ``_available_entries`` is not read-only: it prunes aged-out DEAD
-        # manual entries (rebinding ``self._entries``) and persists.  It must
-        # run under ``self._lock`` like every other caller (``select`` etc.),
-        # otherwise a status probe here can race a concurrent ``select`` /
-        # rotation and tear ``self._entries`` or double-write auth.json.
-        with self._lock:
-            return bool(self._available_entries())
+        return bool(self._available_entries())
 
     def entries(self) -> List[PooledCredential]:
-        with self._lock:
-            return list(self._entries)
+        return list(self._entries)
 
-    def _current_unlocked(self) -> Optional[PooledCredential]:
+    def current(self) -> Optional[PooledCredential]:
         if not self._current_id:
             return None
         return next((entry for entry in self._entries if entry.id == self._current_id), None)
-
-    def current(self) -> Optional[PooledCredential]:
-        with self._lock:
-            return self._current_unlocked()
-
-    def entry_id_for_api_key(self, api_key_hint: Any = None) -> Optional[str]:
-        """Return the stable id for the runtime credential in use.
-
-        Prefer the current selection when it still supplies ``api_key_hint``.
-        If the cursor was cleared, fall back to an unambiguous key match.
-        """
-        with self._lock:
-            current = self._current_unlocked()
-            if current is not None and (
-                api_key_hint is None
-                or current.runtime_api_key == api_key_hint
-            ):
-                return current.id
-            if api_key_hint is None:
-                return None
-            matches = [
-                entry
-                for entry in self._entries
-                if entry.runtime_api_key == api_key_hint
-            ]
-            return matches[0].id if len(matches) == 1 else None
 
     def _replace_entry(self, old: PooledCredential, new: PooledCredential) -> None:
         """Swap an entry in-place by id, preserving sort order."""
@@ -694,8 +700,6 @@ class CredentialPool:
         entry: PooledCredential,
         status_code: Optional[int],
         error_context: Optional[Dict[str, Any]] = None,
-        *,
-        persist: bool = True,
     ) -> PooledCredential:
         normalized_error = _normalize_error_context(error_context)
         # Permanent OAuth failures (token_invalidated, token_revoked, etc.)
@@ -705,7 +709,20 @@ class CredentialPool:
         # removes it (issue #32849).  DEAD entries are excluded from rotation
         # unconditionally and only clear via an explicit re-auth write-side
         # sync (``_save_codex_tokens`` after a fresh device-code login).
-        if self._is_terminal_auth_failure(status_code, normalized_error):
+        if (
+            _custom_pool(self.provider)
+            and status_code == 429
+            and entry.last_status == STATUS_COOLDOWN
+            and entry.last_error_code == 429
+            and entry.last_status_at
+            and time.time() >= entry.last_status_at + CUSTOM_429_COOLDOWN_SECONDS
+        ):
+            # The key was released after its minute-level cooldown and was
+            # rate-limited again: treat this as a quota wall for this pool run.
+            terminal_status = STATUS_EXHAUSTED
+        elif _custom_pool(self.provider) and status_code == 429:
+            terminal_status = STATUS_COOLDOWN
+        elif self._is_terminal_auth_failure(status_code, normalized_error):
             terminal_status = STATUS_DEAD
         else:
             terminal_status = STATUS_EXHAUSTED
@@ -719,8 +736,7 @@ class CredentialPool:
             last_error_reset_at=normalized_error.get("reset_at"),
         )
         self._replace_entry(entry, updated)
-        if persist:
-            self._persist()
+        self._persist()
         return updated
 
     def _sync_anthropic_entry_from_credentials_file(self, entry: PooledCredential) -> PooledCredential:
@@ -1529,43 +1545,6 @@ class CredentialPool:
         self._sync_device_code_entry_to_auth_store(updated)
         return updated
 
-    def _codex_quota_restored_upstream(self, entry: PooledCredential) -> bool:
-        """Live-check whether an exhausted Codex entry's quota reset early.
-
-        A Codex 429 persists a ``last_error_reset_at`` that can be days in
-        the future (weekly windows), but the upstream window can reopen
-        before then — the user redeems a banked rate-limit reset via the
-        Codex CLI / ChatGPT UI, upgrades their plan, or OpenAI resets the
-        window.  Without this check the pool keeps the credential frozen
-        until the stale timestamp elapses even though the account is
-        usable (issue #43747).
-
-        Only fires for openai-codex entries frozen by a 429/quota-shaped
-        error.  The underlying probe is throttled per token (5 min) so this
-        is safe on the hot selection path.
-        """
-        if self.provider != "openai-codex" or entry.last_status != STATUS_EXHAUSTED:
-            return False
-        if not auth_mod._is_codex_rate_limit_shaped(
-            entry.last_error_code,
-            entry.last_error_reason,
-            entry.last_error_message,
-        ):
-            return False
-        token = entry.access_token or ""
-        if not token:
-            return False
-        try:
-            return bool(
-                auth_mod._probe_codex_quota_restored(
-                    token,
-                    base_url=entry.base_url,
-                )
-            )
-        except Exception:
-            logger.debug("Codex quota-restored probe failed", exc_info=True)
-            return False
-
     def _entry_needs_refresh(self, entry: PooledCredential) -> bool:
         if entry.auth_type != AUTH_TYPE_OAUTH:
             return False
@@ -1592,13 +1571,7 @@ class CredentialPool:
 
     def select(self) -> Optional[PooledCredential]:
         with self._lock:
-            entry = self._select_unlocked()
-            if entry is not None:
-                # A normal (non-recovery) selection starts a fresh episode —
-                # don't let a leftover unmatched-rotation streak from an old
-                # failure trip the #70401 bound early next time.
-                self._unmatched_rotation_streak = 0
-            return entry
+            return self._select_unlocked()
 
     def _available_entries(self, *, clear_expired: bool = False, refresh: bool = False) -> List[PooledCredential]:
         """Return entries not currently in exhaustion cooldown.
@@ -1690,21 +1663,17 @@ class CredentialPool:
                 # device-code login).  The auth.json-sync paths below handle
                 # the re-auth case for OAuth singletons.
                 continue
+            if entry.last_status == STATUS_COOLDOWN:
+                cooldown_until = (entry.last_status_at or now) + CUSTOM_429_COOLDOWN_SECONDS
+                if now < cooldown_until:
+                    continue
+                # Preserve the cooldown marker after it opens.  A new 429 on
+                # this re-trial is how _mark_exhausted distinguishes a minute
+                # rate limit from an exhausted daily quota.
             if entry.last_status == STATUS_EXHAUSTED:
                 exhausted_until = _exhausted_until(entry)
                 if exhausted_until is not None and now < exhausted_until:
-                    # Codex quota windows can reopen EARLY: the user redeems a
-                    # banked rate-limit reset (Codex CLI / ChatGPT UI), upgrades
-                    # their plan, or OpenAI resets the window.  The persisted
-                    # ``last_error_reset_at`` can then be days in the future
-                    # while the account is already usable again — a throttled
-                    # live probe of the Codex usage endpoint detects that and
-                    # lifts the stale cooldown (issue #43747).
-                    if not (
-                        clear_expired
-                        and self._codex_quota_restored_upstream(entry)
-                    ):
-                        continue
+                    continue
                 if clear_expired:
                     cleared = replace(
                         entry,
@@ -1777,21 +1746,86 @@ class CredentialPool:
             self._entries = [replace(candidate, priority=idx) for idx, candidate in enumerate(rotated)]
             self._persist()
             self._current_id = entry.id
-            return self._current_unlocked() or entry
+            return self.current() or entry
 
         entry = available[0]
         self._current_id = entry.id
         return entry
 
     def peek(self) -> Optional[PooledCredential]:
-        # Single lock acquisition for the whole read; call the unlocked
-        # helpers so we don't re-enter the non-reentrant ``self._lock``.
+        current = self.current()
+        if current is not None:
+            return current
+        available = self._available_entries()
+        return available[0] if available else None
+
+    def mark_custom_429_and_rotate(
+        self,
+        *,
+        api_key_hint: Optional[str] = None,
+        error_context: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[Optional[PooledCredential], bool]:
+        """Advance a custom key ring after a 429.
+
+        The normal pool intentionally skips cooling entries.  Custom API-key
+        pools instead keep an ordered ring of *two usable slots*: after key A
+        gets a 429, gateway immediately runs key B.  Once the ring wraps back
+        to key A, the caller performs a full ``hi`` probe before declaring the
+        pool depleted.
+        """
         with self._lock:
-            current = self._current_unlocked()
-            if current is not None:
-                return current
-            available = self._available_entries()
-            return available[0] if available else None
+            entry = next(
+                (e for e in self._entries if api_key_hint and e.runtime_api_key == api_key_hint),
+                None,
+            ) or self.current() or self._select_unlocked()
+            if entry is None:
+                return None, False
+            self._mark_exhausted(entry, 429, error_context)
+            eligible = [
+                e for e in self._entries
+                if e.id != entry.id and e.last_status not in {STATUS_EXHAUSTED, STATUS_DEAD}
+            ]
+            if not eligible:
+                self._current_id = None
+                return None, False
+            current_index = next(i for i, e in enumerate(self._entries) if e.id == entry.id)
+            next_entry = None
+            wrapped = False
+            for offset in range(1, len(self._entries) + 1):
+                candidate = self._entries[(current_index + offset) % len(self._entries)]
+                if candidate in eligible:
+                    next_entry = candidate
+                    wrapped = current_index + offset >= len(self._entries)
+                    break
+            if next_entry is None:
+                return None, False
+            self._current_id = next_entry.id
+            return next_entry, wrapped
+
+    def probe_custom_keys(self, model: str) -> Tuple[Optional[PooledCredential], int, int]:
+        """Send the minimal ``hi`` chat request through every custom key.
+
+        Returns ``(first_live, live_count, dead_count)``.  Only HTTP 429 is a
+        quota death here; a non-429 response proves that the key can still be
+        used and remains available for recovery.
+        """
+        if not _custom_pool(self.provider):
+            return None, 0, 0
+        live: List[PooledCredential] = []
+        dead = 0
+        for entry in self.entries():
+            if entry.last_status == STATUS_DEAD or not entry.runtime_api_key:
+                dead += 1
+                continue
+            if _probe_custom_api_key(entry, model):
+                live.append(entry)
+            else:
+                dead += 1
+                self._mark_exhausted(entry, 429, {"message": "429 during pool quota probe"})
+        if live:
+            with self._lock:
+                self._current_id = live[0].id
+        return (live[0] if live else None), len(live), dead
 
     def mark_exhausted_and_rotate(
         self,
@@ -1799,17 +1833,10 @@ class CredentialPool:
         status_code: Optional[int],
         error_context: Optional[Dict[str, Any]] = None,
         api_key_hint: Optional[str] = None,
-        credential_id: Optional[str] = None,
     ) -> Optional[PooledCredential]:
         with self._lock:
             entry = None
-            identity_supplied = bool(credential_id or api_key_hint)
-            if credential_id:
-                entry = next(
-                    (e for e in self._entries if e.id == credential_id),
-                    None,
-                )
-            if entry is None and api_key_hint:
+            if api_key_hint:
                 # Prefer the specific entry whose API key matches the one that
                 # actually failed.  When this pool was freshly loaded from disk
                 # (another process already rotated), current() is None and
@@ -1818,89 +1845,12 @@ class CredentialPool:
                     (e for e in self._entries if e.runtime_api_key == api_key_hint),
                     None,
                 )
-            if entry is None and identity_supplied:
-                # The failed credential is identifiable but matches no entry
-                # (rotated away, or a wrapper whose runtime key differs).
-                # Falling through to current()/_select_unlocked() would mark an
-                # innocent healthy key exhausted for the full cooldown TTL.
-                #
-                # #70401: this branch must still be BOUNDED. With OAuth-token
-                # auth the upstream 401's key hint never matches any entry's
-                # ``runtime_api_key``, so every retry lands here, nothing is
-                # ever marked exhausted, and the pool can never reach the
-                # "no available entries" state — the caller retries the same
-                # dead token forever (~6/sec, starving the event loop so chat
-                # interrupts are never processed). The single-entry case
-                # below already escapes; multi-entry pools could still
-                # ping-pong A→B→A indefinitely without marking anything.
-                # Cap consecutive no-mark rotations at one full lap of the
-                # available entries: past that, every candidate has been
-                # handed back at least once without recovery, so stop
-                # guessing and surface the error (no cooldown is written for
-                # anybody — healthy keys stay available for the next turn).
-                self._unmatched_rotation_streak += 1
-                available_count = len(self._available_entries())
-                if self._unmatched_rotation_streak > max(available_count, 1):
-                    logger.warning(
-                        "credential pool: failed credential identity matched no "
-                        "%s entry for %d consecutive rotations (pool size %d) — "
-                        "surfacing the error instead of rotating again",
-                        self.provider,
-                        self._unmatched_rotation_streak,
-                        available_count,
-                    )
-                    self._unmatched_rotation_streak = 0
-                    self._current_id = None
-                    return None
-                logger.info(
-                    "credential pool: failed credential identity matched no %s "
-                    "entry; rotating without marking any credential exhausted",
-                    self.provider,
-                )
-                self._current_id = None
-                next_entry = self._select_unlocked()
-                if next_entry is not None and len(self._available_entries()) == 1:
-                    # A single-entry pool cannot rotate. Returning its only
-                    # entry reports a successful recovery without changing
-                    # the credential, so the caller retries the same 401
-                    # indefinitely. Let fallback/error propagation proceed.
-                    self._unmatched_rotation_streak = 0
-                    self._current_id = None
-                    return None
-                return next_entry
-            # A real entry was identified — any prior unmatched-rotation
-            # streak is stale (this mark WILL advance pool state).
-            self._unmatched_rotation_streak = 0
             if entry is None:
-                entry = self._current_unlocked() or self._select_unlocked()
+                entry = self.current() or self._select_unlocked()
             if entry is None:
                 return None
             _label = entry.label or entry.id[:8]
             self._mark_exhausted(entry, status_code, error_context)
-            # A 402/429/401 is an API-key–level failure: the account is out of
-            # balance, rate-limited, or its key is rejected.  The same key can
-            # back more than one pool entry (e.g. an explicit pool entry plus a
-            # ``model_config`` entry auto-seeded from ``model.api_key`` — both
-            # carry the identical ``runtime_api_key``).  Marking only the first
-            # match leaves the sibling entries OK, so ``_select_unlocked()``
-            # keeps handing back the same depleted key and rotation never
-            # converges — the caller ``continue``s forever until the client
-            # disconnects (a ~2.5min hang with no error surfaced to the user).
-            # Mark every entry sharing the failed key so the pool can reach the
-            # "no available entries" state and let the error propagate.
-            failed_runtime_key = getattr(entry, "runtime_api_key", None)
-            if identity_supplied and failed_runtime_key:
-                siblings_marked = False
-                for sibling in self._entries:
-                    if sibling.id == entry.id:
-                        continue
-                    if sibling.runtime_api_key == failed_runtime_key:
-                        self._mark_exhausted(
-                            sibling, status_code, error_context, persist=False
-                        )
-                        siblings_marked = True
-                if siblings_marked:
-                    self._persist()
             # Re-read the updated entry to log the correct terminal state.
             updated_entry = next(
                 (e for e in self._entries if e.id == entry.id), entry,
@@ -1968,11 +1918,9 @@ class CredentialPool:
             return self._try_refresh_current_unlocked()
 
     def try_refresh_matching(
-        self,
-        api_key_hint: Optional[str] = None,
-        credential_id: Optional[str] = None,
+        self, api_key_hint: Optional[str] = None
     ) -> Optional[PooledCredential]:
-        """Force-refresh the entry that supplied the failed request.
+        """Force-refresh the entry that supplied ``api_key_hint``.
 
         Direct provider integrations may reload the pool after a request has
         already failed, so they cannot rely on ``current_id`` identifying the
@@ -1982,36 +1930,24 @@ class CredentialPool:
         """
         with self._lock:
             entry = None
-            if credential_id:
+            if api_key_hint:
                 entry = next(
                     (
                         candidate
                         for candidate in self._entries
-                        if candidate.id == credential_id
+                        if candidate.runtime_api_key == api_key_hint
                     ),
                     None,
                 )
-            if entry is None:
-                if api_key_hint:
-                    entry = next(
-                        (
-                            candidate
-                            for candidate in self._entries
-                            if candidate.runtime_api_key == api_key_hint
-                        ),
-                        None,
-                    )
-                else:
-                    entry = self._current_unlocked() or self._select_unlocked(
-                        refresh=False
-                    )
+            else:
+                entry = self.current() or self._select_unlocked(refresh=False)
             if entry is None:
                 return None
             self._current_id = entry.id
             return self._try_refresh_current_unlocked()
 
     def _try_refresh_current_unlocked(self) -> Optional[PooledCredential]:
-        entry = self._current_unlocked()
+        entry = self.current()
         if entry is None:
             return None
         refreshed = self._refresh_entry(entry, force=True)
@@ -2020,80 +1956,76 @@ class CredentialPool:
         return refreshed
 
     def reset_statuses(self) -> int:
-        with self._lock:
-            count = 0
-            new_entries = []
-            for entry in self._entries:
-                if entry.last_status or entry.last_status_at or entry.last_error_code:
-                    new_entries.append(
-                        replace(
-                            entry,
-                            last_status=None,
-                            last_status_at=None,
-                            last_error_code=None,
-                            last_error_reason=None,
-                            last_error_message=None,
-                            last_error_reset_at=None,
-                        )
+        count = 0
+        new_entries = []
+        for entry in self._entries:
+            if entry.last_status or entry.last_status_at or entry.last_error_code:
+                new_entries.append(
+                    replace(
+                        entry,
+                        last_status=None,
+                        last_status_at=None,
+                        last_error_code=None,
+                        last_error_reason=None,
+                        last_error_message=None,
+                        last_error_reset_at=None,
                     )
-                    count += 1
-                else:
-                    new_entries.append(entry)
-            if count:
-                self._entries = new_entries
-                self._persist()
-            return count
+                )
+                count += 1
+            else:
+                new_entries.append(entry)
+        if count:
+            self._entries = new_entries
+            self._persist()
+        return count
 
     def remove_index(self, index: int) -> Optional[PooledCredential]:
-        with self._lock:
-            if index < 1 or index > len(self._entries):
-                return None
-            removed = self._entries.pop(index - 1)
-            self._entries = [
-                replace(entry, priority=new_priority)
-                for new_priority, entry in enumerate(self._entries)
-            ]
-            write_credential_pool(
-                self.provider,
-                [entry.to_dict() for entry in self._entries],
-                removed_ids=[removed.id],
-            )
-            if self._current_id == removed.id:
-                self._current_id = None
-            return removed
+        if index < 1 or index > len(self._entries):
+            return None
+        removed = self._entries.pop(index - 1)
+        self._entries = [
+            replace(entry, priority=new_priority)
+            for new_priority, entry in enumerate(self._entries)
+        ]
+        write_credential_pool(
+            self.provider,
+            [entry.to_dict() for entry in self._entries],
+            removed_ids=[removed.id],
+        )
+        if self._current_id == removed.id:
+            self._current_id = None
+        return removed
 
     def resolve_target(self, target: Any) -> Tuple[Optional[int], Optional[PooledCredential], Optional[str]]:
         raw = str(target or "").strip()
         if not raw:
             return None, None, "No credential target provided."
 
-        with self._lock:
-            for idx, entry in enumerate(self._entries, start=1):
-                if entry.id == raw:
-                    return idx, entry, None
+        for idx, entry in enumerate(self._entries, start=1):
+            if entry.id == raw:
+                return idx, entry, None
 
-            label_matches = [
-                (idx, entry)
-                for idx, entry in enumerate(self._entries, start=1)
-                if entry.label.strip().lower() == raw.lower()
-            ]
-            if len(label_matches) == 1:
-                return label_matches[0][0], label_matches[0][1], None
-            if len(label_matches) > 1:
-                return None, None, f'Ambiguous credential label "{raw}". Use the numeric index or entry id instead.'
-            if raw.isdigit():
-                index = int(raw)
-                if 1 <= index <= len(self._entries):
-                    return index, self._entries[index - 1], None
-                return None, None, f"No credential #{index}."
-            return None, None, f'No credential matching "{raw}".'
+        label_matches = [
+            (idx, entry)
+            for idx, entry in enumerate(self._entries, start=1)
+            if entry.label.strip().lower() == raw.lower()
+        ]
+        if len(label_matches) == 1:
+            return label_matches[0][0], label_matches[0][1], None
+        if len(label_matches) > 1:
+            return None, None, f'Ambiguous credential label "{raw}". Use the numeric index or entry id instead.'
+        if raw.isdigit():
+            index = int(raw)
+            if 1 <= index <= len(self._entries):
+                return index, self._entries[index - 1], None
+            return None, None, f"No credential #{index}."
+        return None, None, f'No credential matching "{raw}".'
 
     def add_entry(self, entry: PooledCredential) -> PooledCredential:
-        with self._lock:
-            entry = replace(entry, priority=_next_priority(self._entries))
-            self._entries.append(entry)
-            self._persist()
-            return entry
+        entry = replace(entry, priority=_next_priority(self._entries))
+        self._entries.append(entry)
+        self._persist()
+        return entry
 
 
 def _upsert_entry(entries: List[PooledCredential], provider: str, source: str, payload: Dict[str, Any]) -> bool:
@@ -2513,10 +2445,9 @@ def _seed_from_env(provider: str, entries: List[PooledCredential]) -> Tuple[bool
     def _get_env_prefer_dotenv(key: str) -> str:
         env_file = load_env()
         raw = env_file.get(key, "").strip()
-        scoped_value = (_get_secret(key, "") or "").strip()
+        env_val = os.environ.get(key, "").strip()
         # If .env contains an unresolved op:// reference, prefer the
-        # already-resolved value supplied by the active secret scope (or by
-        # os.environ in legacy single-profile mode), set by
+        # already-resolved value from os.environ (set by
         # load_hermes_dotenv() -> apply_onepassword_secrets()).  The raw
         # "op://Vault/Item/field" string would otherwise win and every
         # provider auth attempt would receive a URL instead of a key.  This
@@ -2524,9 +2455,9 @@ def _seed_from_env(provider: str, entries: List[PooledCredential]) -> Tuple[bool
         # references straight into .env rather than the secrets.onepassword
         # config block.  For every non-op:// value the original
         # .env-takes-precedence behaviour is preserved unchanged.
-        if raw.startswith("op://") and scoped_value:
-            return scoped_value
-        return raw or scoped_value
+        if raw.startswith("op://") and env_val:
+            return env_val
+        return raw or _get_secret(key, "") or env_val
 
     # Honour user suppression — `hermes auth remove <provider> <N>` for an
     # env-seeded credential marks the env:<VAR> source as suppressed so it
@@ -2716,9 +2647,15 @@ def _seed_custom_pool(pool_key: str, entries: List[PooledCredential]) -> Tuple[b
                     model_api_key = v.strip()
                     break
             if model_provider == "custom" and model_base_url and model_api_key:
-                # Check if this model's base_url matches our custom provider
+                # Check if this model's base_url matches our custom provider.
+                # The picker writes the selected custom provider's primary key
+                # into model.api_key too, so it is often just a mirror of the
+                # config:<name> entry already seeded above. Do not turn that
+                # mirror into a separate rotation slot: after a 429 it would
+                # retry the exact same key before moving to a manual backup.
                 matched_key = get_custom_provider_pool_key(model_base_url)
-                if matched_key == pool_key:
+                primary_key = str(cp_config.get("api_key") or "").strip() if cp_config else ""
+                if matched_key == pool_key and model_api_key != primary_key:
                     source = "model_config"
                     if not _is_suppressed(pool_key, source):
                         active_sources.add(source)
