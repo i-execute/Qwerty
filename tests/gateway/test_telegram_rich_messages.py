@@ -126,19 +126,27 @@ async def test_rich_happy_path_sends_raw_markdown():
     adapter._bot.send_message.assert_not_called()
 
 
-def test_rich_payload_promotes_configured_unicode_emoji_to_premium_entities():
-    """Rich replies encode the user's selected emoji as Telegram custom emoji.
-
-    The input remains readable Markdown, while Telegram's rich parser receives
-    its documented ``tg://emoji`` form rather than a bare Unicode fallback.
-    """
+def test_rich_payload_promotes_only_user_verified_premium_emoji_entities():
+    """Only IDs verified in the user's premium registry may be promoted."""
     adapter = _make_adapter()
 
     payload = adapter._rich_message_payload("📝 Готово: 🤩")
 
     assert payload["markdown"] == (
-        "![📝](tg://emoji?id=5334882760735598374) Готово: "
-        "![🤩](tg://emoji?id=5190683945351535076)"
+        "📝 Готово: ![🤩](tg://emoji?id=5190683945351535076)"
+    )
+
+
+def test_rich_payload_preserves_existing_custom_emoji_entity():
+    """Never nest an entity while promoting another custom emoji."""
+    adapter = _make_adapter()
+    content = "![🤩](tg://emoji?id=5190683945351535076) и 🧠"
+
+    payload = adapter._rich_message_payload(content)
+
+    assert payload["markdown"] == (
+        "![🤩](tg://emoji?id=5190683945351535076) и "
+        "![🧠](tg://emoji?id=5447595110743168717)"
     )
 
 
