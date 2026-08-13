@@ -288,6 +288,12 @@ from plugins.platforms.telegram.telegram_network import (
     discover_fallback_ips,
     parse_fallback_ip_env,
 )
+from plugins.platforms.telegram.rich_blocks import (
+    RichBlocksError,
+    has_native_markers,
+    markdown_to_blocks,
+    strip_thinking_blocks,
+)
 from utils import atomic_replace, env_float, env_int
 
 _inline_msg_id: ContextVar[Optional[str]] = ContextVar("inline_msg_id", default=None)
@@ -674,6 +680,12 @@ class TelegramAdapter(BasePlatformAdapter):
         # to enabled: a normal-looking Markdown reply is not evidence that the
         # Rich API was used. Legacy MarkdownV2 is fallback-only.
         self._rich_messages_enabled: bool = self._coerce_bool_extra("rich_messages", True)
+        # Native structured blocks path (Bot API 10.2): when enabled and the
+        # agent content uses RichMarkdown constructs (tables, :::directives,
+        # checkboxes, math blocks, blockquotes), sendRichMessage receives a
+        # structured ``blocks`` payload instead of the markdown string.
+        # Disable via platforms.telegram.extra.native_rich_blocks: false.
+        self._native_rich_blocks_enabled: bool = self._coerce_bool_extra("native_rich_blocks", True)
         # Rich draft previews use a separate opt-in. Telegram macOS / Desktop
         # can leave Bot API 10.1 rich draft frames visually overlaid until the
         # chat is redrawn, while final rich messages remain useful.
@@ -1734,17 +1746,37 @@ class TelegramAdapter(BasePlatformAdapter):
         )
 
     def _rich_message_payload(
-        self, content: str, *, skip_entity_detection: bool = False
+        self, content: str, *, skip_entity_detection: bool = False,
+        strip_thinking: bool = False,
     ) -> Dict[str, Any]:
         """Build the ``InputRichMessage`` object from RAW markdown.
 
-        Never pass ``format_message(content)`` here — that converts to
-        MarkdownV2 and would escape/destroy rich syntax like table pipes.
+        Native path (default when ``native_rich_blocks`` is enabled): content
+        that uses RichMarkdown constructs is converted into structured
+        ``blocks`` (InputRichBlock* objects) — the fully native Bot API 10.2
+        representation with slideshows, collages, pull quotes, striped tables,
+        details, math, anchors, media blocks and checklists.
+
+        Legacy path: plain markdown payload for everything else. Never pass
+        ``format_message(content)`` here — that converts to MarkdownV2 and
+        would escape/destroy rich syntax like table pipes.
 
         Single newlines are normalized to Markdown hard breaks so that
-        multi-line content (slash-command lists, etc.) renders correctly
-        in the rich-message path.  See ``_rich_normalize_linebreaks``.
+        multi-line content (slash-command lists, etc.) renders correctly.
+        See ``_rich_normalize_linebreaks``.
         """
+        if getattr(self, "_native_rich_blocks_enabled", True) and has_native_markers(content):
+            try:
+                promoted = self._rich_promote_premium_emoji(content)
+                blocks = markdown_to_blocks(promoted)
+                if strip_thinking:
+                    blocks = strip_thinking_blocks(blocks)
+                return {"blocks": blocks}
+            except (RichBlocksError, ValueError) as exc:
+                logger.debug(
+                    "[%s] native rich blocks conversion failed (%s) — falling back to markdown",
+                    self.name, exc,
+                )
         rich_markdown = _rich_normalize_linebreaks(content)
         payload: Dict[str, Any] = {
             "markdown": self._rich_promote_premium_emoji(rich_markdown)
@@ -1857,7 +1889,7 @@ class TelegramAdapter(BasePlatformAdapter):
 
         payload: Dict[str, Any] = {
             "chat_id": normalize_telegram_chat_id(chat_id),
-            "rich_message": self._rich_message_payload(content),
+            "rich_message": self._rich_message_payload(content, strip_thinking=True),
         }
         # Only forward non-None routing keys: when direct_messages_topic_id is
         # present _thread_kwargs_for_send pairs it with message_thread_id=None,
@@ -1971,7 +2003,7 @@ class TelegramAdapter(BasePlatformAdapter):
         payload: Dict[str, Any] = {
             "chat_id": normalize_telegram_chat_id(chat_id),
             "message_id": int(message_id),
-            "rich_message": self._rich_message_payload(content),
+            "rich_message": self._rich_message_payload(content, strip_thinking=True),
         }
         thread_id = self._metadata_thread_id(metadata)
         thread_kwargs = self._thread_kwargs_for_send(
@@ -4095,7 +4127,7 @@ class TelegramAdapter(BasePlatformAdapter):
                     "editMessageText",
                     api_kwargs={
                         "inline_message_id": inline_msg_id,
-                        "rich_message": self._rich_message_payload(content),
+                        "rich_message": self._rich_message_payload(content, strip_thinking=True),
                     },
                 )
                 logger.info("[Telegram] Inline editing: msg_id=%s content_len=%d", inline_msg_id, len(content))
@@ -4490,7 +4522,7 @@ class TelegramAdapter(BasePlatformAdapter):
                     "editMessageText",
                     api_kwargs={
                         "inline_message_id": inline_msg_id,
-                        "rich_message": self._rich_message_payload(content),
+                        "rich_message": self._rich_message_payload(content, strip_thinking=True),
                     },
                 )
                 logger.info(
