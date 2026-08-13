@@ -15796,6 +15796,51 @@ def main():
     secrets_parser.set_defaults(func=_dispatch_secrets)
 
     # =========================================================================
+    # github command — GitHub Personal Access Token management
+    # =========================================================================
+    github_parser = subparsers.add_parser(
+        "github",
+        aliases=["gh"],
+        help="Manage GitHub Personal Access Token (PAT) for authenticated git",
+        description=(
+            "Securely store and manage your GitHub PAT for git operations. "
+            "Tokens are stored in XDG_RUNTIME_DIR (ephemeral) and git credential helper. "
+            "Supports classic (ghp_*) and fine-grained (github_*) PATs."
+        ),
+    )
+    github_subparsers = github_parser.add_subparsers(dest="github_command")
+    
+    github_set = github_subparsers.add_parser(
+        "set",
+        help="Interactively input and store GitHub PAT"
+    )
+    github_check = github_subparsers.add_parser(
+        "check",
+        help="Verify GitHub PAT is configured"
+    )
+    github_clear = github_subparsers.add_parser(
+        "clear",
+        help="Remove GitHub PAT from storage"
+    )
+    github_help = github_subparsers.add_parser(
+        "help",
+        help="Show full GitHub token management guide"
+    )
+    
+    # Lazy import — only loads when github command is used
+    from hermes_cli.commands.github_token import hermes_github
+    
+    def _dispatch_github(args):  # noqa: ANN001
+        cmd = getattr(args, "github_command", None)
+        if cmd in ("set", "check", "clear", "help", None):
+            import asyncio
+            return asyncio.run(hermes_github([cmd] if cmd else []))
+        github_parser.print_help()
+        return 0
+    
+    github_parser.set_defaults(func=_dispatch_github)
+
+    # =========================================================================
     # egress command — iron-proxy outbound credential-injection firewall
     # =========================================================================
     # NOTE: this is the OUTBOUND egress firewall (ironsh/iron-proxy).
