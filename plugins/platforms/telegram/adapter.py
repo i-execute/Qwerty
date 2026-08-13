@@ -1862,6 +1862,36 @@ class TelegramAdapter(BasePlatformAdapter):
         ('5418384076090420168', '🙂'),  # 35
     )
 
+    # ── Emoji pack system ─────────────────────────────────────────────────
+    # All premium emojis live in ONE ordered pack registry.  Each entry is
+    # (pack name, pack description, ordered (id, fallback) pairs).  Packs are
+    # ordered by precedence: earlier packs win glyph collisions, and repeated
+    # fallbacks within a pack cycle through that pack's IDs in upload order.
+    _PREMIUM_EMOJI_PACKS = (
+        (
+            "md3-expressive",
+            "Material Design 3 Expressive (Material You) — Google-style icons. "
+            "Segment roles for the progress waves: #4 начало, #5 продление, "
+            "#6 конец (собирать полосу как 1-2-2-…-3). Also: loader, waves "
+            "around a circle, toggle, camera, maps, trash, status circles, "
+            "assistant faces.",
+            _USER_UPLOADED_NATIVE_PREMIUM_EMOJI_MD3,
+        ),
+        (
+            "uploaded-native",
+            "User's native pack (first upload): hearts family, cats, and the "
+            "adaptive pack (animals, objects, weapons, drinks, status icons) "
+            "— 100 IDs in photo order.",
+            _USER_UPLOADED_NATIVE_PREMIUM_EMOJI,
+        ),
+        (
+            "legacy",
+            "Original verified one-ID-per-glyph registry, kept as the fallback "
+            "for glyphs missing from the uploaded packs.",
+            tuple((emoji_id, glyph) for glyph, emoji_id in _RICH_PREMIUM_EMOJI_IDS.items()),
+        ),
+    )
+
     @classmethod
     def _rich_promote_premium_emoji(cls, content: str) -> str:
         """Encode configured Unicode glyphs as premium rich Markdown entities.
@@ -1874,19 +1904,15 @@ class TelegramAdapter(BasePlatformAdapter):
         parts = entity_pattern.split(content)
         entities = entity_pattern.findall(content)
 
-        # Uploaded/native IDs supersede the older registry for the same
-        # fallback glyph. Several uploaded entries intentionally share one
-        # fallback, so repeated occurrences consume their IDs in upload order.
-        # Newer packs take precedence on glyph collisions.
+        # Pack system drives promotion: packs earlier in _PREMIUM_EMOJI_PACKS
+        # win glyph collisions, repeated fallbacks cycle through the pack's
+        # own IDs in upload order.
         uploaded_by_glyph: Dict[str, List[str]] = {}
-        for registry in (
-            cls._USER_UPLOADED_NATIVE_PREMIUM_EMOJI_MD3,
-            cls._USER_UPLOADED_NATIVE_PREMIUM_EMOJI,
-        ):
+        emoji_ids: Dict[str, str] = {}
+        for _pack_name, _pack_desc, registry in cls._PREMIUM_EMOJI_PACKS:
             for emoji_id, glyph in registry:
                 uploaded_by_glyph.setdefault(glyph, []).append(emoji_id)
-        emoji_ids = dict(cls._RICH_PREMIUM_EMOJI_IDS)
-        emoji_ids.update({glyph: ids[0] for glyph, ids in uploaded_by_glyph.items()})
+                emoji_ids.setdefault(glyph, emoji_id)
         known_glyphs = set(emoji_ids)
         glyph_pattern = re.compile(
             "|".join(re.escape(glyph) for glyph in sorted(known_glyphs, key=len, reverse=True))
