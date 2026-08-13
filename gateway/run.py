@@ -22227,6 +22227,21 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             def _deliver_bg_review_message(message: str) -> None:
                 if not _status_adapter or not _run_still_current():
                     return
+                # Inline turns have one user-visible bubble owned by the
+                # chosen inline result. Background-review notices (memory
+                # updates / skill patches) are independent gateway status
+                # messages and must never be delivered into that inline turn:
+                # they can replace or race the Rich final and appear as
+                # ``💾 Self-improvement review`` instead of the user's answer.
+                if (
+                    source.platform == Platform.TELEGRAM
+                    and source.origin_hint == "inline mode"
+                ):
+                    logger.debug(
+                        "Suppressing background-review notice for Telegram inline turn: %s",
+                        message,
+                    )
+                    return
                 safe_schedule_threadsafe(
                     _status_adapter.send(
                         _status_chat_id,
