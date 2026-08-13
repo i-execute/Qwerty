@@ -4095,6 +4095,7 @@ class TelegramAdapter(BasePlatformAdapter):
                     "editMessageText",
                     api_kwargs={
                         "inline_message_id": inline_msg_id,
+                        "text": content,
                         "rich_message": self._rich_message_payload(content),
                     },
                 )
@@ -4490,6 +4491,7 @@ class TelegramAdapter(BasePlatformAdapter):
                     "editMessageText",
                     api_kwargs={
                         "inline_message_id": inline_msg_id,
+                        "text": content,
                         "rich_message": self._rich_message_payload(content),
                     },
                 )
@@ -6742,10 +6744,15 @@ class TelegramAdapter(BasePlatformAdapter):
 
         inline_msg_id = _inline_msg_id.get()
         if inline_msg_id:
-            if len(images) > 1:
-                logger.info("[Telegram] Inline result has %d images; showing the first", len(images))
-            first_url, first_caption = images[0]
-            await self._inline_edit_photo(inline_msg_id, first_url, first_caption)
+            # Inline media must not replace the text-backed placeholder. Once
+            # Telegram turns the inline result into a photo, editMessageText
+            # cannot restore the final Rich text and the user sees photo-only.
+            logger.info(
+                "[Telegram] Inline media suppressed to preserve text Rich final: "
+                "msg_id=%s images=%d",
+                inline_msg_id,
+                len(images),
+            )
             return
 
         try:
