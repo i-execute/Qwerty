@@ -1609,12 +1609,86 @@ class TelegramAdapter(BasePlatformAdapter):
     # Do not add generic Telegram emoji IDs here: an ID can be syntactically
     # valid but render as a non-premium / unavailable fallback for this user.
     _RICH_PREMIUM_EMOJI_IDS = {
-        "🤩": "5190683945351535076",
-        "🤔": "5296739894914207637",
-        "🧐": "5384182985224374928",
-        "🧠": "5447595110743168717",
-        "💰": "5317054012187499321",
-        "📅": "5192784923093652913",
+        '😌': "5449619723966761441",
+        '😏': "5384214488809490070",
+        '😂': "5298937724168853193",
+        '😁': "5296786967755771785",
+        '👌': "5447363161034346459",
+        '🥲': "5190491238758898985",
+        '😊': "5190867898800821266",
+        '☺️': "5298812156504987574",
+        '🤩': "5190683945351535076",
+        '🫤': "5384453284696181912",
+        '😗': "5296335880225575986",
+        '😙': "5447193685919811994",
+        '🤨': "5384294976496619218",
+        '🤷\u200d♂️': "5211112038171958439",
+        '🙅\u200d♂️': "5190568977666957657",
+        '🤔': "5296739894914207637",
+        '🔫': "5296383305254459545",
+        '🧐': "5384182985224374928",
+        '😱': "5296525713485089826",
+        '😫': "5210808229365305258",
+        '😑': "5384157249780337109",
+        '🦶': "5296732718023857804",
+        '😞': "5193200486949346651",
+        '🤐': "5190415054629002671",
+        '😳': "5192857499451021759",
+        '😐': "5447348871678154623",
+        '🫵': "5210997160681688876",
+        '😡': "5296305622180972936",
+        '😒': "5384059066827949054",
+        '😋': "5298519909750296720",
+        '👅': "5447198809815795961",
+        '😝': "5299006615444278021",
+        '🫦': "5447630192036040634",
+        '😚': "5211042257838296209",
+        '🍆': "5447432125324216825",
+        '😬': "5190958793193710110",
+        '💩': "5296250904297624056",
+        '😮': "5213305791502634699",
+        '🧱': "5316742244806451762",
+        '💨': "5298854260069389723",
+        '🤯': "5447163161587241349",
+        '🩸': "5384285987130065744",
+        '🦠': "5298775778131986041",
+        '🫠': "5190660975866437599",
+        '🧊': "5384108682290152083",
+        '🔪': "5384495396850520754",
+        '👑': "5210952531676516344",
+        '👉': "5296365472550244967",
+        '🧛\u200d♂️': "5447191366637476040",
+        '🤠': "5384268407828924341",
+        '🍩': "5211042502651432248",
+        '🌰': "5316885872807794414",
+        '💞': "5213447602732813642",
+        '🧼': "5316965570220941367",
+        '🖕': "5192966772008966700",
+        '🤟': "5193037226652491753",
+        '💪': "5296691786985527033",
+        '🐺': "5192808914780971277",
+        '🐈\u200d⬛': "5213311533873907167",
+        '🐲': "5447456593752903617",
+        '🍑': "5447614579829921377",
+        '🍌': "5314647211299067950",
+        '❤️': "5316715774923004572",
+        '💔': "5190742593129971422",
+        '💘': "5210767689168999246",
+        '🥔': "5384443861537932638",
+        '🧠': "5447595110743168717",
+        '☕️': "5314806674844835288",
+        '🫁': "5296426834748002089",
+        '🧻': "5193157563046189671",
+        '💰': "5317054012187499321",
+        '🪤': "5190404278556055959",
+        '💸': "5447458260200214425",
+        '💀': "5190682871609712455",
+        '🩻': "5193012388856618565",
+        '📅': "5192784923093652913",
+        '💯': "5384182740411240426",
+        '⛺️': "5193143651647117966",
+        '🗿': "5190458429503723474",
+        '👠': "5190691671997702118",
     }
 
     @classmethod
@@ -8925,13 +8999,20 @@ class TelegramAdapter(BasePlatformAdapter):
         # the General-topic id so replies route back to General (#22423).
         thread_id_str = self._effective_message_thread_id(message)
         chat_topic = None
-        topic_skill = None
+        # The consolidated rich-gateway skill is mandatory for every Telegram
+        # gateway conversation. Topic-specific bindings may layer on top.
+        topic_skill = "telegram-rich-gateway"
 
         if chat_type == "dm" and thread_id_str:
             topic_info = self._get_dm_topic_info(str(chat.id), thread_id_str)
             if topic_info:
                 chat_topic = topic_info.get("name")
-                topic_skill = topic_info.get("skill")
+                # Preserve mandatory rich-gateway skill and layer topic skill.
+                topic_skills = ["telegram-rich-gateway"]
+                bound = topic_info.get("skill")
+                if isinstance(bound, str) and bound.strip() and bound.strip() != "telegram-rich-gateway":
+                    topic_skills.append(bound.strip())
+                topic_skill = topic_skills
 
             # Also check forum_topic_created service message for topic discovery
             if hasattr(message, "forum_topic_created") and message.forum_topic_created:
@@ -8970,7 +9051,12 @@ class TelegramAdapter(BasePlatformAdapter):
                         tid = topic.get("thread_id")
                         if tid is not None and str(tid) == thread_id_str:
                             chat_topic = topic.get("name")
-                            topic_skill = topic.get("skill")
+                            # Preserve mandatory rich-gateway skill and layer topic skill.
+                            bound = topic.get("skill")
+                            if isinstance(bound, str) and bound.strip() and bound.strip() != "telegram-rich-gateway":
+                                topic_skill = ["telegram-rich-gateway", bound.strip()]
+                            else:
+                                topic_skill = ["telegram-rich-gateway"]
                             break
                     break
 

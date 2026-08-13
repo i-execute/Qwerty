@@ -317,11 +317,11 @@ Double integral: $$\iint_R f(x,y) \, dA = \int_a^b \int_c^d f(x,y) \, dy \, dx$$
 
 | Tag | Status | Alternative |
 |-----|--------|-------------|
-| `<tg-emoji>` | ❌ Not supported | Use Markdown emoji: `![🤩](tg://emoji?id=5190683945351535076)` |
+| `<tg-emoji>` | ✅ Supported by official Rich HTML | Gateway prefers Markdown image syntax: `![🤩](tg://emoji?id=5190683945351535076)` |
 | `<tg-thinking>` | ⚠️ **Drafts only** | Use `<tg-thinking>` ONLY in `sendRichMessageDraft` streaming frames; omit from final message |
-| `<tg-spoiler>` | ❌ Not supported | Use `<details><summary>Spoiler</summary>Content</details>` |
-| `<sup>` | ❌ Not supported | Use Unicode: `x²`, `xʳ`, or plain text `x^2` |
-| `<sub>` | ❌ Not supported | Use Unicode: `xᵢ`, `xₙ`, or plain text `x_n` |
+| `<tg-spoiler>` | ✅ Supported by official Rich HTML | Use for inline spoilers; use `<details>` for collapsible blocks |
+| `<sup>` | ✅ Supported by official Rich HTML | Use for mathematical superscripts |
+| `<sub>` | ✅ Supported by official Rich HTML | Use for mathematical subscripts |
 | `<script>`, `<style>` | ❌ Security blocked | Not applicable for Telegram |
 
 ### **CRITICAL: `<tg-thinking>` Behavior**
@@ -453,7 +453,7 @@ The Hermes gateway (`plugins/platforms/telegram/adapter.py`) automatically:
 |-----------|-------|-------|
 | Rich message HTML | 32,768 chars | Longer: split into multiple messages |
 | Single emoji ID length | 19 digits | `5190683945351535076` |
-| Table columns | ≤10 (recommend ≤5) | Mobile rendering degrades with >5 |
+| Table columns | ≤20 (recommend ≤5) | Mobile rendering degrades with >5 |
 | Table rows | ≤100 | Practical limit ~50 for UX |
 | Code block lines | No hard limit | Use `<details>` for >20 lines |
 | Draft frames | ≤50 per session | Stops automatically after final send |
@@ -518,6 +518,14 @@ assert verify_factors(91, [7, 13])
 
 ---
 
+## ZIP archive and official API corrections
+
+The supplied `telegram-rich-messages-basic.zip` was reviewed. Its practical examples for `sendRichMessage`, slideshows, collages, `tg://photo` media references, direct media URLs, and helper scripts are incorporated where compatible with the live official API. When the archive and current Telegram documentation disagree, the official documentation wins.
+
+Official Bot API 10.2 Rich HTML confirms `<tg-emoji emoji-id="ID"></tg-emoji>` and `<img src="tg://emoji?id=ID" alt=""/>` as custom-emoji forms. It also documents `<tg-spoiler>`, `<sup>`, `<sub>`, `<tg-math>`, headings, lists, tables, details, quotations, maps, collages, slideshows, and media tags. Rich Markdown supports `![](tg://emoji?id=ID)`, `$...$`, `$$...$$`, fenced code, tables, task lists, blockquotes, footnotes, and media syntax.
+
+Important parser rule: Markdown is not parsed inside arbitrary block HTML; only `<details>`, `<tg-collage>`, and `<tg-slideshow>` permit Markdown inside. Table cells accept inline formatting only. Formula source is raw LaTeX.
+
 ## 🔗 Bot API References
 
 - **Bot API 10.2 Rich Messages:** https://core.telegram.org/bots/api#sendrichmessage
@@ -537,7 +545,7 @@ Before sending any reply via gateway:
 - [ ] No bare Unicode emoji in response text
 - [ ] LaTeX formulas wrapped in `$...$` or `$$...$$`
 - [ ] HTML table syntax correct (closed `<table>`, `<tr>`, `<td>` tags)
-- [ ] No `<tg-emoji>`, `<tg-spoiler>`, `<sup>`, `<sub>` in final messages
+- [ ] Use only official Rich HTML/Markdown tags; custom emoji are promoted from the 103-ID registry
 - [ ] `<tg-thinking>` used ONLY in `sendRichMessageDraft` drafts, not final
 - [ ] Markdown links use `[text](url)` syntax
 - [ ] Code blocks have language specified: `` ```python\n...\n``` ``
@@ -572,4 +580,4 @@ No additional configuration needed in code — just follow this skill's guidelin
 
 ---
 
-**For every Telegram reply via gateway: Use this skill's formatting rules EXCLUSIVELY.**
+**For every Telegram reply via gateway: Use this skill's formatting rules EXCLUSIVELY. The Telegram adapter auto-loads this skill for every incoming Telegram event.**
