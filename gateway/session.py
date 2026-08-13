@@ -176,7 +176,6 @@ class SessionSource:
     guild_id: Optional[str] = None  # @deprecated legacy alias for scope_id (D-Q2.5)
     parent_chat_id: Optional[str] = None  # Parent channel when chat_id refers to a thread
     message_id: Optional[str] = None  # ID of the triggering message (for pin/reply/react)
-    origin_hint: Optional[str] = None  # Surface marker visible to the agent, e.g. "inline mode"
     role_authorized: bool = False  # True when adapter granted access via role (not user ID)
     # Profile this inbound message is routed to in a multiplexing gateway
     # (from the /p/<profile>/ URL prefix or per-credential adapter ownership).
@@ -233,9 +232,7 @@ class SessionSource:
         
         if self.thread_id:
             parts.append(f"thread: {self.thread_id}")
-        if self.origin_hint:
-            parts.append(self.origin_hint)
-
+        
         return ", ".join(parts)
     
     def to_dict(self) -> Dict[str, Any]:
@@ -265,8 +262,6 @@ class SessionSource:
             d["parent_chat_id"] = self.parent_chat_id
         if self.message_id:
             d["message_id"] = self.message_id
-        if self.origin_hint:
-            d["origin_hint"] = self.origin_hint
         if self.profile:
             d["profile"] = self.profile
         if self.auto_thread_created:
@@ -293,7 +288,6 @@ class SessionSource:
             scope_id=data.get("scope_id", data.get("guild_id")),
             parent_chat_id=data.get("parent_chat_id"),
             message_id=data.get("message_id"),
-            origin_hint=data.get("origin_hint"),
             profile=data.get("profile"),
             auto_thread_created=bool(data.get("auto_thread_created", False)),
             auto_thread_initial_name=data.get("auto_thread_initial_name"),

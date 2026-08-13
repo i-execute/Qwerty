@@ -206,11 +206,7 @@ async def _shutdown_abandoned_app(app) -> None:
             logger.debug("Abandoned Telegram request shutdown failed", exc_info=True)
 
 try:
-    from telegram import (
-        Update, Bot, Message, InlineKeyboardButton, InlineKeyboardMarkup,
-        InlineQueryResultArticle, InputTextMessageContent,
-        InputMediaPhoto, InputMediaDocument,
-    )
+    from telegram import Update, Bot, Message, InlineKeyboardButton, InlineKeyboardMarkup
     try:
         from telegram import LinkPreviewOptions
     except ImportError:
@@ -219,8 +215,6 @@ try:
         Application,
         CommandHandler,
         CallbackQueryHandler,
-        InlineQueryHandler,
-        ChosenInlineResultHandler,
         MessageHandler as TelegramMessageHandler,
         ContextTypes,
         filters,
@@ -235,16 +229,10 @@ except ImportError:
     Message = Any
     InlineKeyboardButton = Any
     InlineKeyboardMarkup = Any
-    InlineQueryResultArticle = Any
-    InputTextMessageContent = Any
-    InputMediaPhoto = Any
-    InputMediaDocument = Any
     LinkPreviewOptions = None
     Application = Any
     CommandHandler = Any
     CallbackQueryHandler = Any
-    InlineQueryHandler = Any
-    ChosenInlineResultHandler = Any
     TelegramMessageHandler = Any
     HTTPXRequest = Any
     filters = None
@@ -289,14 +277,6 @@ from plugins.platforms.telegram.telegram_network import (
     parse_fallback_ip_env,
 )
 from utils import atomic_replace, env_float, env_int
-
-_inline_msg_id: ContextVar[Optional[str]] = ContextVar("inline_msg_id", default=None)
-
-# Premium emoji (verified ID from the user's premium-emoji registry) used in
-# inline placeholder messages: renders animated for Telegram Premium owners,
-# falls back to the plain glyph for everyone else. tg://emoji links only work
-# in message text (not in result titles/buttons), so titles keep plain "⚡".
-_PREMIUM_BOT_EMOJI = "![🤖](tg://emoji?id=5931415565955503486)"
 
 _TELEGRAM_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 _TELEGRAM_IMAGE_MIME_TO_EXT = {
@@ -722,9 +702,6 @@ class TelegramAdapter(BasePlatformAdapter):
         )
         self._pending_text_batches: Dict[str, MessageEvent] = {}
         self._pending_text_batch_tasks: Dict[str, asyncio.Task] = {}
-        # Diagnostic index only; response routing itself is task-local via
-        # _inline_msg_id so inline and DM turns can safely share a session.
-        self._inline_edits: Dict[str, str] = {}
         self._drop_delayed_deliveries = False
         self._polling_error_task: Optional[asyncio.Task] = None
         self._polling_conflict_count: int = 0
@@ -880,15 +857,6 @@ class TelegramAdapter(BasePlatformAdapter):
         normalized_user_id = str(user_id or "").strip()
         if not normalized_user_id:
             return False
-
-        adapter_allow_from = self.config.extra.get("allow_from")
-        if adapter_allow_from is not None:
-            allowed = {
-                str(value).strip()
-                for value in adapter_allow_from
-                if str(value).strip()
-            }
-            return "*" in allowed or normalized_user_id in allowed
 
         runner = getattr(getattr(self, "_message_handler", None), "__self__", None)
         auth_fn = getattr(runner, "_is_user_authorized", None)
@@ -3651,9 +3619,6 @@ class TelegramAdapter(BasePlatformAdapter):
             ))
             # Handle inline keyboard button callbacks (update prompts)
             self._app.add_handler(CallbackQueryHandler(self._handle_callback_query))
-            self._app.add_handler(InlineQueryHandler(self._handle_inline_query))
-            self._app.add_handler(ChosenInlineResultHandler(self._handle_chosen_inline_result))
-            self._app.add_error_handler(self._handle_telegram_error)
             
             # Start polling — retry initialize() for transient TLS resets.
             # Each attempt is capped by _init_timeout so a single unreachable
@@ -4079,45 +4044,6 @@ class TelegramAdapter(BasePlatformAdapter):
         # Skip whitespace-only text to prevent Telegram 400 empty-text errors.
         if not content or not content.strip():
             return SendResult(success=True, message_id=None)
-
-        # Inline turns inherit this task-local marker from the chosen-result
-        # dispatch. Keep the normal chat_id/session untouched so DM and inline
-        # conversations share history without DM sends hijacking inline edits.
-        inline_msg_id = _inline_msg_id.get()
-        if inline_msg_id:
-            # Inline edits are ALWAYS rich: Telegram drops custom-emoji entities
-            # in rich inline edits (verified against the official API), while
-            # MarkdownV2 has no native tables. The user chose native tables
-            # over animated premium emoji here — do not route these through
-            # MarkdownV2 without asking again (2026-08-13).
-            try:
-                await self._bot.do_api_request(
-                    "editMessageText",
-                    api_kwargs={
-                        "inline_message_id": inline_msg_id,
-                        "rich_message": self._rich_message_payload(content),
-                    },
-                )
-                logger.info("[Telegram] Inline editing: msg_id=%s content_len=%d", inline_msg_id, len(content))
-            except Exception as inline_error:
-                logger.warning(
-                    "[Telegram] Inline edit failed: %s",
-                    _redact_telegram_error_text(inline_error),
-                    exc_info=True,
-                )
-                try:
-                    await self._bot.edit_message_text(
-                        inline_message_id=inline_msg_id,
-                        text=content[:self.MAX_MESSAGE_LENGTH],
-                        reply_markup=None,
-                    )
-                except Exception as fallback_error:
-                    logger.warning(
-                        "[Telegram] Inline plain-text fallback failed: %s",
-                        _redact_telegram_error_text(fallback_error),
-                        exc_info=True,
-                    )
-            return SendResult(success=True, message_id=inline_msg_id)
         
         try:
             # Bot API 10.1 rich fast-path: send the raw agent markdown via
@@ -4482,44 +4408,6 @@ class TelegramAdapter(BasePlatformAdapter):
         """
         if not self._bot:
             return SendResult(success=False, error="Not connected")
-
-        inline_msg_id = _inline_msg_id.get()
-        if inline_msg_id:
-            try:
-                await self._bot.do_api_request(
-                    "editMessageText",
-                    api_kwargs={
-                        "inline_message_id": inline_msg_id,
-                        "rich_message": self._rich_message_payload(content),
-                    },
-                )
-                logger.info(
-                    "[Telegram] Inline streaming edit: msg_id=%s content_len=%d finalize=%s",
-                    inline_msg_id,
-                    len(content),
-                    finalize,
-                )
-            except Exception as inline_error:
-                if "not modified" not in str(inline_error).lower():
-                    logger.warning(
-                        "[Telegram] Inline streaming rich edit failed: %s",
-                        _redact_telegram_error_text(inline_error),
-                        exc_info=True,
-                    )
-                    try:
-                        await self._bot.edit_message_text(
-                            inline_message_id=inline_msg_id,
-                            text=content[:self.MAX_MESSAGE_LENGTH],
-                            reply_markup=None,
-                        )
-                    except Exception as fallback_error:
-                        if "not modified" not in str(fallback_error).lower():
-                            logger.warning(
-                                "[Telegram] Inline streaming plain-text fallback failed: %s",
-                                _redact_telegram_error_text(fallback_error),
-                                exc_info=True,
-                            )
-            return SendResult(success=True, message_id=inline_msg_id)
 
         # Rich finalize (Bot API 10.1): when the completed content has
         # constructs the legacy MarkdownV2 edit degrades (tables → bullet
@@ -6031,37 +5919,11 @@ class TelegramAdapter(BasePlatformAdapter):
         query_thread_id = getattr(query_message, "message_thread_id", None)
         query_user_name = getattr(query.from_user, "first_name", None)
 
-        # Every callback must be acknowledged quickly. PTB otherwise leaves a
-        # spinner on the client and late handler failures look like /model did
-        # nothing. Individual branches may answer again with a useful status;
-        # Telegram treats that second acknowledgement as a harmless no-op.
-        try:
-            await query.answer()
-        except Exception:
-            logger.debug("[Telegram] Callback pre-ack failed", exc_info=True)
-
         # --- Model picker callbacks ---
         if data.startswith(("mp:", "mpg:", "mpv:", "mm:", "mc:", "mb", "mx", "mg:")):
             chat_id = str(query.message.chat_id) if query.message else None
             if chat_id:
-                try:
-                    await self._handle_model_picker_callback(query, data, chat_id)
-                except Exception as exc:
-                    logger.error(
-                        "[Telegram] Model picker callback failed (data=%s chat=%s): %s",
-                        data,
-                        chat_id,
-                        _redact_telegram_error_text(exc),
-                        exc_info=True,
-                    )
-                    try:
-                        await query.edit_message_text(
-                            text="Не удалось открыть модель. Отправь /model ещё раз.",
-                            parse_mode=None,
-                            reply_markup=None,
-                        )
-                    except Exception:
-                        pass
+                await self._handle_model_picker_callback(query, data, chat_id)
             return
 
         # --- Generic choice picker callbacks (/reasoning, /fast) ---
@@ -6662,61 +6524,6 @@ class TelegramAdapter(BasePlatformAdapter):
             )
             return await super().send_voice(chat_id, audio_path, caption, reply_to, metadata=metadata)
 
-    async def _upload_inline_media(self, file_path: str) -> Optional[str]:
-        """Upload a local file for Telegram inline edits, which only accept URLs."""
-        try:
-            import httpx
-            with open(file_path, "rb") as media_file:
-                async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
-                    response = await client.post(
-                        "https://tmpfiles.org/api/v1/upload",
-                        files={"file": (os.path.basename(file_path), media_file)},
-                    )
-            response.raise_for_status()
-            url = str(response.json()["data"]["url"])
-            return url.replace("https://tmpfiles.org/", "https://tmpfiles.org/dl/", 1)
-        except Exception as exc:
-            logger.warning(
-                "[Telegram] Inline media upload failed: %s",
-                _redact_telegram_error_text(exc),
-                exc_info=True,
-            )
-            return None
-
-    async def _inline_media_url(self, media_url: str) -> Optional[str]:
-        if not media_url.startswith("file://"):
-            return media_url
-        from urllib.parse import unquote
-        local_path = unquote(media_url[7:])
-        if not os.path.exists(local_path):
-            logger.warning("[Telegram] Inline media file is missing: %s", local_path)
-            return None
-        return await self._upload_inline_media(local_path)
-
-    async def _inline_edit_photo(
-        self, inline_msg_id: str, media_url: str, caption: Optional[str] = None
-    ) -> bool:
-        public_url = await self._inline_media_url(media_url)
-        if not public_url:
-            return False
-        try:
-            await self._bot.edit_message_media(
-                inline_message_id=inline_msg_id,
-                media=InputMediaPhoto(
-                    media=public_url,
-                    caption=caption[:1024] if caption else None,
-                ),
-            )
-            logger.info("[Telegram] Inline photo edit complete: msg_id=%s", inline_msg_id)
-            return True
-        except Exception as exc:
-            logger.warning(
-                "[Telegram] Inline photo edit failed: %s",
-                _redact_telegram_error_text(exc),
-                exc_info=True,
-            )
-            return False
-
     async def send_multiple_images(
         self,
         chat_id: str,
@@ -6738,14 +6545,6 @@ class TelegramAdapter(BasePlatformAdapter):
         if not self._bot:
             return
         if not images:
-            return
-
-        inline_msg_id = _inline_msg_id.get()
-        if inline_msg_id:
-            if len(images) > 1:
-                logger.info("[Telegram] Inline result has %d images; showing the first", len(images))
-            first_url, first_caption = images[0]
-            await self._inline_edit_photo(inline_msg_id, first_url, first_caption)
             return
 
         try:
@@ -6966,32 +6765,6 @@ class TelegramAdapter(BasePlatformAdapter):
         """Send a document/file natively as a Telegram file attachment."""
         if not self._bot:
             return SendResult(success=False, error="Not connected")
-
-        inline_msg_id = _inline_msg_id.get()
-        if inline_msg_id:
-            if not os.path.exists(file_path):
-                return SendResult(success=False, error=self._missing_media_path_error("File", file_path))
-            public_url = await self._upload_inline_media(file_path)
-            if not public_url:
-                return SendResult(success=False, error="inline media upload failed")
-            try:
-                await self._bot.edit_message_media(
-                    inline_message_id=inline_msg_id,
-                    media=InputMediaDocument(
-                        media=public_url,
-                        filename=file_name or os.path.basename(file_path),
-                        caption=caption[:1024] if caption else None,
-                    ),
-                )
-                logger.info("[Telegram] Inline document edit complete: msg_id=%s", inline_msg_id)
-                return SendResult(success=True, message_id=inline_msg_id)
-            except Exception as exc:
-                logger.warning(
-                    "[Telegram] Inline document edit failed: %s",
-                    _redact_telegram_error_text(exc),
-                    exc_info=True,
-                )
-                return SendResult(success=False, error=_redact_telegram_error_text(exc))
 
         try:
             if not os.path.exists(file_path):
@@ -8362,101 +8135,6 @@ class TelegramAdapter(BasePlatformAdapter):
         consuming channel posts without ever building a gateway event.
         """
         return getattr(update, "effective_message", None) or getattr(update, "message", None)
-
-    async def _handle_telegram_error(self, update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Make PTB handler failures visible instead of silently dropping them."""
-        import traceback
-        logger.error(
-            "[Telegram] Handler error for update %s: %s\n%s",
-            update,
-            _redact_telegram_error_text(getattr(context, "error", None)),
-            traceback.format_exc(),
-        )
-
-    async def _handle_inline_query(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Offer a lightweight result that becomes editable after insertion."""
-        query = getattr(update, "inline_query", None)
-        if not query:
-            return
-        user_id = str(getattr(getattr(query, "from_user", None), "id", "") or "")
-        if user_id and not self._is_callback_user_authorized(user_id):
-            logger.info("[Telegram] Blocked inline query from unauthorized user %s", user_id)
-            await query.answer(results=[], cache_time=0, is_personal=True)
-            return
-        text = str(getattr(query, "query", "") or "").strip()
-        display = text or "Ask Hermes"
-        markup = InlineKeyboardMarkup([[
-            InlineKeyboardButton("⚡ Run", callback_data="inline_placeholder")
-        ]])
-        logger.info("[Telegram] Inline query: %r", text)
-        await query.answer(
-            results=[InlineQueryResultArticle(
-                id="hermes-inline",
-                title=f"⚡ {display[:60]}",
-                description="Tap to run Hermes here",
-                input_message_content=InputTextMessageContent(
-                    message_text=f"{_PREMIUM_BOT_EMOJI} подожди мяу обожди мяу\\.",
-                    parse_mode=ParseMode.MARKDOWN_V2,
-                ),
-                reply_markup=markup,
-            )],
-            cache_time=0,
-            is_personal=True,
-        )
-
-    async def _handle_chosen_inline_result(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Dispatch the chosen query while preserving its inline message target."""
-        chosen = getattr(update, "chosen_inline_result", None)
-        if not chosen or not getattr(chosen, "query", None):
-            return
-        inline_id = getattr(chosen, "inline_message_id", None)
-        user = getattr(chosen, "from_user", None)
-        user_id = str(getattr(user, "id", "") or "")
-        if not inline_id or not user_id:
-            logger.warning("[Telegram] Chosen inline has no inline_message_id; enable /setinlinefeedback")
-            return
-        if not self._is_callback_user_authorized(user_id):
-            logger.info("[Telegram] Blocked chosen inline result from unauthorized user %s", user_id)
-            return
-        query_text = str(chosen.query).strip()
-        try:
-            await self._bot.edit_message_text(
-                inline_message_id=inline_id,
-                text=f"{_PREMIUM_BOT_EMOJI} подожди мяу обожди мяу\\.",
-                parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=None,
-            )
-        except Exception as exc:
-            logger.debug("[Telegram] Initial inline placeholder edit failed: %s", _redact_telegram_error_text(exc))
-            try:
-                await self._bot.edit_message_text(
-                    inline_message_id=inline_id,
-                    text="подожди мяу обожди мяу.",
-                    reply_markup=None,
-                )
-            except Exception:
-                pass
-        self._inline_edits[str(user_id)] = str(inline_id)
-        logger.info("[Telegram] Inline edit stored: user=%s msg_id=%s — dispatching to agent", user_id, inline_id)
-        token = _inline_msg_id.set(str(inline_id))
-        try:
-            from gateway.session import SessionSource
-            event = MessageEvent(
-                source=SessionSource(
-                    platform=Platform.TELEGRAM,
-                    chat_id=user_id,
-                    chat_type="dm",
-                    user_id=user_id,
-                    thread_id=None,
-                    origin_hint="inline mode",
-                ),
-                text=query_text,
-                message_type=MessageType.TEXT,
-            )
-            await self.handle_message(event)
-            logger.info("[Telegram] Inline agent dispatch complete for user=%s", user_id)
-        finally:
-            _inline_msg_id.reset(token)
 
     async def _handle_text_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle incoming text messages.
