@@ -3749,34 +3749,57 @@ class BasePlatformAdapter(ABC):
         """
         images = []
         cleaned = content
-        
+
+        # Rich native containers (Bot API 10.1+): media links INSIDE
+        # <tg-slideshow>/<tg-collage> must stay in the text so the Telegram
+        # rich-markdown parser renders them as slideshow/collage blocks.
+        # Extracting them here would empty the container and send the photos
+        # as separate messages (2026-08-13).
+        _tg_block_re = re.compile(
+            r"<tg-(slideshow|collage)[^>]*>.*?</tg-\1>", re.S | re.I
+        )
+        _protected: List[str] = []
+
+        def _protect(match: "re.Match[str]") -> str:
+            _protected.append(match.group(0))
+            return f"\x00TGBLOCK{len(_protected) - 1}\x00"
+
+        scannable = _tg_block_re.sub(_protect, content)
+
         # Match markdown images: ![alt](url)
         md_pattern = r'!\[([^\]]*)\]\((https?://[^\s\)]+)\)'
-        for match in re.finditer(md_pattern, content):
+        for match in re.finditer(md_pattern, scannable):
             alt_text = match.group(1)
             url = match.group(2)
             # Only extract URLs that look like actual images
             if any(url.lower().endswith(ext) or ext in url.lower() for ext in
                    ['.png', '.jpg', '.jpeg', '.gif', '.webp', 'fal.media', 'fal-cdn', 'replicate.delivery']):
                 images.append((url, alt_text))
-        
+
         # Match HTML img tags: <img src="url"> or <img src="url"></img> or <img src="url"/>
         html_pattern = r'<img\s+src=["\']?(https?://[^\s"\'<>]+)["\']?\s*/?>\s*(?:</img>)?'
-        for match in re.finditer(html_pattern, content):
+        for match in re.finditer(html_pattern, scannable):
             url = match.group(1)
             images.append((url, ""))
-        
+
         # Remove only the matched image tags from content (not all markdown images)
         if images:
             extracted_urls = {url for url, _ in images}
             def _remove_if_extracted(match):
                 url = match.group(2) if match.lastindex >= 2 else match.group(1)
                 return '' if url in extracted_urls else match.group(0)
-            cleaned = re.sub(md_pattern, _remove_if_extracted, cleaned)
+            cleaned = re.sub(md_pattern, _remove_if_extracted, scannable)
             cleaned = re.sub(html_pattern, _remove_if_extracted, cleaned)
             # Clean up leftover blank lines
             cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
-        
+        else:
+            cleaned = scannable
+
+        # Restore protected rich containers.
+        if _protected:
+            for index, block in enumerate(_protected):
+                cleaned = cleaned.replace(f"\x00TGBLOCK{index}\x00", block)
+
         return images, cleaned
     
     async def send_voice(
