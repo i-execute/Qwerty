@@ -15828,7 +15828,7 @@ def main():
     )
     
     # Lazy import — only loads when github command is used
-    from hermes_cli.commands.github_token import hermes_github
+    from hermes_cli.github_token import hermes_github
     
     def _dispatch_github(args):  # noqa: ANN001
         cmd = getattr(args, "github_command", None)
