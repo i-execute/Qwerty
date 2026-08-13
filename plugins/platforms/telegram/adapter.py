@@ -8,6 +8,7 @@ Uses python-telegram-bot library for:
 """
 
 import asyncio
+import html as _html
 import dataclasses
 import faulthandler
 import inspect
@@ -208,7 +209,7 @@ async def _shutdown_abandoned_app(app) -> None:
 try:
     from telegram import (
         Update, Bot, Message, InlineKeyboardButton, InlineKeyboardMarkup,
-        InlineQueryResultArticle, InputTextMessageContent,
+        InlineQueryResultArticle, InputTextMessageContent, InputMessageContent,
         InputMediaPhoto, InputMediaDocument,
     )
     try:
@@ -237,6 +238,7 @@ except ImportError:
     InlineKeyboardMarkup = Any
     InlineQueryResultArticle = Any
     InputTextMessageContent = Any
+    InputMessageContent = Any
     InputMediaPhoto = Any
     InputMediaDocument = Any
     LinkPreviewOptions = None
@@ -1746,12 +1748,50 @@ class TelegramAdapter(BasePlatformAdapter):
         in the rich-message path.  See ``_rich_normalize_linebreaks``.
         """
         rich_markdown = _rich_normalize_linebreaks(content)
+        # Rich Message media is not ordinary Markdown media. Bot API 10.2
+        # requires an InputRichMessage.media entry plus a tg://photo|audio
+        # reference in the markdown/html. Convert the model's portable media
+        # syntax for inline edits as well as normal sends.
+        rich_markdown, rich_media = self._rich_inline_media(rich_markdown)
         payload: Dict[str, Any] = {
             "markdown": self._rich_promote_premium_emoji(rich_markdown)
         }
+        if rich_media:
+            payload["media"] = rich_media
         if skip_entity_detection:
             payload["skip_entity_detection"] = True
         return payload
+
+    @staticmethod
+    def _rich_inline_media(content: str) -> tuple[str, List[Dict[str, Any]]]:
+        """Embed portable image/audio URLs using Bot API 10.2 media refs."""
+        media: List[Dict[str, Any]] = []
+        photo_index = 0
+        audio_index = 0
+
+        def photo(match: re.Match[str]) -> str:
+            nonlocal photo_index
+            alt, url = match.group(1), match.group(2)
+            if not url.startswith(("http://", "https://")):
+                return match.group(0)
+            ident = f"inline-photo-{photo_index}"
+            photo_index += 1
+            media.append({"id": ident, "media": {"type": "photo", "media": url}})
+            return f"![{alt}](tg://photo?id={ident})"
+
+        def audio(match: re.Match[str]) -> str:
+            nonlocal audio_index
+            url = match.group(1)
+            if not url.startswith(("http://", "https://")):
+                return match.group(0)
+            ident = f"inline-audio-{audio_index}"
+            audio_index += 1
+            media.append({"id": ident, "media": {"type": "audio", "media": url}})
+            return f"[audio](tg://audio?id={ident})"
+
+        content = re.sub(r"!\[([^\]]*)\]\((https?://[^)]+)\)", photo, content)
+        content = re.sub(r"<audio\s+src=[\"'](https?://[^\"']+)[\"']\s*/?>", audio, content, flags=re.I)
+        return content, media
 
     def _is_rich_capability_error(self, exc: Exception) -> bool:
         """True ⇒ the rich endpoint itself is unavailable (old PTB/server).
@@ -8396,14 +8436,22 @@ class TelegramAdapter(BasePlatformAdapter):
             InlineKeyboardButton("⚡ Run", callback_data="inline_placeholder")
         ]])
         logger.info("[Telegram] Inline query: %r", text)
+        # Bot API 10.2 inline results support InputRichMessageContent. Using
+        # InputTextMessageContent here downgrades the inserted result to a
+        # legacy Markdown message before ChosenInlineResult is dispatched;
+        # later Rich edits then cannot restore premium entities/media. PTB
+        # does not expose the new class yet, so use its base content object
+        # with api_kwargs (which serializes as InputRichMessageContent).
+        initial_rich = self._rich_message_payload(
+            f"![💯](tg://emoji?id=5384182740411240426) Подожди — inline Rich готовится."
+        )
         await query.answer(
             results=[InlineQueryResultArticle(
                 id="hermes-inline",
                 title=f"⚡ {display[:60]}",
                 description="Tap to run Hermes here",
-                input_message_content=InputTextMessageContent(
-                    message_text=f"{_PREMIUM_BOT_EMOJI} подожди мяу обожди мяу\\.",
-                    parse_mode=ParseMode.MARKDOWN_V2,
+                input_message_content=InputMessageContent(
+                    api_kwargs={"rich_message": initial_rich},
                 ),
                 reply_markup=markup,
             )],
@@ -8426,23 +8474,9 @@ class TelegramAdapter(BasePlatformAdapter):
             logger.info("[Telegram] Blocked chosen inline result from unauthorized user %s", user_id)
             return
         query_text = str(chosen.query).strip()
-        try:
-            await self._bot.edit_message_text(
-                inline_message_id=inline_id,
-                text=f"{_PREMIUM_BOT_EMOJI} подожди мяу обожди мяу\\.",
-                parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=None,
-            )
-        except Exception as exc:
-            logger.debug("[Telegram] Initial inline placeholder edit failed: %s", _redact_telegram_error_text(exc))
-            try:
-                await self._bot.edit_message_text(
-                    inline_message_id=inline_id,
-                    text="подожди мяу обожди мяу.",
-                    reply_markup=None,
-                )
-            except Exception:
-                pass
+        # Do not legacy-edit the chosen result before dispatch. The inline
+        # result is Rich already; an InputText/MarkdownV2 edit destroys its
+        # custom-emoji/media-capable representation before the final answer.
         self._inline_edits[str(user_id)] = str(inline_id)
         logger.info("[Telegram] Inline edit stored: user=%s msg_id=%s — dispatching to agent", user_id, inline_id)
         token = _inline_msg_id.set(str(inline_id))
