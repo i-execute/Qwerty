@@ -24,7 +24,7 @@ from telegram.error import BadRequest, NetworkError, TimedOut
 
 # Content exercising rich-only constructs: a heading, a real Markdown table,
 # and a task list. Pipes / brackets must survive untouched into the payload.
-RICH_CONTENT = "## Results\n\n| Case | Status |\n|---|---|\n| rich | ✅ |\n\n- [x] table renders"
+RICH_CONTENT = "## Results\n\n| Case | Status |\n|---|---|\n| rich | ready |\n\n- [x] table renders"
 CJK_RICH_CONTENT = "## 持仓\n\n| 项目 | 状态 |\n|---|---|\n| 早盘 | 正常 |"
 ASTRAL_CJK_RICH_CONTENT = "## Rare Han\n\n| glyph | status |\n|---|---|\n| \U00030000 | ok |"
 TABLE_ONLY_CONTENT = (
@@ -133,7 +133,37 @@ def test_rich_payload_promotes_only_user_verified_premium_emoji_entities():
     payload = adapter._rich_message_payload("📝 Готово: 🤩")
 
     assert payload["markdown"] == (
-        "📝 Готово: ![🤩](tg://emoji?id=5190683945351535076)"
+        "📝 Готово: ![🤩](tg://emoji?id=5346270183621171895)"
+    )
+
+
+def test_rich_payload_uses_uploaded_native_ids_in_order_for_duplicate_fallbacks():
+    adapter = _make_adapter()
+
+    payload = adapter._rich_message_payload("🖤 🌟 🌟 ❤️ 💔 💔 👻 👻")
+
+    assert payload["markdown"] == (
+        "![🖤](tg://emoji?id=5361635124179906093) "
+        "![🌟](tg://emoji?id=5429168219279603879) "
+        "![🌟](tg://emoji?id=5449860740351539454) "
+        "![❤️](tg://emoji?id=5296594136609075307) "
+        "![💔](tg://emoji?id=5287395828489532868) "
+        "![💔](tg://emoji?id=5208787155194761088) "
+        "![👻](tg://emoji?id=5208664366374733420) "
+        "![👻](tg://emoji?id=5208653938194136885)"
+    )
+
+
+def test_rich_payload_promotes_md3_pack_with_precedence_over_pack1():
+    adapter = _make_adapter()
+
+    payload = adapter._rich_message_payload("😭 🤔 🌊 🙂")
+
+    assert payload["markdown"] == (
+        "![😭](tg://emoji?id=5345778951031658558) "
+        "![🤔](tg://emoji?id=5345988476716226868) "
+        "![🌊](tg://emoji?id=5346107885396991553) "
+        "![🙂](tg://emoji?id=5418384076090420168)"
     )
 
 
