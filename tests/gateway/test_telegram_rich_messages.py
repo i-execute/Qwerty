@@ -151,7 +151,7 @@ def test_rich_payload_preserves_existing_custom_emoji_entity():
 
 
 @pytest.mark.asyncio
-async def test_details_with_math_skips_rich_send_to_avoid_tdesktop_crash():
+async def test_details_with_math_uses_rich_send_when_api_is_available():
     adapter = _make_adapter()
 
     result = await adapter.send("12345", DANGEROUS_DETAILS_MATH)
@@ -159,8 +159,8 @@ async def test_details_with_math_skips_rich_send_to_avoid_tdesktop_crash():
     assert result.success is True
     bot = adapter._bot
     assert bot is not None
-    bot.do_api_request.assert_not_called()
-    bot.send_message.assert_awaited()
+    bot.do_api_request.assert_awaited_once()
+    bot.send_message.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -193,25 +193,25 @@ async def test_math_outside_details_still_uses_rich_send():
 
 
 @pytest.mark.asyncio
-async def test_cjk_rich_content_skips_rich_send_to_avoid_tdesktop_garble():
+async def test_cjk_rich_content_uses_rich_send():
     adapter = _make_adapter()
 
     result = await adapter.send("12345", CJK_RICH_CONTENT)
 
     assert result.success is True
-    adapter._bot.do_api_request.assert_not_called()
-    adapter._bot.send_message.assert_awaited_once()
+    adapter._bot.do_api_request.assert_awaited_once()
+    adapter._bot.send_message.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_astral_cjk_rich_content_skips_rich_send_to_avoid_tdesktop_garble():
+async def test_astral_cjk_rich_content_uses_rich_send():
     adapter = _make_adapter()
 
     result = await adapter.send("12345", ASTRAL_CJK_RICH_CONTENT)
 
     assert result.success is True
-    adapter._bot.do_api_request.assert_not_called()
-    adapter._bot.send_message.assert_awaited_once()
+    adapter._bot.do_api_request.assert_awaited_once()
+    adapter._bot.send_message.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -241,10 +241,8 @@ async def test_rich_messages_opt_out_accepts_string_false():
 
 
 @pytest.mark.asyncio
-async def test_rich_messages_default_is_legacy_copyable_path():
-    """Rich messages stay opt-in because current Telegram clients can make
-    Bot API rich messages hard to copy as plain text. Rich-eligible content
-    defaults to the legacy MarkdownV2 path unless the user opts in."""
+async def test_rich_messages_default_is_native_path():
+    """Rich delivery is the default; legacy is fallback-only."""
     config = PlatformConfig(enabled=True, token="fake-token")
     adapter = TelegramAdapter(config)
     bot = MagicMock()
@@ -258,8 +256,8 @@ async def test_rich_messages_default_is_legacy_copyable_path():
     assert result.success is True
     bot = adapter._bot
     assert bot is not None
-    bot.do_api_request.assert_not_called()
-    bot.send_message.assert_awaited()
+    bot.do_api_request.assert_awaited_once()
+    bot.send_message.assert_not_called()
 
 
 @pytest.mark.asyncio

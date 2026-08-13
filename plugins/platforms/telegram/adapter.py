@@ -649,17 +649,11 @@ class TelegramAdapter(BasePlatformAdapter):
         self._mention_patterns = self._compile_mention_patterns()
         self._reply_to_mode: str = getattr(config, 'reply_to_mode', 'first') or 'first'
         self._disable_link_previews: bool = self._coerce_bool_extra("disable_link_previews", False)
-        # Bot API 10.1 Rich Messages: render constructs the legacy MarkdownV2
-        # path degrades (tables → bullet lists, task lists, <details>, block
-        # math) via sendRichMessage / editMessageText's rich_message param using
-        # the raw agent markdown. Disabled by default so Telegram messages stay
-        # easy to copy as plain text; users can opt in for richer rendering on
-        # clients that accept but render rich messages poorly via
-        # platforms.telegram.extra.rich_messages: true.  Keep this opt-in:
-        # current Telegram clients can make rich messages difficult to copy
-        # as plain text, which is worse than degraded table/task-list rendering
-        # for command snippets and mobile handoffs.
-        self._rich_messages_enabled: bool = self._coerce_bool_extra("rich_messages", False)
+        # Bot API 10.1 Rich Messages are the canonical Telegram gateway path.
+        # ``rich_messages`` remains a compatibility/config flag, but defaults
+        # to enabled: a normal-looking Markdown reply is not evidence that the
+        # Rich API was used. Legacy MarkdownV2 is fallback-only.
+        self._rich_messages_enabled: bool = self._coerce_bool_extra("rich_messages", True)
         # Rich draft previews use a separate opt-in. Telegram macOS / Desktop
         # can leave Bot API 10.1 rich draft frames visually overlaid until the
         # chat is redrawn, while final rich messages remain useful.
@@ -1554,8 +1548,6 @@ class TelegramAdapter(BasePlatformAdapter):
             and content
             and content.strip()
             and self._needs_rich_rendering(content)
-            and not self._has_telegram_desktop_details_math_crash_shape(content)
-            and not self._has_telegram_desktop_cjk_rich_garble_shape(content)
             and self._content_fits_rich_limits(content)
             and self._bot_supports_rich()
         )
@@ -1571,17 +1563,15 @@ class TelegramAdapter(BasePlatformAdapter):
     def prefers_fresh_final_streaming(
         self, content: str, metadata: Optional[Dict[str, Any]] = None
     ) -> bool:
-        """Whether to replace a streamed preview with a fresh rich final.
+        """Finalize streamed replies with a fresh Rich Message.
 
-        Disabled for Telegram. The fresh-final path briefly shows two copies of
-        the final answer, then deletes the streaming preview after the rich send
-        succeeds — it looks like duplicate delivery at the end of every streamed
-        turn (the reason #46206 reverted it).  Rich finalize is instead handled
-        by editing the existing preview in place via Bot API 10.1's
-        ``editMessageText`` ``rich_message`` parameter (see
-        :meth:`_try_edit_rich`), so no fresh re-send / delete is needed.
+        The preview is intentionally legacy/editable, while the completed
+        answer must pass through ``sendRichMessage``. Editing the preview with
+        the legacy method can silently downgrade the final answer to plain
+        MarkdownV2, so the stream consumer sends the verified Rich final and
+        removes the stale preview.
         """
-        return False
+        return self._rich_eligible(content)
 
     def streaming_overflow_limit(self) -> Optional[int]:
         """Allow the stream consumer to accumulate up to the rich-message cap
@@ -1916,6 +1906,11 @@ class TelegramAdapter(BasePlatformAdapter):
                 rich_sent_store.record(str(chat_id), str(message_id), content)
             except Exception:
                 pass
+        logger.info(
+            "[%s] Rich delivery confirmed via sendRichMessage message_id=%s",
+            self.name,
+            message_id,
+        )
         return SendResult(
             success=True,
             message_id=str(message_id) if message_id is not None else None,
