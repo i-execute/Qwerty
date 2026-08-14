@@ -299,6 +299,8 @@ _inline_msg_id: ContextVar[Optional[str]] = ContextVar("inline_msg_id", default=
 # falls back to the plain glyph for everyone else. tg://emoji links only work
 # in message text (not in result titles/buttons), so titles keep plain "⚡".
 _PREMIUM_BOT_EMOJI = "![🤖](tg://emoji?id=5931415565955503486)"
+_INLINE_DEMO_PHOTO_URL = "https://telegram.org/img/t_logo.png"
+_INLINE_DEMO_AUDIO_URL = "https://x0.at/jsol.mp3"
 
 _TELEGRAM_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 _TELEGRAM_IMAGE_MIME_TO_EXT = {
@@ -1758,6 +1760,23 @@ class TelegramAdapter(BasePlatformAdapter):
         }
         if rich_media:
             payload["media"] = rich_media
+        # Inline messages cannot upload new media during editMessageText.
+        # Seed the inserted Rich result with stable media and carry the same
+        # references through every later edit; otherwise Telegram returns
+        # Invalid message content specified when an edit introduces media.
+        if _inline_msg_id.get():
+            demo_markdown = (
+                " ![demo](tg://photo?id=inline-demo-photo) "
+                "[audio](tg://audio?id=inline-demo-audio)"
+            )
+            if "tg://photo?id=inline-demo-photo" not in payload["markdown"]:
+                payload["markdown"] += demo_markdown
+            payload.setdefault("media", [])
+            existing = {m.get("id") for m in payload["media"]}
+            if "inline-demo-photo" not in existing:
+                payload["media"].append({"id": "inline-demo-photo", "media": {"type": "photo", "media": _INLINE_DEMO_PHOTO_URL}})
+            if "inline-demo-audio" not in existing:
+                payload["media"].append({"id": "inline-demo-audio", "media": {"type": "audio", "media": _INLINE_DEMO_AUDIO_URL}})
         if skip_entity_detection:
             payload["skip_entity_detection"] = True
         return payload
