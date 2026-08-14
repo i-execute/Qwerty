@@ -4135,29 +4135,26 @@ class TelegramAdapter(BasePlatformAdapter):
                     "editMessageText",
                     api_kwargs={
                         "inline_message_id": inline_msg_id,
-                        "text": content,
                         "rich_message": self._rich_message_payload(content),
                     },
                 )
                 logger.info("[Telegram] Inline editing: msg_id=%s content_len=%d", inline_msg_id, len(content))
             except Exception as inline_error:
                 logger.warning(
-                    "[Telegram] Inline edit failed: %s",
+                    "[Telegram] Inline rich edit failed: %s",
                     _redact_telegram_error_text(inline_error),
                     exc_info=True,
                 )
-                try:
-                    await self._bot.edit_message_text(
-                        inline_message_id=inline_msg_id,
-                        text=content[:self.MAX_MESSAGE_LENGTH],
-                        reply_markup=None,
-                    )
-                except Exception as fallback_error:
-                    logger.warning(
-                        "[Telegram] Inline plain-text fallback failed: %s",
-                        _redact_telegram_error_text(fallback_error),
-                        exc_info=True,
-                    )
+                # Never downgrade an inline Rich failure to legacy MarkdownV2:
+                # that is what made raw HTML/LaTeX appear in the bubble. Keep
+                # the failure visible and retryable instead of sending a
+                # misleading ordinary-text replacement.
+                return SendResult(
+                    success=False,
+                    message_id=inline_msg_id,
+                    error=_redact_telegram_error_text(inline_error),
+                    retryable=True,
+                )
             return SendResult(success=True, message_id=inline_msg_id)
         
         try:
@@ -4531,7 +4528,6 @@ class TelegramAdapter(BasePlatformAdapter):
                     "editMessageText",
                     api_kwargs={
                         "inline_message_id": inline_msg_id,
-                        "text": content,
                         "rich_message": self._rich_message_payload(content),
                     },
                 )
@@ -4548,19 +4544,12 @@ class TelegramAdapter(BasePlatformAdapter):
                         _redact_telegram_error_text(inline_error),
                         exc_info=True,
                     )
-                    try:
-                        await self._bot.edit_message_text(
-                            inline_message_id=inline_msg_id,
-                            text=content[:self.MAX_MESSAGE_LENGTH],
-                            reply_markup=None,
-                        )
-                    except Exception as fallback_error:
-                        if "not modified" not in str(fallback_error).lower():
-                            logger.warning(
-                                "[Telegram] Inline streaming plain-text fallback failed: %s",
-                                _redact_telegram_error_text(fallback_error),
-                                exc_info=True,
-                            )
+                    return SendResult(
+                        success=False,
+                        message_id=inline_msg_id,
+                        error=_redact_telegram_error_text(inline_error),
+                        retryable=True,
+                    )
             return SendResult(success=True, message_id=inline_msg_id)
 
         # Rich finalize (Bot API 10.1): when the completed content has
@@ -8451,7 +8440,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 title=f"⚡ {display[:60]}",
                 description="Tap to run Hermes here",
                 input_message_content=InputMessageContent(
-                    api_kwargs={"rich_message": initial_rich},
+                    api_kwargs={"rich_message": initial_rich}
                 ),
                 reply_markup=markup,
             )],
