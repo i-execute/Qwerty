@@ -301,6 +301,11 @@ _inline_msg_id: ContextVar[Optional[str]] = ContextVar("inline_msg_id", default=
 _PREMIUM_BOT_EMOJI = "![🤖](tg://emoji?id=5931415565955503486)"
 _INLINE_DEMO_PHOTO_URL = "https://telegram.org/img/t_logo.png"
 _INLINE_DEMO_AUDIO_URL = "https://x0.at/jsol.mp3"
+_INLINE_DEMO_FIREFLY_URLS = (
+    "https://wsrv.nl/?url=https%3A%2F%2Fstatic.wikia.nocookie.net%2Fhoukai-star-rail%2Fimages%2F3%2F38%2FCharacter_Firefly_Splash_Art.png%2Frevision%2Flatest%3Fcb%3D20241007220547%26output=jpg%26w=1200",
+    "https://wsrv.nl/?url=https%3A%2F%2Fstatic.wikia.nocookie.net%2Fhoukai-star-rail%2Fimages%2F9%2F9d%2FCharacter_Firefly_Portrait.png%2Frevision%2Flatest%3Fcb%3D20240619155908%26output=jpg%26w=1200",
+    "https://wsrv.nl/?url=https%3A%2F%2Fstatic.wikia.nocookie.net%2Fhoukai-star-rail%2Fimages%2Fe%2Fe4%2FCharacter_Firefly_Introduction.png%2Frevision%2Flatest%3Fcb%3D20240423040158%26output=jpg%26w=1200",
+)
 
 _TELEGRAM_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 _TELEGRAM_IMAGE_MIME_TO_EXT = {
@@ -1764,9 +1769,12 @@ class TelegramAdapter(BasePlatformAdapter):
         # Seed the inserted Rich result with stable media and carry the same
         # references through every later edit; otherwise Telegram returns
         # Invalid message content specified when an edit introduces media.
-        if _inline_msg_id.get():
+        if inline or _inline_msg_id.get():
             demo_markdown = (
-                " ![demo](tg://photo?id=inline-demo-photo) "
+                " ![demo](tg://photo?id=inline-demo-photo)"
+                " ![Firefly](tg://photo?id=inline-demo-firefly-0)"
+                " ![Firefly](tg://photo?id=inline-demo-firefly-1)"
+                " ![Firefly](tg://photo?id=inline-demo-firefly-2) "
                 "[audio](tg://audio?id=inline-demo-audio)"
             )
             if "tg://photo?id=inline-demo-photo" not in payload["markdown"]:
@@ -1775,6 +1783,10 @@ class TelegramAdapter(BasePlatformAdapter):
             existing = {m.get("id") for m in payload["media"]}
             if "inline-demo-photo" not in existing:
                 payload["media"].append({"id": "inline-demo-photo", "media": {"type": "photo", "media": _INLINE_DEMO_PHOTO_URL}})
+            for index, url in enumerate(_INLINE_DEMO_FIREFLY_URLS):
+                ident = f"inline-demo-firefly-{index}"
+                if ident not in existing:
+                    payload["media"].append({"id": ident, "media": {"type": "photo", "media": url}})
             if "inline-demo-audio" not in existing:
                 payload["media"].append({"id": "inline-demo-audio", "media": {"type": "audio", "media": _INLINE_DEMO_AUDIO_URL}})
         if skip_entity_detection:
@@ -8462,7 +8474,8 @@ class TelegramAdapter(BasePlatformAdapter):
         # does not expose the new class yet, so use its base content object
         # with api_kwargs (which serializes as InputRichMessageContent).
         initial_rich = self._rich_message_payload(
-            f"![💯](tg://emoji?id=5384182740411240426) Подожди — inline Rich готовится."
+            f"![💯](tg://emoji?id=5384182740411240426) Подожди — inline Rich готовится.",
+            inline=True,
         )
         await query.answer(
             results=[InlineQueryResultArticle(
