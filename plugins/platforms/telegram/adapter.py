@@ -1763,6 +1763,16 @@ class TelegramAdapter(BasePlatformAdapter):
         return payload
 
     @staticmethod
+    def _rich_inline_text_fallback(content: str) -> str:
+        """Plain text companion required by the deployed inline validator."""
+        text = re.sub(r"<audio\s+src=[\"'][^\"']+[\"']\s*/?>", "[audio]", content, flags=re.I)
+        text = re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"\1", text)
+        text = re.sub(r"<[^>]+>", "", text)
+        text = re.sub(r"(`{1,3}|[*_~]|\$)", "", text)
+        text = re.sub(r"\s+", " ", _html.unescape(text)).strip()
+        return text[:4096] or "Rich message"
+
+    @staticmethod
     def _rich_inline_media(content: str) -> tuple[str, List[Dict[str, Any]]]:
         """Embed portable image/audio URLs using Bot API 10.2 media refs."""
         media: List[Dict[str, Any]] = []
@@ -4135,6 +4145,7 @@ class TelegramAdapter(BasePlatformAdapter):
                     "editMessageText",
                     api_kwargs={
                         "inline_message_id": inline_msg_id,
+                        "text": self._rich_inline_text_fallback(content),
                         "rich_message": self._rich_message_payload(content),
                     },
                 )
@@ -4527,6 +4538,7 @@ class TelegramAdapter(BasePlatformAdapter):
                     "editMessageText",
                     api_kwargs={
                         "inline_message_id": inline_msg_id,
+                        "text": self._rich_inline_text_fallback(content),
                         "rich_message": self._rich_message_payload(content),
                     },
                 )
