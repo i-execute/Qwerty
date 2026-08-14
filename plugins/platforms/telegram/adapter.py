@@ -1761,35 +1761,33 @@ class TelegramAdapter(BasePlatformAdapter):
         # reference in the markdown/html. Convert the model's portable media
         # syntax for inline edits as well as normal sends.
         rich_markdown, rich_media = self._rich_inline_media(rich_markdown)
+        # An inline message has a single text representation.  Do not introduce
+        # Rich media in a later edit: Telegram rejects an editMessageText that
+        # changes the inline representation to media.  Preserve the surrounding
+        # Rich markdown and degrade only the media references to their labels.
+        if inline or _inline_msg_id.get():
+            rich_markdown = re.sub(
+                r"!\[([^\]]*)\]\(tg://photo\?id=[^)]+\)",
+                r"\1",
+                rich_markdown,
+            )
+            rich_markdown = re.sub(
+                r"\[([^\]]*)\]\(tg://audio\?id=[^)]+\)",
+                r"\1",
+                rich_markdown,
+            )
+            rich_media = []
         payload: Dict[str, Any] = {
             "markdown": self._rich_promote_premium_emoji(rich_markdown)
         }
         if rich_media:
             payload["media"] = rich_media
-        # Inline messages cannot upload new media during editMessageText.
-        # Seed the inserted Rich result with stable media and carry the same
-        # references through every later edit; otherwise Telegram returns
-        # Invalid message content specified when an edit introduces media.
-        if inline or _inline_msg_id.get():
-            demo_markdown = (
-                " ![demo](tg://photo?id=inline-demo-photo)"
-                " ![Firefly](tg://photo?id=inline-demo-firefly-0)"
-                " ![Firefly](tg://photo?id=inline-demo-firefly-1)"
-                " ![Firefly](tg://photo?id=inline-demo-firefly-2) "
-                "[audio](tg://audio?id=inline-demo-audio)"
-            )
-            if "tg://photo?id=inline-demo-photo" not in payload["markdown"]:
-                payload["markdown"] += demo_markdown
-            payload.setdefault("media", [])
-            existing = {m.get("id") for m in payload["media"]}
-            if "inline-demo-photo" not in existing:
-                payload["media"].append({"id": "inline-demo-photo", "media": {"type": "photo", "media": _INLINE_DEMO_PHOTO_URL}})
-            for index, url in enumerate(_INLINE_DEMO_FIREFLY_URLS):
-                ident = f"inline-demo-firefly-{index}"
-                if ident not in existing:
-                    payload["media"].append({"id": ident, "media": {"type": "photo", "media": url}})
-            if "inline-demo-audio" not in existing:
-                payload["media"].append({"id": "inline-demo-audio", "media": {"type": "audio", "media": _INLINE_DEMO_AUDIO_URL}})
+        # Inline results must start as a text-only InputRichMessageContent.
+        # Telegram validates the complete inline content during answerInlineQuery;
+        # seeding it with synthetic photo/audio references makes the result
+        # invalid before the client can display the selectable result card.
+        # Real media is intentionally kept out of the generic inline path and
+        # must be implemented as a separate, media-first flow.
         if skip_entity_detection:
             payload["skip_entity_detection"] = True
         return payload
@@ -8474,10 +8472,10 @@ class TelegramAdapter(BasePlatformAdapter):
         # later Rich edits then cannot restore premium entities/media. PTB
         # does not expose the new class yet, so use its base content object
         # with api_kwargs (which serializes as InputRichMessageContent).
-        initial_rich = self._rich_message_payload(
-            f"![💯](tg://emoji?id=5384182740411240426) Подожди — inline Rich готовится.",
-            inline=True,
-        )
+        # Keep the initial result deliberately minimal.  Telegram validates the
+        # inline InputRichMessageContent before showing the result card; custom
+        # emoji/media references belong in the later Rich edit, not this probe.
+        initial_rich = {"markdown": "Подожди — inline Rich готовится."}
         await query.answer(
             results=[InlineQueryResultArticle(
                 id="hermes-inline",
