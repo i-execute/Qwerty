@@ -4138,7 +4138,6 @@ class TelegramAdapter(BasePlatformAdapter):
                         "rich_message": self._rich_message_payload(content),
                     },
                 )
-                logger.info("[Telegram] Inline editing: msg_id=%s content_len=%d", inline_msg_id, len(content))
             except Exception as inline_error:
                 logger.warning(
                     "[Telegram] Inline rich edit failed: %s",
