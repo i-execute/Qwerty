@@ -1743,7 +1743,8 @@ class TelegramAdapter(BasePlatformAdapter):
         )
 
     def _rich_message_payload(
-        self, content: str, *, skip_entity_detection: bool = False
+        self, content: str, *, skip_entity_detection: bool = False,
+        inline: bool = False,
     ) -> Dict[str, Any]:
         """Build the ``InputRichMessage`` object from RAW markdown.
 
