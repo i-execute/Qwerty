@@ -1733,9 +1733,16 @@ class TelegramAdapter(BasePlatformAdapter):
         entity_pattern = re.compile(r"!\[[^\]]*\]\(tg://emoji\?id=\d+\)")
         parts = entity_pattern.split(content)
         entities = entity_pattern.findall(content)
+        # Normalize authored custom-emoji image entities to the documented blank
+        # alt-text form. A visible glyph in the image alt is plain text in the
+        # resulting RichMessage (as seen in Telethon dumps), not premium emoji.
+        entities = [re.sub(r"!\[[^\]]*\]", "![ ]", entity) for entity in entities]
         for index, part in enumerate(parts):
             for emoji, emoji_id in cls._RICH_PREMIUM_EMOJI_IDS.items():
-                part = part.replace(emoji, f"![{emoji}](tg://emoji?id={emoji_id})")
+                # Rich Markdown custom emoji uses the tg://emoji image form.
+                # Telegram's documented form carries a blank alternative text;
+                # the glyph is only a local fallback, not the entity payload.
+                part = part.replace(emoji, f"![ ](tg://emoji?id={emoji_id})")
             parts[index] = part
         return "".join(
             part + (entities[index] if index < len(entities) else "")
@@ -1761,34 +1768,42 @@ class TelegramAdapter(BasePlatformAdapter):
         # reference in the markdown/html. Convert the model's portable media
         # syntax for inline edits as well as normal sends.
         rich_markdown, rich_media = self._rich_inline_media(rich_markdown)
-        # An inline message has a single text representation.  Do not introduce
-        # Rich media in a later edit: Telegram rejects an editMessageText that
-        # changes the inline representation to media.  Preserve the surrounding
-        # Rich markdown and degrade only the media references to their labels.
-        if inline or _inline_msg_id.get():
-            rich_markdown = re.sub(
-                r"!\[([^\]]*)\]\(tg://photo\?id=[^)]+\)",
-                r"\1",
-                rich_markdown,
-            )
-            rich_markdown = re.sub(
-                r"\[([^\]]*)\]\(tg://audio\?id=[^)]+\)",
-                r"\1",
-                rich_markdown,
-            )
-            rich_media = []
+        # Inline Rich edits may carry media as well: the Bot API 10.2
+        # InputRichMessage.media field is part of the rich_message payload used
+        # by editMessageText. Keep the model's tg:// references and matching
+        # media entries; stripping them here is exactly why the user's inline
+        # result contained photos=[] and documents=[] in Telethon.
         payload: Dict[str, Any] = {
             "markdown": self._rich_promote_premium_emoji(rich_markdown)
         }
         if rich_media:
             payload["media"] = rich_media
-        # Inline results must start as a text-only InputRichMessageContent.
-        # Telegram validates the complete inline content during answerInlineQuery;
-        # seeding it with synthetic photo/audio references makes the result
-        # invalid before the client can display the selectable result card.
-        # Real media is intentionally kept out of the generic inline path and
-        # must be implemented as a separate, media-first flow.
-        if skip_entity_detection:
+        if inline or _inline_msg_id.get():
+            # Inline editMessageText cannot upload a new file. Seed the chosen
+            # inline result with the demo media, then keep the same tg:// IDs in
+            # the final Rich edit; Telegram can reuse these already declared
+            # inline media entries without converting the message to a photo.
+            demo = [
+                ("inline-demo-photo", "photo", _INLINE_DEMO_PHOTO_URL, "Demo photo"),
+                *[
+                    (f"inline-demo-firefly-{i}", "photo", url, "Firefly")
+                    for i, url in enumerate(_INLINE_DEMO_FIREFLY_URLS)
+                ],
+                ("inline-demo-audio", "audio", _INLINE_DEMO_AUDIO_URL, "Audio"),
+            ]
+            payload.setdefault("media", [])
+            known = {item.get("id") for item in payload["media"]}
+            for ident, kind, url, label in demo:
+                if ident not in known:
+                    payload["media"].append({"id": ident, "media": {"type": kind, "media": url}})
+                scheme = "audio" if kind == "audio" else "photo"
+                ref = f"tg://{scheme}?id={ident}"
+                if ref not in payload["markdown"]:
+                    if kind == "audio":
+                        payload["markdown"] += f"\n[{label}]({ref})"
+                    else:
+                        payload["markdown"] += f"\n![{label}]({ref})"
+
             payload["skip_entity_detection"] = True
         return payload
 
@@ -1804,33 +1819,63 @@ class TelegramAdapter(BasePlatformAdapter):
 
     @staticmethod
     def _rich_inline_media(content: str) -> tuple[str, List[Dict[str, Any]]]:
-        """Embed portable image/audio URLs using Bot API 10.2 media refs."""
+        """Convert supported HTTP media syntax to Rich tg:// refs + media entries.
+
+        Rich Markdown accepts image-style media links, while model output also
+        commonly emits HTML ``img``/``audio`` tags or ordinary Markdown audio
+        links. Normalize all of those before send/edit so the API receives both
+        the reference and its matching InputRichMessageMedia object.
+        """
         media: List[Dict[str, Any]] = []
-        photo_index = 0
-        audio_index = 0
+        counters = {"photo": 0, "video": 0, "audio": 0, "animation": 0}
 
-        def photo(match: re.Match[str]) -> str:
-            nonlocal photo_index
-            alt, url = match.group(1), match.group(2)
+        def add(kind: str, url: str, label: str) -> str:
             if not url.startswith(("http://", "https://")):
-                return match.group(0)
-            ident = f"inline-photo-{photo_index}"
-            photo_index += 1
-            media.append({"id": ident, "media": {"type": "photo", "media": url}})
-            return f"![{alt}](tg://photo?id={ident})"
+                return url
+            ident = f"inline-{kind}-{counters[kind]}"
+            counters[kind] += 1
+            media.append({"id": ident, "media": {"type": kind, "media": url}})
+            scheme = "photo" if kind == "photo" else kind
+            if kind == "audio":
+                return f"[{label or 'audio'}](tg://audio?id={ident})"
+            return f"![{label}](tg://{scheme}?id={ident})"
 
-        def audio(match: re.Match[str]) -> str:
-            nonlocal audio_index
-            url = match.group(1)
-            if not url.startswith(("http://", "https://")):
-                return match.group(0)
-            ident = f"inline-audio-{audio_index}"
-            audio_index += 1
-            media.append({"id": ident, "media": {"type": "audio", "media": url}})
-            return f"[audio](tg://audio?id={ident})"
+        def image(match: re.Match[str]) -> str:
+            return add("photo", match.group(2), match.group(1))
 
-        content = re.sub(r"!\[([^\]]*)\]\((https?://[^)]+)\)", photo, content)
-        content = re.sub(r"<audio\s+src=[\"'](https?://[^\"']+)[\"']\s*/?>", audio, content, flags=re.I)
+        def html_image(match: re.Match[str]) -> str:
+            return add("photo", match.group(2), match.group(1) or "photo")
+
+        def html_audio(match: re.Match[str]) -> str:
+            return add("audio", match.group(1), "audio")
+
+        def markdown_audio(match: re.Match[str]) -> str:
+            return add("audio", match.group(2), match.group(1) or "audio")
+
+        # Markdown image title is optional: ![alt](url "caption").
+        content = re.sub(
+            r"!\[([^\]]*)\]\((https?://[^)\s]+)(?:\s+\"[^\"]*\")?\)",
+            image,
+            content,
+        )
+        content = re.sub(
+            r"<img\s+[^>]*?alt=[\"']([^\"']*)[\"'][^>]*?src=[\"'](https?://[^\"']+)[\"'][^>]*/?>",
+            html_image,
+            content,
+            flags=re.I,
+        )
+        content = re.sub(
+            r"<audio\s+[^>]*?src=[\"'](https?://[^\"']+)[\"'][^>]*>(?:.*?)</audio\s*>",
+            html_audio,
+            content,
+            flags=re.I,
+        )
+        content = re.sub(
+            r"\[([^\]]*)\]\((https?://[^)\s]+\.(?:mp3|ogg|m4a|wav)(?:\?[^)]*)?)\)",
+            markdown_audio,
+            content,
+            flags=re.I,
+        )
         return content, media
 
     def _is_rich_capability_error(self, exc: Exception) -> bool:
@@ -8475,7 +8520,10 @@ class TelegramAdapter(BasePlatformAdapter):
         # Keep the initial result deliberately minimal.  Telegram validates the
         # inline InputRichMessageContent before showing the result card; custom
         # emoji/media references belong in the later Rich edit, not this probe.
-        initial_rich = {"markdown": "Подожди — inline Rich готовится."}
+        initial_rich = self._rich_message_payload(
+            "Подожди — inline Rich готовится.",
+            inline=True,
+        )
         await query.answer(
             results=[InlineQueryResultArticle(
                 id="hermes-inline",
