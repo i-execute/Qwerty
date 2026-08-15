@@ -8503,17 +8503,19 @@ class TelegramAdapter(BasePlatformAdapter):
         # later Rich edits then cannot restore premium entities/media. PTB
         # does not expose the new class yet, so use its base content object
         # with api_kwargs (which serializes as InputRichMessageContent).
-        # The inline result card itself must be text-only. Telegram rejects an
-        # InputRichMessageContent containing media during answerInlineQuery;
-        # media can only be introduced after selection, in the final edit.
+        # Keep this constructed for the native Rich edit path; the initial
+        # selection card above intentionally uses InputTextMessageContent.
         initial_rich = {"markdown": "Подожди — inline Rich готовится."}
         await query.answer(
             results=[InlineQueryResultArticle(
                 id="hermes-inline",
                 title=f"⚡ {display[:60]}",
                 description="Tap to run Hermes here",
-                input_message_content=InputMessageContent(
-                    api_kwargs={"rich_message": initial_rich}
+                # Use a guaranteed-valid text-backed inline card for selection.
+                # The selected result is upgraded to native Rich via
+                # editMessageText once Telegram supplies inline_message_id.
+                input_message_content=InputTextMessageContent(
+                    message_text="Подожди — inline Rich готовится."
                 ),
                 reply_markup=markup,
             )],
