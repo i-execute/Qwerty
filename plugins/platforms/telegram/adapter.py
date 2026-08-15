@@ -1730,24 +1730,41 @@ class TelegramAdapter(BasePlatformAdapter):
         inside an image alt-text would otherwise nest Markdown image syntax and
         make Telegram display the ordinary fallback glyph instead.
         """
-        entity_pattern = re.compile(r"!\[[^\]]*\]\(tg://emoji\?id=\d+\)")
-        parts = entity_pattern.split(content)
-        entities = entity_pattern.findall(content)
-        # Normalize authored custom-emoji image entities to the documented blank
-        # alt-text form. A visible glyph in the image alt is plain text in the
-        # resulting RichMessage (as seen in Telethon dumps), not premium emoji.
-        entities = [re.sub(r"!\[[^\]]*\]", "![ ]", entity) for entity in entities]
-        for index, part in enumerate(parts):
-            for emoji, emoji_id in cls._RICH_PREMIUM_EMOJI_IDS.items():
-                # Rich Markdown custom emoji uses the tg://emoji image form.
-                # Telegram's documented form carries a blank alternative text;
-                # the glyph is only a local fallback, not the entity payload.
-                part = part.replace(emoji, f"![ ](tg://emoji?id={emoji_id})")
-            parts[index] = part
-        return "".join(
-            part + (entities[index] if index < len(entities) else "")
-            for index, part in enumerate(parts)
+        # Rich Markdown permits inline Rich HTML. Use the explicit tg-emoji
+        # element instead of Markdown image syntax: live Telethon dumps showed
+        # the latter degrading to TextPlain in edited inline messages.
+        entity_pattern = re.compile(
+            r"!\[([^\]]*)\]\(tg://emoji\?id=(\d+)\)"
+            r"|<tg-emoji\s+emoji-id=[\"'](\d+)[\"']>.*?</tg-emoji>",
+            re.I | re.S,
         )
+        parts = entity_pattern.split(content)
+        # re.split with capture groups is unsuitable here; protect authored
+        # entities first, promote plain glyphs, then restore them as tg-emoji.
+        protected: List[str] = []
+
+        def protect(match: re.Match[str]) -> str:
+            emoji_id = match.group(2) or match.group(3)
+            alt = match.group(1) or ""
+            fallback = next(
+                (glyph for glyph, known_id in cls._RICH_PREMIUM_EMOJI_IDS.items()
+                 if known_id == emoji_id),
+                alt.strip() or "🙂",
+            )
+            protected.append(
+                f'<tg-emoji emoji-id="{emoji_id}">{fallback}</tg-emoji>'
+            )
+            return f"\x00TGEMOJI{len(protected) - 1}\x00"
+
+        promoted = entity_pattern.sub(protect, content)
+        for emoji, emoji_id in cls._RICH_PREMIUM_EMOJI_IDS.items():
+            promoted = promoted.replace(
+                emoji,
+                f'<tg-emoji emoji-id="{emoji_id}">{emoji}</tg-emoji>',
+            )
+        for index, entity in enumerate(protected):
+            promoted = promoted.replace(f"\x00TGEMOJI{index}\x00", entity)
+        return promoted
 
     def _rich_message_payload(
         self, content: str, *, skip_entity_detection: bool = False,
@@ -1778,14 +1795,13 @@ class TelegramAdapter(BasePlatformAdapter):
         }
         if rich_media:
             payload["media"] = rich_media
-        if inline or _inline_msg_id.get():
-            # A generic inline result must remain text-backed. Telegram's
-            # answerInlineQuery validator rejects InputRichMessage.media here
-            # when the media is a fresh HTTP upload. Media is handled by a
-            # separate media-first inline result, not injected into this card.
+        if inline:
+            # The initial card is intentionally text-only. Fresh HTTP media is
+            # not valid in the answerInlineQuery content; the final inline edit
+            # may reference media using the rich_message media field.
             payload.pop("media", None)
             payload["markdown"] = re.sub(
-                r"!\[[^\]]*\]\(tg://(?:photo|audio)\?id=[^)]+\)",
+                r"!\[[^\]]*\]\(tg://(?:photo|video|audio)\?id=[^)]+\)",
                 "",
                 payload["markdown"],
             )
@@ -8543,6 +8559,30 @@ class TelegramAdapter(BasePlatformAdapter):
         # custom-emoji/media-capable representation before the final answer.
         self._inline_edits[str(user_id)] = str(inline_id)
         logger.info("[Telegram] Inline edit stored: user=%s msg_id=%s — dispatching to agent", user_id, inline_id)
+        # Telegram's inline premium-emoji gate is stateful in practice: the
+        # initial inline result may serialize the fallback glyph, while a
+        # first edit of that same inline message causes the Rich parser to
+        # materialize the custom-emoji entity. Mirror the proven userbot flow
+        # and prime the inline message with a minimal Rich edit before the
+        # agent's full response is generated.
+        try:
+            prime = self._rich_message_payload(
+                "![ ](tg://emoji?id=5447595110743168717) Inline Rich готовится."
+            )
+            await self._bot.do_api_request(
+                "editMessageText",
+                api_kwargs={
+                    "inline_message_id": str(inline_id),
+                    "text": "Inline Rich готовится.",
+                    "rich_message": prime,
+                },
+            )
+            logger.info("[Telegram] Inline Rich prime edit complete: msg_id=%s", inline_id)
+        except Exception as prime_error:
+            logger.warning(
+                "[Telegram] Inline Rich prime edit failed: %s",
+                _redact_telegram_error_text(prime_error),
+            )
         token = _inline_msg_id.set(str(inline_id))
         try:
             from gateway.session import SessionSource
