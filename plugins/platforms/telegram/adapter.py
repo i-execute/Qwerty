@@ -1779,31 +1779,17 @@ class TelegramAdapter(BasePlatformAdapter):
         if rich_media:
             payload["media"] = rich_media
         if inline or _inline_msg_id.get():
-            # Inline editMessageText cannot upload a new file. Seed the chosen
-            # inline result with the demo media, then keep the same tg:// IDs in
-            # the final Rich edit; Telegram can reuse these already declared
-            # inline media entries without converting the message to a photo.
-            demo = [
-                ("inline-demo-photo", "photo", _INLINE_DEMO_PHOTO_URL, "Demo photo"),
-                *[
-                    (f"inline-demo-firefly-{i}", "photo", url, "Firefly")
-                    for i, url in enumerate(_INLINE_DEMO_FIREFLY_URLS)
-                ],
-                ("inline-demo-audio", "audio", _INLINE_DEMO_AUDIO_URL, "Audio"),
-            ]
-            payload.setdefault("media", [])
-            known = {item.get("id") for item in payload["media"]}
-            for ident, kind, url, label in demo:
-                if ident not in known:
-                    payload["media"].append({"id": ident, "media": {"type": kind, "media": url}})
-                scheme = "audio" if kind == "audio" else "photo"
-                ref = f"tg://{scheme}?id={ident}"
-                if ref not in payload["markdown"]:
-                    if kind == "audio":
-                        payload["markdown"] += f"\n[{label}]({ref})"
-                    else:
-                        payload["markdown"] += f"\n![{label}]({ref})"
-
+            # A generic inline result must remain text-backed. Telegram's
+            # answerInlineQuery validator rejects InputRichMessage.media here
+            # when the media is a fresh HTTP upload. Media is handled by a
+            # separate media-first inline result, not injected into this card.
+            payload.pop("media", None)
+            payload["markdown"] = re.sub(
+                r"!\[[^\]]*\]\(tg://(?:photo|audio)\?id=[^)]+\)",
+                "",
+                payload["markdown"],
+            )
+        if skip_entity_detection:
             payload["skip_entity_detection"] = True
         return payload
 
@@ -8517,13 +8503,10 @@ class TelegramAdapter(BasePlatformAdapter):
         # later Rich edits then cannot restore premium entities/media. PTB
         # does not expose the new class yet, so use its base content object
         # with api_kwargs (which serializes as InputRichMessageContent).
-        # Keep the initial result deliberately minimal.  Telegram validates the
-        # inline InputRichMessageContent before showing the result card; custom
-        # emoji/media references belong in the later Rich edit, not this probe.
-        initial_rich = self._rich_message_payload(
-            "Подожди — inline Rich готовится.",
-            inline=True,
-        )
+        # The inline result card itself must be text-only. Telegram rejects an
+        # InputRichMessageContent containing media during answerInlineQuery;
+        # media can only be introduced after selection, in the final edit.
+        initial_rich = {"markdown": "Подожди — inline Rich готовится."}
         await query.answer(
             results=[InlineQueryResultArticle(
                 id="hermes-inline",
