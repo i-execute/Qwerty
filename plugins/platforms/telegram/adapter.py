@@ -1784,7 +1784,11 @@ class TelegramAdapter(BasePlatformAdapter):
         # requires an InputRichMessage.media entry plus a tg://photo|audio
         # reference in the markdown/html. Convert the model's portable media
         # syntax for inline edits as well as normal sends.
-        rich_markdown, rich_media = self._rich_inline_media(rich_markdown)
+        # Rich Markdown/HTML supports direct HTTP(S) media URLs and Telegram
+        # fetches them server-side. Do not rewrite them into InputRichMessage
+        # media entries: that form is for explicit uploaded/reused media and
+        # made inline editMessageText reject the whole rich message.
+        rich_markdown, rich_media = rich_markdown, []
         # Inline Rich edits may carry media as well: the Bot API 10.2
         # InputRichMessage.media field is part of the rich_message payload used
         # by editMessageText. Keep the model's tg:// references and matching
@@ -8574,7 +8578,9 @@ class TelegramAdapter(BasePlatformAdapter):
                 api_kwargs={
                     "inline_message_id": str(inline_id),
                     "text": "Inline Rich готовится.",
-                    "rich_message": prime,
+                    "rich_message": self._rich_message_payload(
+                        "![ ](tg://emoji?id=5447595110743168717) Inline Rich готовится.",
+                    ),
                 },
             )
             logger.info("[Telegram] Inline Rich prime edit complete: msg_id=%s", inline_id)
