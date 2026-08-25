@@ -264,3 +264,5 @@ MIT — see [LICENSE](LICENSE).
 Built by [Nous Research](https://nousresearch.com).
 
 <!-- Test notification check: 2026-08-25 12:29:53 -->
+
+<!-- Test notification: 2026-08-25 12:34:37 -->
