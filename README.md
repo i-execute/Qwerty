@@ -1,6 +1,6 @@
 <p align="center">
   <img src="assets/banner.png" alt="Hermes Agent" width="100%">
-</p>
+</p> 
 
 # Hermes Agent ☤
 <p align="center">
