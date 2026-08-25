@@ -262,3 +262,5 @@ scripts/run_tests.sh
 MIT — see [LICENSE](LICENSE).
 
 Built by [Nous Research](https://nousresearch.com).
+
+<!-- Test notification check: 2026-08-25 12:29:53 -->
