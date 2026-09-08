@@ -1,7 +1,7 @@
 """
 Telegram platform adapter.
 
-Uses python-telegram-bot library for:
+Uses the goygram hybrid MTProto bot for:
 - Receiving messages from users/groups
 - Sending responses back
 - Handling media and commands
@@ -500,7 +500,7 @@ class TelegramAdapter(BasePlatformAdapter):
         # chat is redrawn, while final rich messages remain useful.
         self._rich_drafts_enabled: bool = self._coerce_bool_extra("rich_drafts", False)
         # Latched off after a capability failure on sendRichMessage /
-        # sendRichMessageDraft (e.g. older python-telegram-bot without the
+        # sendRichMessageDraft (e.g. a runtime without the
         # endpoint) so later sends skip the doomed rich attempt entirely.
         self._rich_send_disabled: bool = False
         self._rich_draft_disabled: bool = False
@@ -551,7 +551,6 @@ class TelegramAdapter(BasePlatformAdapter):
         # While True, send() short-circuits to a failure so callers
         # (cron live-adapter branch) fall through to standalone delivery.
         self._send_path_degraded: bool = False
-        self._general_request_drain_lock = asyncio.Lock()
         # DM Topics: map of topic_name -> message_thread_id (populated at startup)
         self._dm_topics: Dict[str, int] = {}
         # Track forum chats where we've already registered bot commands
@@ -2689,49 +2688,13 @@ class TelegramAdapter(BasePlatformAdapter):
 
 
 
-    def _get_general_request_drain_lock(self) -> asyncio.Lock:
-        lock = getattr(self, "_general_request_drain_lock", None)
-        if lock is None:
-            lock = asyncio.Lock()
-            self._general_request_drain_lock = lock
-        return lock
-
     async def _drain_general_connections_after_pool_timeout(self) -> None:
         """Reset the Bot API request pool after a confirmed send pool timeout.
 
-        ``send_message`` uses PTB's general request pool (``_request[1]``).
-        When httpx reports that this pool is exhausted, PTB says the request
-        was not sent, so it is safe to reset the wedged pool before retrying.
+        With the goygram MTProto transport there is no shared Bot API request
+        pool to drain; the method remains a no-op hook for the send retry path.
         """
-        bot = getattr(getattr(self, "_app", None), "bot", None)
-        if bot is None:
-            bot = getattr(self, "_bot", None)
-        if bot is None:
-            return
-        try:
-            # PTB 22.x: _request is (get_updates_request, general_request).
-            general_req = bot._request[1]  # noqa: SLF001
-        except Exception:
-            return
-        async with self._get_general_request_drain_lock():
-            try:
-                await general_req.shutdown()
-            except Exception:
-                logger.debug(
-                    "[%s] General request shutdown failed after pool timeout (non-fatal)",
-                    self.name, exc_info=True,
-                )
-            try:
-                await general_req.initialize()
-                logger.warning(
-                    "[%s] General request pool drained after Telegram pool timeout",
-                    self.name,
-                )
-            except Exception:
-                logger.debug(
-                    "[%s] General request re-initialize failed after pool timeout (non-fatal)",
-                    self.name, exc_info=True,
-                )
+        return
 
 
 
@@ -4323,7 +4286,7 @@ class TelegramAdapter(BasePlatformAdapter):
         channels still rely on the edit-based path.
 
         We additionally require ``self._bot`` to expose ``send_message_draft``
-        (added to python-telegram-bot in 22.6); older PTB installs gracefully
+        (provided by the goygram MTProto shim); runtimes without it gracefully
         fall back to the edit path even on DMs.
         """
         if not self._bot or not hasattr(self._bot, "send_message_draft"):

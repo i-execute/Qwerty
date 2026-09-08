@@ -882,7 +882,7 @@ def run_doctor(args):
     
     optional_packages = [
         ("croniter", "Croniter (cron expressions)"),
-        ("telegram", "python-telegram-bot"),
+        ("goygram", "goygram (Telegram MTProto)"),
         ("discord", "discord.py"),
     ]
     

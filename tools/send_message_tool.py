@@ -794,7 +794,7 @@ async def _send_to_platform(platform, pconfig, chat_id, message, thread_id=None,
 
     from gateway.platforms.base import BasePlatformAdapter, utf16_len
 
-    # Telegram adapter import is optional (requires python-telegram-bot)
+    # Telegram adapter import is optional (requires goygram)
     try:
         from plugins.platforms.telegram.adapter import TelegramAdapter
         _telegram_available = True
@@ -1482,7 +1482,7 @@ async def _send_telegram(token, chat_id, message, media_files=None, thread_id=No
             result["warnings"] = warnings
         return result
     except ImportError:
-        return {"error": "python-telegram-bot not installed. Run: pip install python-telegram-bot"}
+        return {"error": "goygram not installed. Run: pip install goygram"}
     except Exception as e:
         return _error(f"Telegram send failed: {e}")
 
