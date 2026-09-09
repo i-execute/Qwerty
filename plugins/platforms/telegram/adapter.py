@@ -3246,9 +3246,13 @@ class TelegramAdapter(BasePlatformAdapter):
             async def _mt_inline(query):  # noqa: ANN001
                 await self._dispatch_mt_inline(query)
 
-            @app.on_inline_choice
-            async def _mt_inline_choice(query):  # noqa: ANN001
-                await self._dispatch_mt_inline_choice(query)
+            @app.on_update
+            async def _mt_raw_update(update):  # noqa: ANN001
+                update_type = getattr(update, "update_type", None) or (
+                    update.get("update_type") if hasattr(update, "get") else None
+                )
+                if update_type == "updateBotInlineSend":
+                    await self._dispatch_mt_inline_choice(update)
 
             _max_connect = 8
             connected = False
@@ -8154,6 +8158,8 @@ class TelegramAdapter(BasePlatformAdapter):
         user.id = sender_id if sender_id is not None else chat_id
         user.is_bot = False
         user.first_name = (raw.get("from_name") or "") or None
+        user.full_name = user.first_name
+        user.last_name = None
         user.username = None
 
         chat = SimpleNamespace()
@@ -8242,9 +8248,17 @@ class TelegramAdapter(BasePlatformAdapter):
             if getattr(msg, "is_me", False):
                 return
             raw = msg.raw if hasattr(msg, "raw") else (msg if isinstance(msg, dict) else {})
-            if not isinstance(raw, dict) or raw.get("_") != "message":
+            if not isinstance(raw, dict):
+                raw = {}
+            if raw.get("_") != "message":
+                inner = raw.get("raw_update")
+                tl_msg = inner.get("message") if isinstance(inner, dict) else None
+                if isinstance(tl_msg, dict) and tl_msg.get("_") == "message":
+                    raw = tl_msg
+            if raw.get("_") != "message":
                 return
-            ptb_msg = self._mt_to_ptb_message(msg)
+            carrier = SimpleNamespace(raw=raw)
+            ptb_msg = self._mt_to_ptb_message(carrier)
             upd = self._mt_update_wrapper(ptb_msg, int(raw.get("id") or 0))
             text = (getattr(ptb_msg, "text", "") or "").strip()
             is_command = bool(text.startswith("/"))
@@ -8268,16 +8282,33 @@ class TelegramAdapter(BasePlatformAdapter):
                 raw = {}
             cq = SimpleNamespace()
             cq.id = cbobj.id if hasattr(cbobj, "id") else raw.get("query_id")
-            cq.data = self._mt_decode_callback_data(cbobj)
+            data = self._mt_decode_callback_data(cbobj)
+            if data is None:
+                data = getattr(cbobj, "data", None)
+                if data is None and isinstance(raw, dict):
+                    data = raw.get("data")
+                if isinstance(data, (bytes, bytearray)):
+                    data = bytes(data).decode("utf-8", errors="replace")
+            cq.data = data if isinstance(data, str) else None
             cq.from_user = None
             from_id = raw.get("user_id")
+            if from_id is None:
+                from_id = raw.get("from_id")
+                if from_id is None:
+                    from_id = getattr(cbobj, "from_id", None)
             u = SimpleNamespace()
             u.id = from_id
             u.is_bot = False
             cq.from_user = u
             cq.message = None
             cq.inline_message_id = None
+            cq.chat_id = raw.get("chat_id") or getattr(cbobj, "chat_id", None)
             msg_id = raw.get("msg_id")
+            if msg_id is not None:
+                try:
+                    msg_id = int(msg_id)
+                except (TypeError, ValueError):
+                    msg_id = None
             if msg_id:
                 m = SimpleNamespace()
                 m.id = msg_id
@@ -8317,6 +8348,10 @@ class TelegramAdapter(BasePlatformAdapter):
             iq.offset = raw.get("offset") or ""
             iq.chat_type = None
             from_id = raw.get("user_id")
+            if from_id is None:
+                from_id = raw.get("from_id")
+                if from_id is None:
+                    from_id = getattr(query, "from_id", None)
             u2 = SimpleNamespace()
             u2.id = from_id
             u2.is_bot = False
@@ -8330,13 +8365,22 @@ class TelegramAdapter(BasePlatformAdapter):
             logger.exception("[%s] MTProto inline query dispatch failed", self.name)
 
     async def _dispatch_mt_inline_choice(self, query: Any) -> None:
-        """Route a goygram on_inline_choice update (chosen inline result)."""
+        """Route a goygram updateBotInlineSend update (chosen inline result)."""
         try:
             raw = query.raw if hasattr(query, "raw") else (query if isinstance(query, dict) else {})
             if not isinstance(raw, dict):
                 raw = {}
             upd = SimpleNamespace()
-            upd.chosen_inline_result = query
+            chosen = SimpleNamespace()
+            chosen.query = getattr(query, "query", None) or raw.get("query")
+            chosen.inline_message_id = (
+                getattr(query, "inline_message_id", None)
+                or raw.get("inline_message_id")
+                or raw.get("result_id")
+            )
+            from_id = getattr(query, "from_id", None) or raw.get("from_id")
+            chosen.from_user = SimpleNamespace(id=from_id)
+            upd.chosen_inline_result = chosen
             upd.effective_message = None
             upd.update_id = 0
             upd.inline_query = None
