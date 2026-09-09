@@ -1123,6 +1123,7 @@ def _guest_test_adapter(*, guest_mode=True, require_mention=True, allowed_chats=
         },
     )
     adapter = object.__new__(TelegramAdapter)
+    adapter._app = None
     adapter.config = config
     adapter._bot = SimpleNamespace(id=999, username="hermes_bot")
     adapter._mention_patterns = adapter._compile_mention_patterns()

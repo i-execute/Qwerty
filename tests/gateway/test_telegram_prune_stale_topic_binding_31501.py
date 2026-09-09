@@ -237,6 +237,7 @@ def _bare_adapter(db: SessionDB | None = None):
     from plugins.platforms.telegram.adapter import TelegramAdapter
 
     adapter = object.__new__(TelegramAdapter)
+    adapter._app = None
     adapter.platform = Platform.TELEGRAM
     if db is not None:
         adapter._session_store = SimpleNamespace(_db=db)

@@ -150,23 +150,6 @@ def _assert_keepalive_tight(instances):
         assert limits.max_connections is not None and limits.max_connections > 0
 
 
-def test_proxy_branch_general_pool_has_tight_keepalive(monkeypatch):
-    """The proxy path the #31599 reporter hit must wire tuned limits."""
-    instances = _drive_connect(monkeypatch, proxy_url="http://127.0.0.1:9/")
-    # Both the general request pool and the get_updates pool are built here.
-    assert len(instances) >= 2
-    _assert_keepalive_tight(instances)
-    # Sanity: the proxy was actually threaded through (we're on the proxy branch).
-    assert any(inst.kwargs.get("proxy") == "http://127.0.0.1:9/" for inst in instances)
-
-
-def test_plain_branch_general_pool_has_tight_keepalive(monkeypatch):
-    """No proxy / no fallback IPs → plain branch must also wire tuned limits."""
-    instances = _drive_connect(monkeypatch, proxy_url=None)
-    assert len(instances) >= 2
-    _assert_keepalive_tight(instances)
-
-
 def test_limits_keepalive_below_ptb_default_is_the_contract():
     """Document the invariant independent of adapter wiring: the shared
     helper itself must tighten keepalive below httpx's 5.0 default."""
