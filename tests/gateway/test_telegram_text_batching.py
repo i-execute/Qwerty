@@ -22,6 +22,7 @@ def _make_adapter():
 
     config = PlatformConfig(enabled=True, token="test-token")
     adapter = object.__new__(TelegramAdapter)
+    adapter._app = None
     adapter._platform = Platform.TELEGRAM
     adapter.platform = Platform.TELEGRAM
     adapter.config = config

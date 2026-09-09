@@ -124,6 +124,7 @@ def _capture_build_source_is_bot(is_bot: bool):
     from plugins.platforms.telegram.adapter import TelegramAdapter
 
     adapter = object.__new__(TelegramAdapter)
+    adapter._app = None
     adapter.platform = Platform.TELEGRAM
     adapter.config = SimpleNamespace(extra={})
     message = _build_telegram_message(is_bot=is_bot)

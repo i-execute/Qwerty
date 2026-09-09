@@ -19,6 +19,7 @@ import mimetypes
 import html as _html
 import re
 import threading
+import time
 from types import SimpleNamespace
 from contextvars import ContextVar
 from datetime import datetime, timezone
@@ -272,6 +273,18 @@ class ParseMode:
     MARKDOWN_V2 = "MarkdownV2"
     HTML = "HTML"
     MARKDOWN = "Markdown"
+
+
+class ChatType:
+    """String-valued chat-type constants mirroring telegram.constants.
+
+    The MT→PTB message bridge fills ``chat.type`` with these strings, so
+    comparisons like ``chat.type == ChatType.PRIVATE`` keep working.
+    """
+    PRIVATE = "private"
+    GROUP = "group"
+    SUPERGROUP = "supergroup"
+    CHANNEL = "channel"
 
 
 def InlineKeyboardButton(text: str, **kwargs: Any) -> Dict[str, Any]:
@@ -649,14 +662,30 @@ class TelegramAdapter(BasePlatformAdapter):
 
     def _notification_kwargs_tl(self, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """MTProto flags equivalent of _notification_kwargs (silent / notify)."""
-        out: Dict[str, Any] = {}
-        if (metadata or {}).get("silent"):
-            out["silent"] = True
-        return out
+        if getattr(self, "_notifications_mode", "important") != "important":
+            out: Dict[str, Any] = {}
+            if (metadata or {}).get("silent"):
+                out["silent"] = True
+            return out
+        if (metadata or {}).get("notify"):
+            return {}
+        return {"silent": True}
 
     def _extract_sent_message(self, result: Any) -> Optional[Dict[str, Any]]:
-        """Extract the sent message dict from an mt_req sendMessage result."""
+        """Extract the sent message dict from a send result.
+
+        Accepts mt_req dict results (``{"result": {"updates": [...]}}`` or a
+        bare message dict) and object-shaped results (``message_id`` attribute
+        on SimpleNamespace/Mock-style returns, e.g. Bot API-shaped callers).
+        """
+        if result is None:
+            return None
         if not isinstance(result, dict):
+            obj_id = getattr(result, "message_id", None)
+            if obj_id is None:
+                obj_id = getattr(result, "id", None)
+            if obj_id is not None:
+                return {"id": obj_id, "message_id": obj_id}
             return None
         inner = result.get("result") if isinstance(result.get("result"), dict) else result
         if not isinstance(inner, dict):
@@ -877,8 +906,13 @@ class TelegramAdapter(BasePlatformAdapter):
         if not user_id:
             return True
 
-        # Adapter-level allow_from: when set, it is the sole authority.
-        adapter_allow_from = self.config.extra.get("allow_from")
+        # Adapter-level allow_from / group_allow_from: when set, they are the
+        # sole authority.  Group chats use group_allow_from; DMs use allow_from.
+        chat_type = source.chat_type or ""
+        if chat_type in ("group", "forum"):
+            adapter_allow_from = self.config.extra.get("group_allow_from")
+        else:
+            adapter_allow_from = self.config.extra.get("allow_from")
         if adapter_allow_from is not None:
             allowed = {str(u).strip() for u in adapter_allow_from if str(u).strip()}
             return user_id in allowed or "*" in allowed
@@ -1303,9 +1337,7 @@ class TelegramAdapter(BasePlatformAdapter):
     def _link_preview_kwargs(self) -> Dict[str, Any]:
         if not getattr(self, "_disable_link_previews", False):
             return {}
-        if LinkPreviewOptions is not None:
-            return {"link_preview_options": LinkPreviewOptions(is_disabled=True)}
-        return {"disable_web_page_preview": True}
+        return {"no_webpage": True}
 
     # ------------------------------------------------------------------
     # Bot API 10.1 Rich Messages (sendRichMessage)
@@ -1814,6 +1846,16 @@ class TelegramAdapter(BasePlatformAdapter):
         @property
         def username(self) -> str:
             return getattr(self._adapter, "_bot_username", "") or ""
+
+        async def get_me(self) -> Any:
+            me = await self._app.get_me()
+            if isinstance(me, dict):
+                return me
+            username = getattr(me, "username", None)
+            me_id = getattr(me, "id", None)
+            if username or me_id is not None:
+                return {"id": me_id, "username": username, "_": "user"}
+            return me
 
         def _peer(self, chat_id: Any) -> Any:
             return normalize_telegram_chat_id(chat_id)
@@ -2470,11 +2512,19 @@ class TelegramAdapter(BasePlatformAdapter):
                 message="",
                 random_id=secrets.randbits(63),
                 rich_message=self._rich_input_tl(content),
+                reply_to=(
+                    {"_": "inputReplyToMessage", "reply_to_msg_id": int(reply_to_id)}
+                    if reply_to_id is not None
+                    else None
+                ),
+                no_webpage=True if getattr(self, "_disable_link_previews", False) else None,
                 **({k: v for k, v in thread_kwargs.items() if v is not None}),
                 **(self._notification_kwargs_tl(metadata)),
             )
             msg = result.get("result") if isinstance(result, dict) else None
-            if msg is None and isinstance(result, dict):
+            if msg is None:
+                # Object-shaped results (test doubles / Bot API-shaped
+                # callers) carry the id directly.
                 msg = result
         except Exception as exc:
             if self._is_rich_fallback_error(exc):
@@ -3135,10 +3185,12 @@ class TelegramAdapter(BasePlatformAdapter):
                 "[%s] goygram not installed. Run: pip install goygram",
                 self.name,
             )
+            self._set_fatal_error("missing_dependency", "goygram not installed. Run: pip install goygram", retryable=False)
             return False
-        
+
         if not self.config.token:
             logger.error("[%s] No bot token configured", self.name)
+            self._set_fatal_error("missing_credentials", "No Telegram bot token configured", retryable=False)
             return False
         
         try:
@@ -3325,6 +3377,7 @@ class TelegramAdapter(BasePlatformAdapter):
             collect(task)
         for task in list(self._pending_text_batch_tasks.values()):
             collect(task)
+        collect(getattr(self, "_polling_error_task", None))
 
         for task in pending_tasks:
             task.cancel()
@@ -3337,6 +3390,10 @@ class TelegramAdapter(BasePlatformAdapter):
         self._pending_photo_batches.clear()
         self._pending_text_batch_tasks.clear()
         self._pending_text_batches.clear()
+        polling_task = getattr(self, "_polling_error_task", None)
+        if polling_task is not None and (polling_task.done() or polling_task is not asyncio.current_task()):
+            if polling_task in pending_tasks or polling_task.done():
+                self._polling_error_task = None
 
     async def disconnect(self) -> None:
         """Stop polling/webhook, cancel pending delayed deliveries, and disconnect."""
@@ -3562,41 +3619,30 @@ class TelegramAdapter(BasePlatformAdapter):
                 msg = None
                 for _send_attempt in range(3):
                     try:
-                        # Try Markdown first (MTProto entities), fall back to
-                        # plain text if entity parsing fails.
+                        # Derive MTProto entities from the MarkdownV2 chunk;
+                        # the shim re-derives them from parse_mode identically.
                         entities, no_webpage = self._entities_for_markdown(chunk)
-                        mt_kwargs: Dict[str, Any] = {
-                            "peer": normalize_telegram_chat_id(chat_id),
-                            "message": chunk,
-                            "random_id": secrets.randbits(63),
+                        # Single transport: route through the _MTBot shim so
+                        # tests and production share one call surface.
+                        shim_kwargs: Dict[str, Any] = {
+                            "chat_id": normalize_telegram_chat_id(chat_id),
+                            "text": chunk,
                         }
                         if entities:
-                            mt_kwargs["entities"] = entities
+                            shim_kwargs["parse_mode"] = ParseMode.MARKDOWN_V2
                         if no_webpage or getattr(self, "_disable_link_previews", False):
-                            mt_kwargs["no_webpage"] = True
-                        if reply_to_id is not None:
-                            mt_kwargs["reply_to"] = {"_": "inputReplyToMessage", "reply_to_msg_id": int(reply_to_id)}
-                        mt_kwargs.update(self._notification_kwargs_tl(metadata))
-                        for _tk, _tv in thread_kwargs.items():
-                            if _tv is not None and _tk in ("reply_to", "top_msg_id"):
-                                mt_kwargs[_tk] = _tv
-                        try:
-                            result = await self._app.mt_req("messages.sendMessage", **mt_kwargs)
-                        except Exception as md_error:
-                            # Entity parsing failed server-side; send plain text.
-                            if "entity" in str(md_error).lower() or "parse" in str(md_error).lower() or "markdown" in str(md_error).lower():
-                                logger.warning("[%s] MT entity parse failed, falling back to plain text: %s", self.name, md_error)
-                                plain_chunk = _strip_mdv2(chunk)
-                                mt_kwargs["message"] = plain_chunk
-                                mt_kwargs.pop("entities", None)
-                                result = await self._app.mt_req("messages.sendMessage", **mt_kwargs)
-                            else:
-                                raise
+                            shim_kwargs["no_webpage"] = True
+                        shim_kwargs["reply_to_message_id"] = int(reply_to_id) if reply_to_id is not None else None
+                        shim_kwargs.update(self._notification_kwargs_tl(metadata))
+                        for _tk in ("reply_to", "top_msg_id", "message_thread_id", "direct_messages_topic_id"):
+                            if _tk in thread_kwargs:
+                                shim_kwargs[_tk] = thread_kwargs[_tk]
+                        result = await self._bot.send_message(**shim_kwargs)
                         msg = self._extract_sent_message(result)
                         break  # success
-                    except _NetErr as send_err:
-                        # BadRequestError in goygram is a ValueError subclass
-                        # with the TL error string; classify by text.
+                    except (ValueError, OSError) as send_err:
+                        # Network and API errors in goygram surface as
+                        # OSError/ValueError subclasses; classify by text.
                         err_text = str(send_err)
                         if self._is_thread_not_found_error(send_err) and effective_thread_id is not None:
                             if private_dm_topic_send or (metadata and metadata.get("telegram_dm_topic_created_for_send")):
@@ -3625,7 +3671,7 @@ class TelegramAdapter(BasePlatformAdapter):
                             # messages aren't redirected back to it
                             # (#31501).
                             logger.warning(
-                                "[%s] Thread %s not found, retrying without topic anchor",
+                                "[%s] Thread %s not found, retrying without message_thread_id",
                                 self.name, effective_thread_id,
                             )
                             self._prune_stale_dm_topic_binding(
@@ -3671,7 +3717,22 @@ class TelegramAdapter(BasePlatformAdapter):
                         # — don't retry them as network failures.
                         if "badrequesterror" in err_lower or "[400]" in err_text:
                             raise
+                        # A timeout may mean the request already reached
+                        # Telegram and was delivered — retrying would send
+                        # duplicate messages. Fail immediately instead.
+                        # Pool/connect timeouts (request never left the
+                        # process) stay retryable below.
                         is_pool_timeout = self._looks_like_pool_timeout(send_err)
+                        is_connect_timeout = self._looks_like_connect_timeout(send_err)
+                        if (
+                            not is_pool_timeout
+                            and not is_connect_timeout
+                            and (
+                                isinstance(send_err, (asyncio.TimeoutError, TimeoutError))
+                                or ("timed out" in err_lower or "timeout" in err_lower)
+                            )
+                        ):
+                            raise
                         if is_pool_timeout:
                             await self._drain_general_connections_after_pool_timeout()
                         if _send_attempt < 2:
@@ -3698,7 +3759,7 @@ class TelegramAdapter(BasePlatformAdapter):
                                 await asyncio.sleep(wait)
                                 continue
                         raise
-                message_ids.append(str(msg.message_id))
+                message_ids.append(str((msg or {}).get("message_id") if isinstance(msg, dict) else getattr(msg, "message_id", None)))
 
             # Re-trigger typing indicator after sending a message.
             # Telegram clears the typing state when a new message is delivered,
@@ -4508,11 +4569,15 @@ class TelegramAdapter(BasePlatformAdapter):
                     InlineKeyboardButton("✅ Session", callback_data=f"ea:session:{approval_id}")
                 )
                 if allow_permanent:
+                    # Two-by-two layout (regression d48bf743f: a single
+                    # flattened row of four buttons is unreadable on mobile).
                     buttons.append(
                         InlineKeyboardButton("✅ Always", callback_data=f"ea:always:{approval_id}")
                     )
             buttons.append(InlineKeyboardButton("❌ Deny", callback_data=f"ea:deny:{approval_id}"))
-            keyboard = InlineKeyboardMarkup([buttons])
+            # Pair buttons two per row; a trailing odd button gets its own row.
+            rows = [buttons[i:i + 2] for i in range(0, len(buttons), 2)]
+            keyboard = InlineKeyboardMarkup(rows)
 
             kwargs: Dict[str, Any] = {
                 "chat_id": normalize_telegram_chat_id(chat_id),
@@ -5359,10 +5424,16 @@ class TelegramAdapter(BasePlatformAdapter):
 
         # Every callback must be acknowledged quickly. PTB otherwise leaves a
         # spinner on the client and late handler failures look like /model did
-        # nothing. Individual branches may answer again with a useful status;
-        # Telegram treats that second acknowledgement as a harmless no-op.
+        # nothing. Callbacks below that ALWAYS answer with a status (ea:, sc:,
+        # cl:, update_prompt:) must not be pre-acked — the branch's own
+        # answer carries the status text and Telegram allows only one
+        # answerCallbackQuery per query.
+        self_answered = data.startswith(("ea:", "sc:", "cl:", "update_prompt:"))
+        acked = False
         try:
-            await query.answer()
+            if not self_answered:
+                await query.answer()
+                acked = True
         except Exception:
             logger.debug("[Telegram] Callback pre-ack failed", exc_info=True)
 
@@ -5417,7 +5488,8 @@ class TelegramAdapter(BasePlatformAdapter):
                 try:
                     approval_id = int(parts[2])
                 except (ValueError, IndexError):
-                    await query.answer(text="Invalid approval data.")
+                    if not acked:
+                        await query.answer(text="Invalid approval data.")
                     return
 
                 # Only authorized users may click approval buttons.
@@ -5429,12 +5501,14 @@ class TelegramAdapter(BasePlatformAdapter):
                     thread_id=str(query_thread_id) if query_thread_id is not None else None,
                     user_name=query_user_name,
                 ):
-                    await query.answer(text="⛔ You are not authorized to approve commands.")
+                    if not acked:
+                        await query.answer(text="⛔ You are not authorized to approve commands.")
                     return
 
                 session_key = self._approval_state.pop(approval_id, None)
                 if not session_key:
-                    await query.answer(text="This approval has already been resolved.")
+                    if not acked:
+                        await query.answer(text="This approval has already been resolved.")
                     return
 
                 # Map choice to human-readable label
@@ -5447,18 +5521,6 @@ class TelegramAdapter(BasePlatformAdapter):
                 user_display = getattr(query.from_user, "first_name", "User")
                 label = label_map.get(choice, "Resolved")
 
-                await query.answer(text=label)
-
-                # Edit message to show decision, remove buttons
-                try:
-                    await query.edit_message_text(
-                        text=self.format_message(f"{label} by {user_display}"),
-                        parse_mode=ParseMode.MARKDOWN_V2,
-                        reply_markup=None,
-                    )
-                except Exception:
-                    pass  # non-fatal if edit fails
-
                 # Resolve the approval — unblocks the agent thread
                 try:
                     from tools.approval import resolve_gateway_approval
@@ -5470,6 +5532,36 @@ class TelegramAdapter(BasePlatformAdapter):
                 except Exception as exc:
                     logger.error("Failed to resolve gateway approval from Telegram button: %s", exc)
                     count = 0
+
+                if not count:
+                    # Stale tap: the approval wait already timed out and the
+                    # command was denied fail-closed.  Do NOT render the
+                    # "✅ Approved" label — it would claim approval that never
+                    # happened (false-confirmation UX regression).
+                    if not acked:
+                        await query.answer(text="This approval has expired.")
+                    try:
+                        await query.edit_message_text(
+                            text=self.format_message("⌛ This approval has expired — ask again."),
+                            parse_mode=ParseMode.MARKDOWN_V2,
+                            reply_markup=None,
+                        )
+                    except Exception:
+                        pass  # non-fatal if edit fails
+                    return
+
+                if not acked:
+                    await query.answer(text=label)
+
+                # Edit message to show decision, remove buttons
+                try:
+                    await query.edit_message_text(
+                        text=self.format_message(f"{label} by {user_display}"),
+                        parse_mode=ParseMode.MARKDOWN_V2,
+                        reply_markup=None,
+                    )
+                except Exception:
+                    pass  # non-fatal if edit fails
 
                 # Resume the typing indicator — paused when the approval was
                 # sent (gateway/run.py).  The text /approve and /deny paths
@@ -5495,12 +5587,14 @@ class TelegramAdapter(BasePlatformAdapter):
                     thread_id=str(query_thread_id) if query_thread_id is not None else None,
                     user_name=query_user_name,
                 ):
-                    await query.answer(text="⛔ You are not authorized to answer this prompt.")
+                    if not acked:
+                        await query.answer(text="⛔ You are not authorized to answer this prompt.")
                     return
 
                 session_key = self._slash_confirm_state.pop(confirm_id, None)
                 if not session_key:
-                    await query.answer(text="This prompt has already been resolved.")
+                    if not acked:
+                        await query.answer(text="This prompt has already been resolved.")
                     return
 
                 label_map = {
@@ -5511,7 +5605,8 @@ class TelegramAdapter(BasePlatformAdapter):
                 user_display = getattr(query.from_user, "first_name", "User")
                 label = label_map.get(choice, "Resolved")
 
-                await query.answer(text=label)
+                if not acked:
+                    await query.answer(text=label)
 
                 try:
                     await query.edit_message_text(
@@ -5595,12 +5690,14 @@ class TelegramAdapter(BasePlatformAdapter):
                     thread_id=str(query_thread_id) if query_thread_id is not None else None,
                     user_name=query_user_name,
                 ):
-                    await query.answer(text="⛔ You are not authorized to answer this prompt.")
+                    if not acked:
+                        await query.answer(text="⛔ You are not authorized to answer this prompt.")
                     return
 
                 session_key = self._clarify_state.get(clarify_id)
                 if not session_key:
-                    await query.answer(text="This prompt has already been resolved.")
+                    if not acked:
+                        await query.answer(text="This prompt has already been resolved.")
                     return
 
                 user_display = getattr(query.from_user, "first_name", "User")
@@ -5626,7 +5723,8 @@ class TelegramAdapter(BasePlatformAdapter):
                         await self._notify_clarify_expired(query, user_display)
                         return
 
-                    await query.answer(text="✏️ Type your answer in the chat.")
+                    if not acked:
+                        await query.answer(text="✏️ Type your answer in the chat.")
                     try:
                         await query.edit_message_text(
                             text=f"❓ {query.message.text or ''}\n\n<i>Awaiting typed response from {_html.escape(user_display)}…</i>",
@@ -5641,7 +5739,8 @@ class TelegramAdapter(BasePlatformAdapter):
                 try:
                     idx = int(choice_token)
                 except (ValueError, TypeError):
-                    await query.answer(text="Invalid choice.")
+                    if not acked:
+                        await query.answer(text="Invalid choice.")
                     return
 
                 # Look up the choice text from the entry registered in the
@@ -5672,7 +5771,8 @@ class TelegramAdapter(BasePlatformAdapter):
                     resolved = False
 
                 if resolved:
-                    await query.answer(text=f"✓ {resolved_text[:60]}")
+                    if not acked:
+                        await query.answer(text=f"✓ {resolved_text[:60]}")
                     try:
                         await query.edit_message_text(
                             text=f"❓ {_html.escape(query.message.text or '')}\n\n<b>{_html.escape(user_display)}:</b> {_html.escape(resolved_text)}",
@@ -5708,9 +5808,11 @@ class TelegramAdapter(BasePlatformAdapter):
             thread_id=str(query_thread_id) if query_thread_id is not None else None,
             user_name=query_user_name,
         ):
-            await query.answer(text="⛔ You are not authorized to answer update prompts.")
+            if not acked:
+                await query.answer(text="⛔ You are not authorized to answer update prompts.")
             return
-        await query.answer(text=f"Sent '{answer}' to the update process.")
+        if not acked:
+            await query.answer(text=f"Sent '{answer}' to the update process.")
         # Edit the message to show the choice and remove buttons
         label = "Yes" if answer == "y" else "No"
         try:
@@ -6452,8 +6554,8 @@ class TelegramAdapter(BasePlatformAdapter):
             )
             # Fallback: download and upload as file (supports up to 10MB)
             try:
-                import httpx
-                async with httpx.AsyncClient(timeout=30.0) as client:
+                from tools.url_safety import create_ssrf_safe_async_client
+                async with create_ssrf_safe_async_client(timeout=30.0) as client:
                     resp = await client.get(image_url)
                     resp.raise_for_status()
                     image_data = resp.content
@@ -7198,22 +7300,171 @@ class TelegramAdapter(BasePlatformAdapter):
             return cls._GENERAL_TOPIC_THREAD_ID
         return None
 
+    def _current_bot_username(self) -> str:
+        """Return this bot's live @username (lowercased, no leading ``@``).
+
+        Prefers the most recently observed handle over the connect-time
+        self-resolve snapshot. After a BotFather rename the cached handle
+        silently stops matching, so every mention comparison fails and the
+        exclusive-mention gate concludes the message is addressed to a
+        different bot. Observing the handle from inbound updates closes that
+        window without an extra API round-trip.
+        """
+        observed = getattr(self, "_bot_username_observed", None)
+        if observed:
+            return observed
+        from_bot = (getattr(self._bot, "username", None) or "")
+        if from_bot:
+            return from_bot.lstrip("@").lower()
+        return (getattr(self, "_bot_username", None) or "").lstrip("@").lower()
+
+    def _note_bot_username(self, username: Optional[str]) -> None:
+        """Record the bot's current @username, logging real renames."""
+        handle = (username or "").lstrip("@").lower()
+        if not handle:
+            return
+        previous = getattr(self, "_bot_username_observed", None) or (
+            (getattr(self, "_bot_username", None) or "").lstrip("@").lower()
+        )
+        if previous == handle:
+            return
+        self._bot_username_observed = handle
+        self._bot_username = handle
+        self._bot_identity_checked_at = time.monotonic()
+        if previous:
+            logger.info(
+                "[%s] Telegram bot username changed: @%s -> @%s "
+                "(mention routing now follows the new handle)",
+                self.name, previous, handle,
+            )
+
+    def _observe_bot_identity_from_message(self, message: Any) -> None:
+        """Learn our own handle from a message Telegram says we authored.
+
+        Telegram stamps the *current* username on the bot's own outgoing
+        messages and on ``reply_to_message`` when a user replies to us, so a
+        rename is observable from the update stream itself — no API call
+        needed.  Only trusted when the user id matches this bot, so another
+        account's handle can never be adopted as our own.
+        """
+        bot_id = getattr(self, "_bot_user_id", None) or getattr(self._bot, "id", None)
+        if bot_id is None:
+            return
+        for candidate in (
+            getattr(message, "from_user", None),
+            getattr(getattr(message, "reply_to_message", None), "from_user", None),
+        ):
+            if candidate is None:
+                continue
+            if getattr(candidate, "id", None) != bot_id:
+                continue
+            self._note_bot_username(getattr(candidate, "username", None))
+
+    def _bot_identity_is_fresh(self) -> bool:
+        """True when identity was re-read within the TTL.
+
+        ``None`` means never checked, which is always stale. Do not fold the
+        sentinel into ``0.0``: monotonic clocks have an arbitrary epoch that
+        can legitimately be smaller than the TTL on a freshly-booted host,
+        which would make "never" look like "just now".
+        """
+        checked_at = getattr(self, "_bot_identity_checked_at", None)
+        if checked_at is None:
+            return False
+        return (time.monotonic() - checked_at) < self._BOT_IDENTITY_TTL_SECONDS
+
+    async def _refresh_bot_identity(self, *, force: bool = False) -> None:
+        """Re-read the bot's identity from Telegram when the cache may be stale.
+
+        ``await app.get_me()`` is the self-resolve point in the goygram
+        hybrid runtime. Best-effort: a failed probe leaves the last known
+        handle in place.
+        """
+        if not force and self._bot_identity_is_fresh():
+            return
+        app = getattr(self, "_app", None)
+        bot = getattr(self, "_bot", None)
+        probe = None
+        if bot is not None and callable(getattr(bot, "get_me", None)):
+            probe = bot.get_me()
+        elif app is not None and callable(getattr(app, "get_me", None)):
+            probe = app.get_me()
+        if probe is None:
+            return
+        try:
+            me = await asyncio.wait_for(probe, self._BOT_IDENTITY_PROBE_TIMEOUT)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            logger.debug(
+                "[%s] Telegram identity refresh failed (keeping @%s): %s",
+                self.name, self._current_bot_username() or "unknown", exc,
+            )
+            return
+        self._bot_identity_checked_at = time.monotonic()
+        username = me.get("username") if isinstance(me, dict) else getattr(me, "username", None)
+        self._note_bot_username(username)
+
+    _BOT_IDENTITY_PROBE_TIMEOUT = 15.0
+    _BOT_IDENTITY_TTL_SECONDS = 300.0
+
+    def _schedule_bot_identity_recheck(self) -> None:
+        """Fire a TTL-guarded identity refresh in the background.
+
+        Called when routing is about to discard a message because the bot
+        handles it names don't include ours — the exact symptom of a stale
+        username after a BotFather rename. The TTL in
+        ``_refresh_bot_identity`` bounds this to one getMe per
+        ``_BOT_IDENTITY_TTL_SECONDS``, so a busy group that legitimately
+        addresses other bots cannot turn this into per-message API traffic.
+        Fire-and-forget: the current message still routes on what we know now.
+        """
+        existing = getattr(self, "_bot_identity_refresh_task", None)
+        if existing is not None and not existing.done():
+            return
+        if self._bot_identity_is_fresh():
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        task = loop.create_task(self._refresh_bot_identity())
+        self._bot_identity_refresh_task = task
+        tracked = getattr(self, "_background_tasks", None)
+        if isinstance(tracked, set):
+            tracked.add(task)
+            task.add_done_callback(tracked.discard)
+
     def _is_reply_to_bot(self, message: Any) -> bool:
         if not self._bot or not getattr(message, "reply_to_message", None):
             return False
         reply_user = getattr(message.reply_to_message, "from_user", None)
         return bool(reply_user and getattr(reply_user, "id", None) == getattr(self._bot, "id", None))
 
-    @staticmethod
-    def _extract_bot_mention_usernames(message: Any) -> set[str]:
+    @classmethod
+    def _extract_bot_mention_usernames(cls, message: Any, self_username: str = "") -> set[str]:
         """Extract explicit Telegram bot usernames mentioned in text/captions.
 
-        Telegram bot usernames are 5-32 characters and must end in "bot".
+        Foreign handles are only treated as bot mentions when they look
+        bot-shaped (``...bot``), which keeps human ``@handles`` from acting as
+        routing hints. ``self_username`` opts our OWN handle into the same set
+        regardless of shape: collectible (Fragment) usernames can be assigned
+        to bots and need not end in "bot" (@jarvis, @pic), and a bot addressed
+        by such a handle must still recognise itself.
+
         Entity mentions are authoritative. The raw-text fallback is intentionally narrow so
         entity-less mobile/client variants still work without treating email
         addresses or arbitrary substrings as bot mentions.
         """
         mentioned_bot_usernames: set[str] = set()
+        own = (self_username or "").lstrip("@").lower()
+
+        def _is_bot_handle(handle: str) -> bool:
+            if not handle:
+                return False
+            if own and handle == own:
+                return True
+            return bool(re.fullmatch(r"[a-z0-9_]{2,31}bot", handle, re.IGNORECASE))
 
         def _iter_sources():
             yield getattr(message, "text", None) or "", getattr(message, "entities", None) or []
@@ -7232,7 +7483,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 entity_text = source_text[offset:offset + length].strip()
                 if entity_type == "mention":
                     handle = entity_text.lstrip("@").lower()
-                    if re.fullmatch(r"[a-z0-9_]{2,29}bot", handle, re.IGNORECASE):
+                    if _is_bot_handle(handle):
                         mentioned_bot_usernames.add(handle)
                     continue
 
@@ -7244,7 +7495,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 if at_index < 0:
                     continue
                 command_target = entity_text[at_index + 1:].strip().lower()
-                if re.fullmatch(r"[a-z0-9_]{2,29}bot", command_target, re.IGNORECASE):
+                if _is_bot_handle(command_target):
                     mentioned_bot_usernames.add(command_target)
 
         # Entity-less fallback for older/client-specific updates. If Telegram
@@ -7253,8 +7504,10 @@ class TelegramAdapter(BasePlatformAdapter):
         for raw_text, entities in _iter_sources():
             if not raw_text or entities:
                 continue
-            for match in re.finditer(r"(?i)(?<![A-Za-z0-9_`/])@([A-Za-z0-9_]{2,29}bot)\b", raw_text):
-                mentioned_bot_usernames.add(match.group(1).lower())
+            for match in re.finditer(r"(?i)(?<![A-Za-z0-9_`/])@([A-Za-z0-9_]{2,31})\b", raw_text):
+                handle = match.group(1).lower()
+                if _is_bot_handle(handle):
+                    mentioned_bot_usernames.add(handle)
 
         return mentioned_bot_usernames
 
@@ -7262,8 +7515,8 @@ class TelegramAdapter(BasePlatformAdapter):
         if not self._bot:
             return False
 
-        bot_username = (getattr(self._bot, "username", None) or "").lstrip("@").lower()
-        bot_id = getattr(self._bot, "id", None)
+        bot_username = self._current_bot_username()
+        bot_id = getattr(self, "_bot_user_id", None) or getattr(self._bot, "id", None)
         expected = f"@{bot_username}" if bot_username else None
 
         def _iter_sources():
@@ -7310,8 +7563,8 @@ class TelegramAdapter(BasePlatformAdapter):
                         continue
                     if command_text[at_index:].strip().lower() == expected:
                         return True
-        if bot_username and re.fullmatch(r"[a-z0-9_]{2,29}bot", bot_username, re.IGNORECASE):
-            return bot_username in self._extract_bot_mention_usernames(message)
+        if bot_username:
+            return bot_username in self._extract_bot_mention_usernames(message, bot_username)
         return False
 
     def _explicit_bot_mentions_exclude_self(self, message: Any) -> bool:
@@ -7324,19 +7577,27 @@ class TelegramAdapter(BasePlatformAdapter):
         adapter's own bot username, this adapter should ignore the message.
 
         MessageEntity values are preferred, but some Telegram clients expose
-        selected bot handles as plain text in group messages. The raw-text
-        fallback is intentionally limited to usernames ending in "bot", which
-        Telegram requires for bot accounts.
+        selected bot handles as plain text in group messages. Foreign handles
+        are limited to the ``...bot`` shape so human @handles never suppress
+        this bot; our own handle is matched by identity, so a collectible
+        username without that suffix still counts as addressing us.
         """
         if not self._bot:
             return False
 
-        bot_username = (getattr(self._bot, "username", None) or "").lstrip("@").lower()
+        bot_username = self._current_bot_username()
         if not bot_username:
             return False
 
-        mentioned_bot_usernames = self._extract_bot_mention_usernames(message)
-        return bool(mentioned_bot_usernames) and bot_username not in mentioned_bot_usernames
+        mentioned_bot_usernames = self._extract_bot_mention_usernames(message, bot_username)
+        excludes_self = bool(mentioned_bot_usernames) and bot_username not in mentioned_bot_usernames
+        if excludes_self:
+            # Either the message really is for another bot, or our cached
+            # handle is stale after a rename and we are about to ignore a
+            # message addressed to us. Re-check identity out of band (TTL
+            # bounded) so the mistake self-corrects instead of persisting.
+            self._schedule_bot_identity_recheck()
+        return excludes_self
 
     def _message_matches_mention_patterns(self, message: Any) -> bool:
         if not self._mention_patterns:
@@ -7358,9 +7619,10 @@ class TelegramAdapter(BasePlatformAdapter):
         return self._telegram_guest_mode() and self._message_mentions_bot(message)
 
     def _clean_bot_trigger_text(self, text: Optional[str]) -> Optional[str]:
-        if not text or not self._bot or not getattr(self._bot, "username", None):
+        bot_username = self._current_bot_username()
+        if not text or not bot_username:
             return text
-        username = re.escape(self._bot.username)
+        username = re.escape(bot_username)
         cleaned = re.sub(rf"(?i)@{username}\b[,:\-]*\s*", "", text).strip()
         return cleaned or text
 
@@ -7453,9 +7715,15 @@ class TelegramAdapter(BasePlatformAdapter):
         observe_prompt = self._telegram_group_observe_channel_prompt()
         channel_prompt = f"{event.channel_prompt}\n\n{observe_prompt}" if event.channel_prompt else observe_prompt
         if event.message_type == MessageType.COMMAND:
+            # Commands must retain the original source (with user_id) so
+            # slash-access control (_check_slash_access) can identify the
+            # sender.  Replacing the source with an anonymised shared source
+            # (user_id=None) causes admin-only commands like /new to be
+            # denied even when the sender is an admin, because
+            # SlashAccessPolicy.is_admin(None) is always False.
+            # Still inject channel_prompt for group context.
             return dataclasses.replace(
                 event,
-                source=shared_source,
                 channel_prompt=channel_prompt,
             )
         return dataclasses.replace(
@@ -7723,6 +7991,13 @@ class TelegramAdapter(BasePlatformAdapter):
         # environments like groups/supergroups where the bot can see its own
         # messages).  Without this, outbound messages are counted as incoming
         # unread in the Hermes inbox (#52363).
+        #
+        # Telegram stamps our CURRENT @username on those own-messages and on
+        # reply_to_message, so learn the live handle here — before any mention
+        # gate routes on it. Otherwise a BotFather rename leaves the stale
+        # handle in place and the exclusive-mention gate reads a message
+        # addressed to us as one addressed to some other bot.
+        self._observe_bot_identity_from_message(message)
         if self._is_own_message(message):
             return False
 

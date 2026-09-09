@@ -29,6 +29,7 @@ def _make_adapter(allow_from=None, allowed_chats=None, group_allowed_chats=None,
     extra.update(extra_overrides)
 
     adapter = object.__new__(TelegramAdapter)
+    adapter._app = None
     adapter.platform = Platform.TELEGRAM
     adapter.config = PlatformConfig(enabled=True, token="fake-token", extra=extra)
     adapter._bot = SimpleNamespace(id=999, username="test_bot")

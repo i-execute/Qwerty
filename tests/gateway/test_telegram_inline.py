@@ -9,6 +9,7 @@ from plugins.platforms.telegram.adapter import TelegramAdapter, _inline_msg_id
 
 def _adapter() -> TelegramAdapter:
     adapter = object.__new__(TelegramAdapter)
+    adapter._app = SimpleNamespace(mt_req=AsyncMock())
     adapter.config = PlatformConfig(enabled=True)
     adapter._bot = SimpleNamespace(
         do_api_request=AsyncMock(),
@@ -34,10 +35,11 @@ def test_inline_send_edits_target_without_dm_send():
         _inline_msg_id.reset(token)
 
     assert result == SendResult(success=True, message_id="inline-42")
-    adapter._bot.do_api_request.assert_awaited_once()
-    method, = adapter._bot.do_api_request.await_args.args
-    assert method == "editMessageText"
-    assert adapter._bot.do_api_request.await_args.kwargs["api_kwargs"]["inline_message_id"] == "inline-42"
+    adapter._app.mt_req.assert_awaited_once()
+    method, = adapter._app.mt_req.await_args.args
+    assert method == "messages.editInlineBotMessage"
+    assert adapter._app.mt_req.await_args.kwargs["id"] == "inline-42"
+    assert adapter._bot.do_api_request.assert_not_awaited() is None
 
 
 def test_plain_send_does_not_use_inline_edit():
