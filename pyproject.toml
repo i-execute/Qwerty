@@ -226,7 +226,7 @@ vertex = ["google-auth==2.55.1"]
 azure-identity = ["azure-identity==1.25.3"]
 termux = [
   # Baseline Android / Termux path for reliable fresh installs.
-  "goygram==0.7.71",
+  "goygram==0.7.72",
   "hermes-agent[cron]",
   "hermes-agent[cli]",
   "hermes-agent[mcp]",
