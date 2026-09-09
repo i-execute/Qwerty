@@ -3794,6 +3794,14 @@ def run_job(
             except (Exception, KeyboardInterrupt) as e:
                 logger.debug("Job '%s': failed to end session: %s", job_id, e)
             try:
+                _apply_cron_session_retention(_session_db, job_id)
+            except (Exception, KeyboardInterrupt) as e:
+                logger.debug(
+                    "Job '%s': failed to apply cron session retention: %s",
+                    job_id,
+                    e,
+                )
+            try:
                 _session_db.close()
             except (Exception, KeyboardInterrupt) as e:
                 logger.debug("Job '%s': failed to close SQLite session store: %s", job_id, e)
@@ -3810,6 +3818,55 @@ def run_job(
                 defer_agent_teardown.append(agent)
         else:
             _teardown_cron_agent(agent, job_id)
+
+
+def _apply_cron_session_retention(session_db, job_id: str) -> None:
+    """Trim one cron job's run-session history down to the retention window.
+
+    A recurring job creates one persistent session per execution
+    (``cron_{job_id}_{timestamp}``), so a 15-minute watchdog accumulates
+    thousands of rows forever without this. The retention window is
+    ``cron.session_retention`` in config.yaml (default 50); ``keep_all``-style
+    null/``all`` values disable trimming. Runs are ordered newest-first, so
+    the just-finished run — already ended above — is always inside the keep
+    window and never deleted by its own retention pass.
+
+    Errors never propagate (callers wrap too, but keep this self-sufficient):
+    a broken retention setting must not fail the job's delivery/marking.
+    """
+    try:
+        import yaml
+        _cfg_path = str(_get_hermes_home() / "config.yaml")
+        _cron_cfg: dict = {}
+        if os.path.exists(_cfg_path):
+            with open(_cfg_path, encoding="utf-8") as _f:
+                _loaded = yaml.safe_load(_f) or {}
+            _cron_cfg = _loaded.get("cron", {}) if isinstance(_loaded, dict) else {}
+        _raw_retention = _cron_cfg.get("session_retention", 50)
+    except Exception:
+        _raw_retention = 50
+    if _raw_retention is None:
+        return
+    if isinstance(_raw_retention, str) and _raw_retention.strip().lower() in ("all", "keep_all", "keep-all"):
+        return
+    try:
+        keep_last = int(_raw_retention)
+    except (TypeError, ValueError):
+        return
+    if keep_last < 0:
+        return
+    roots_deleted, total_deleted = session_db.delete_cron_job_sessions(
+        job_id, keep_last=keep_last
+    )
+    if roots_deleted or total_deleted:
+        logger.info(
+            "Job '%s': cron session retention kept %s run session(s), removed %s "
+            "session row(s) (%s run root(s))",
+            job_id,
+            keep_last,
+            total_deleted,
+            roots_deleted,
+        )
 
 
 def _teardown_cron_agent(agent, job_id: str) -> None:

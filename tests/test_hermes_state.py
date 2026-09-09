@@ -7079,6 +7079,213 @@ class TestListCronJobRuns:
         assert "idx_sessions_source" in detail, detail
 
 
+class TestDeleteCronJobSessions:
+    """``delete_cron_job_sessions`` is the retention / job-removal sink.
+
+    A recurring job creates one persistent session per execution, so this
+    method's job is to keep exactly the newest ``keep_last`` runs and delete
+    everything older — together with each doomed run's compression-continuation
+    chain and delegate children, while never touching other jobs' runs,
+    non-cron sessions, or runs inside the keep window.
+    """
+
+    def _seed_run(self, db, job_id: str, idx: int, started_at: float):
+        sid = f"cron_{job_id}_{idx:08d}"
+        db.create_session(session_id=sid, source="cron")
+        db.append_message(sid, role="user", content=f"run {idx} for {job_id}")
+        db.append_message(sid, role="assistant", content="done")
+        db.end_session(sid, "cron_complete")
+        db._conn.execute(
+            "UPDATE sessions SET started_at = ? WHERE id = ?", (started_at, sid)
+        )
+        db._conn.commit()
+        return sid
+
+    def test_keeps_newest_runs_and_deletes_older(self, db):
+        base = 1_700_000_000.0
+        for i in range(12):
+            self._seed_run(db, "alpha", i, base + i * 60)
+
+        roots, total = db.delete_cron_job_sessions("alpha", keep_last=5)
+
+        assert roots == 7
+        assert total == 7
+        remaining = [
+            r["id"]
+            for r in db._conn.execute(
+                "SELECT id FROM sessions WHERE id LIKE 'cron_alpha_%' "
+                "ORDER BY started_at DESC"
+            ).fetchall()
+        ]
+        # The 5 newest runs survive; the 7 oldest are gone.
+        assert len(remaining) == 5
+        assert remaining[0] == "cron_alpha_00000011"
+        assert remaining[-1] == "cron_alpha_00000007"
+        # Messages went with their sessions.
+        for sid in remaining:
+            count = db._conn.execute(
+                "SELECT COUNT(*) FROM messages WHERE session_id = ?", (sid,)
+            ).fetchone()[0]
+            assert count == 2
+
+    def test_keep_last_zero_deletes_every_run(self, db):
+        base = 1_700_000_000.0
+        for i in range(4):
+            self._seed_run(db, "alpha", i, base + i * 60)
+
+        roots, total = db.delete_cron_job_sessions("alpha", keep_last=0)
+
+        assert roots == 4
+        assert total == 4
+        assert db._conn.execute(
+            "SELECT COUNT(*) FROM sessions WHERE id LIKE 'cron_alpha_%'"
+        ).fetchone()[0] == 0
+
+    def test_only_touches_target_job(self, db):
+        base = 1_700_000_000.0
+        for i in range(6):
+            self._seed_run(db, "alpha", i, base + i * 60)
+        for i in range(3):
+            self._seed_run(db, "beta", i, base + i * 60)
+        db.create_session(session_id="cli_alpha_00000000", source="cli")
+
+        db.delete_cron_job_sessions("alpha", keep_last=0)
+
+        assert db._conn.execute(
+            "SELECT COUNT(*) FROM sessions WHERE id LIKE 'cron_alpha_%'"
+        ).fetchone()[0] == 0
+        assert db._conn.execute(
+            "SELECT COUNT(*) FROM sessions WHERE id LIKE 'cron_beta_%'"
+        ).fetchone()[0] == 3
+        assert db._conn.execute(
+            "SELECT COUNT(*) FROM sessions WHERE id = 'cli_alpha_00000000'"
+        ).fetchone()[0] == 1
+
+    def test_deletes_continuations_of_doomed_roots_keeps_kept_root_tips(self, db):
+        """A compression rotation mid-run gives the continuation a fresh
+        ``YYYYMMDD_HHMMSS_hex`` id (not the cron prefix), so prefix deletion
+        alone would orphan the tips. Doomed roots must take their chains with
+        them; kept roots must keep theirs.
+        """
+        base = 1_700_000_000.0
+        for i in range(10):
+            self._seed_run(db, "alpha", i, base + i * 60)
+
+        # Continuation on a DOOMED (old) root — the oldest run.
+        doomed_root = "cron_alpha_00000000"
+        db._conn.execute(
+            "UPDATE sessions SET end_reason = 'compression' WHERE id = ?",
+            (doomed_root,),
+        )
+        tip_old = "20260101_000000_deadbeef"
+        db.create_session(session_id=tip_old, source="cron")
+        db._conn.execute(
+            "UPDATE sessions SET parent_session_id = ?, started_at = ? WHERE id = ?",
+            (doomed_root, base + 1000, tip_old),
+        )
+        # Continuation on a KEPT (new) root — the newest run.
+        kept_root = "cron_alpha_00000009"
+        db._conn.execute(
+            "UPDATE sessions SET end_reason = 'compression' WHERE id = ?",
+            (kept_root,),
+        )
+        tip_new = "20260101_000000_cafecafe"
+        db.create_session(session_id=tip_new, source="cron")
+        db._conn.execute(
+            "UPDATE sessions SET parent_session_id = ?, started_at = ? WHERE id = ?",
+            (kept_root, base + 2000, tip_new),
+        )
+        db._conn.commit()
+
+        roots, total = db.delete_cron_job_sessions("alpha", keep_last=5)
+
+        # 5 doomed roots + the old tip; the kept root's tip survives.
+        assert roots == 5
+        assert total == 6
+        assert db._conn.execute(
+            "SELECT COUNT(*) FROM sessions WHERE id = ?", (tip_old,)
+        ).fetchone()[0] == 0
+        assert db._conn.execute(
+            "SELECT COUNT(*) FROM sessions WHERE id = ?", (tip_new,)
+        ).fetchone()[0] == 1
+
+    def test_do_not_sweep_non_compression_children(self, db):
+        """A branch/subagent child whose parent link isn't a compression
+        rotation must never be deleted by cron retention (orphan-don't-delete
+        contract) — it is detached, not destroyed.
+        """
+        base = 1_700_000_000.0
+        for i in range(8):
+            self._seed_run(db, "alpha", i, base + i * 60)
+        doomed_root = "cron_alpha_00000000"
+        branch = "branch-child-0001"
+        db.create_session(session_id=branch, source="cli")
+        db._conn.execute(
+            "UPDATE sessions SET parent_session_id = ? WHERE id = ?",
+            (doomed_root, branch),
+        )
+        db._conn.commit()
+
+        db.delete_cron_job_sessions("alpha", keep_last=3)
+
+        row = db._conn.execute(
+            "SELECT parent_session_id FROM sessions WHERE id = ?", (branch,)
+        ).fetchone()
+        assert row is not None
+        assert row["parent_session_id"] is None
+
+    def test_cascade_deletes_delegate_children(self, db):
+        """Delegate subagent runs tagged with ``_delegate_from`` follow their
+        parent into deletion — same contract as ``delete_session``.
+        """
+        base = 1_700_000_000.0
+        for i in range(6):
+            self._seed_run(db, "alpha", i, base + i * 60)
+        doomed_root = "cron_alpha_00000002"
+        delegate = "delegate-child-0001"
+        db.create_session(session_id=delegate, source="tool")
+        db._conn.execute(
+            "UPDATE sessions SET model_config = ? WHERE id = ?",
+            (f'{{"_delegate_from": "{doomed_root}"}}', delegate),
+        )
+        db._conn.commit()
+
+        roots, total = db.delete_cron_job_sessions("alpha", keep_last=3)
+
+        # 3 doomed roots + 1 delegate child.
+        assert total == 4
+        assert db._conn.execute(
+            "SELECT COUNT(*) FROM sessions WHERE id = ?", (delegate,)
+        ).fetchone()[0] == 0
+
+    def test_empty_job_is_noop(self, db):
+        self._seed_run(db, "beta", 0, 1_700_000_000.0)
+
+        roots, total = db.delete_cron_job_sessions("alpha", keep_last=5)
+
+        assert (roots, total) == (0, 0)
+
+    def test_archived_runs_respect_retention_regardless(self, db):
+        """Retention is automatic housekeeping, not a user statement of keep:
+        archived runs age out exactly like unarchived ones (``include_archived``
+        only guards the CLI surface, which defaults to sparing them only for
+        manual ``--include-archived``-less prune; retention always cleans).
+        """
+        base = 1_700_000_000.0
+        for i in range(6):
+            sid = self._seed_run(db, "alpha", i, base + i * 60)
+            if i == 0:
+                db._conn.execute(
+                    "UPDATE sessions SET archived = 1 WHERE id = ?", (sid,)
+                )
+        db._conn.commit()
+
+        roots, total = db.delete_cron_job_sessions("alpha", keep_last=2)
+
+        assert roots == 4
+        assert total == 4
+
+
 def test_gateway_session_peer_round_trip_and_recovery(db):
     db.create_session(
         "gw-session",
