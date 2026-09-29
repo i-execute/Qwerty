@@ -17,7 +17,7 @@ class GetSpillConfigTests(unittest.TestCase):
             # load_config is resolved at call time via local import;
             # patch the module's source instead.
             pass
-        with patch("hermes_cli.config.load_config", return_value={}):
+        with patch("qwerty_cli.config.load_config", return_value={}):
             cfg = hos.get_spill_config()
         self.assertTrue(cfg["enabled"])
         self.assertEqual(cfg["max_chars"], hos.DEFAULT_MAX_CHARS)
@@ -37,7 +37,7 @@ class GetSpillConfigTests(unittest.TestCase):
                 }
             }
         }
-        with patch("hermes_cli.config.load_config", return_value=user_cfg):
+        with patch("qwerty_cli.config.load_config", return_value=user_cfg):
             cfg = hos.get_spill_config()
         self.assertFalse(cfg["enabled"])
         self.assertEqual(cfg["max_chars"], 500)
@@ -56,7 +56,7 @@ class GetSpillConfigTests(unittest.TestCase):
                 }
             }
         }
-        with patch("hermes_cli.config.load_config", return_value=user_cfg):
+        with patch("qwerty_cli.config.load_config", return_value=user_cfg):
             cfg = hos.get_spill_config()
         self.assertEqual(cfg["max_chars"], hos.DEFAULT_MAX_CHARS)
         self.assertEqual(cfg["preview_head"], hos.DEFAULT_PREVIEW_HEAD)
@@ -64,7 +64,7 @@ class GetSpillConfigTests(unittest.TestCase):
         self.assertIsNone(cfg["directory"])
 
     def test_load_config_exception_is_swallowed(self):
-        with patch("hermes_cli.config.load_config", side_effect=RuntimeError("bad")):
+        with patch("qwerty_cli.config.load_config", side_effect=RuntimeError("bad")):
             cfg = hos.get_spill_config()
         self.assertEqual(cfg["max_chars"], hos.DEFAULT_MAX_CHARS)
         self.assertTrue(cfg["enabled"])
@@ -72,7 +72,7 @@ class GetSpillConfigTests(unittest.TestCase):
 
 class SpillIfOversizedTests(unittest.TestCase):
     def setUp(self):
-        self.tmpdir = tempfile.mkdtemp(prefix="hermes-spill-test-")
+        self.tmpdir = tempfile.mkdtemp(prefix="qwerty-spill-test-")
 
     def tearDown(self):
         import shutil
@@ -141,7 +141,7 @@ class SpillIfOversizedTests(unittest.TestCase):
         # base directory.
         hos.spill_if_oversized(big, session_id="../../etc/passwd", config=cfg)
         # Nothing leaks outside self.tmpdir.
-        self.assertFalse(Path("/etc/passwd-hermes-test").exists())
+        self.assertFalse(Path("/etc/passwd-qwerty-test").exists())
         # A sanitised path should exist under tmpdir.
         entries = list(Path(self.tmpdir).rglob("*.txt"))
         self.assertEqual(len(entries), 1)
@@ -179,16 +179,16 @@ class SpillIfOversizedTests(unittest.TestCase):
         result = hos.spill_if_oversized(StrFriendly(), session_id="s", config=cfg)
         self.assertIn("truncated", result)
 
-    def test_default_directory_uses_hermes_home(self):
-        """When no directory override, spill under HERMES_HOME/hook_outputs."""
-        test_home = tempfile.mkdtemp(prefix="hermes-home-")
+    def test_default_directory_uses_qwerty_home(self):
+        """When no directory override, spill under QWERTY_HOME/hook_outputs."""
+        test_home = tempfile.mkdtemp(prefix="qwerty-home-")
         try:
-            with patch.dict(os.environ, {"HERMES_HOME": test_home}):
-                # Also patch get_hermes_home to the env var to mirror production.
+            with patch.dict(os.environ, {"QWERTY_HOME": test_home}):
+                # Also patch get_qwerty_home to the env var to mirror production.
                 cfg = self._cfg(directory=None, max_chars=5)
                 hos.spill_if_oversized("x" * 200, session_id="sess", config=cfg)
             # Spill directory exists somewhere under test_home OR default
-            # ~/.hermes/hook_outputs depending on get_hermes_home behaviour.
+            # ~/.qwerty/hook_outputs depending on get_qwerty_home behaviour.
             candidates = [
                 Path(test_home) / "hook_outputs" / "sess",
                 Path(os.path.expanduser("~/.hermes/hook_outputs/sess")),

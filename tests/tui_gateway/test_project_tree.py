@@ -142,7 +142,7 @@ def test_user_worktree_under_dotworktrees_is_its_own_lane_not_kanban():
     )
     sessions = [
         _session("/repo", branch="main"),
-        _session("/repo/.worktrees/test-gui-stuff", branch="hermes/test-gui-stuff"),
+        _session("/repo/.worktrees/test-gui-stuff", branch="qwerty/test-gui-stuff"),
     ]
 
     tree = pt.build_tree([], sessions, [], resolve, hydrate=True)
@@ -402,7 +402,7 @@ def test_nested_project_folders_pick_the_deepest_match():
 
 
 def test_junk_root_never_becomes_an_auto_project():
-    # A session whose git root is HERMES_HOME (config/state) must not spawn a
+    # A session whose git root is QWERTY_HOME (config/state) must not spawn a
     # phantom project; it falls through to flat Recents (unscoped). A real repo
     # alongside it still groups normally.
     resolve = _resolver(
@@ -470,19 +470,19 @@ def test_deleted_sibling_worktree_folds_into_parent_home_checkout():
     # A deleted <repo>-<suffix> worktree leaves its session with an unresolvable
     # cwd and no persisted root. It joins the parent's trunk lane — no dead-path
     # lane, no phantom project.
-    resolve = _resolver({"/www/hermes-agent": ("/www/hermes-agent", "/www/hermes-agent")})
+    resolve = _resolver({"/www/qwerty-agent": ("/www/qwerty-agent", "/www/qwerty-agent")})
     sessions = [
-        _session("/www/hermes-agent", branch="main"),
-        _session("/www/hermes-agent-session-links"),
+        _session("/www/qwerty-agent", branch="main"),
+        _session("/www/qwerty-agent-session-links"),
     ]
 
     tree = pt.build_tree([], sessions, [], resolve, hydrate=True)
     project = tree["projects"][0]
 
-    assert [p["id"] for p in tree["projects"]] == ["/www/hermes-agent"]
-    assert _lane_ids(project) == ["/www/hermes-agent::branch::main"]
+    assert [p["id"] for p in tree["projects"]] == ["/www/qwerty-agent"]
+    assert _lane_ids(project) == ["/www/qwerty-agent::branch::main"]
     main = project["repos"][0]["groups"][0]
-    assert main["isMain"] and main["path"] == "/www/hermes-agent"
+    assert main["isMain"] and main["path"] == "/www/qwerty-agent"
     assert len(main["sessions"]) == 2
 
 
@@ -491,36 +491,36 @@ def test_deleted_sibling_worktree_subdir_folds_into_parent_home_checkout():
     # (an agent that cd-ed into `<repo>-<suffix>/apps/desktop`). The leaf name
     # ("desktop") shares nothing with the repo, so the sibling probe has to walk
     # the ancestors — otherwise the dead path is minted as its own project.
-    resolve = _resolver({"/www/hermes-agent": ("/www/hermes-agent", "/www/hermes-agent")})
+    resolve = _resolver({"/www/qwerty-agent": ("/www/qwerty-agent", "/www/qwerty-agent")})
     sessions = [
-        _session("/www/hermes-agent", branch="main"),
-        _session("/www/hermes-agent-guiperf/apps/desktop"),
+        _session("/www/qwerty-agent", branch="main"),
+        _session("/www/qwerty-agent-guiperf/apps/desktop"),
     ]
 
     tree = pt.build_tree([], sessions, [], resolve, hydrate=True)
 
-    assert [p["id"] for p in tree["projects"]] == ["/www/hermes-agent"]
+    assert [p["id"] for p in tree["projects"]] == ["/www/qwerty-agent"]
     project = tree["projects"][0]
-    assert _lane_ids(project) == ["/www/hermes-agent::branch::main"]
+    assert _lane_ids(project) == ["/www/qwerty-agent::branch::main"]
     assert len(project["repos"][0]["groups"][0]["sessions"]) == 2
 
 
 def test_deleted_unrelated_workspace_does_not_become_a_project():
-    # A deleted dir the sibling probe can't reach by name (`hermes-salvage-drafts`
-    # shares no prefix with `hermes-agent`; `/tmp/scratch` was never a worktree)
+    # A deleted dir the sibling probe can't reach by name (`qwerty-salvage-drafts`
+    # shares no prefix with `qwerty-agent`; `/tmp/scratch` was never a worktree)
     # must not be promoted to a phantom project — it can never be opened and can
     # only be dismissed by hand. The session stays in flat Recents.
-    resolve = _resolver({"/www/hermes-agent": ("/www/hermes-agent", "/www/hermes-agent")})
+    resolve = _resolver({"/www/qwerty-agent": ("/www/qwerty-agent", "/www/qwerty-agent")})
     sessions = [
-        _session("/www/hermes-agent", branch="main"),
-        _session("/www/hermes-salvage-drafts/apps/desktop"),
+        _session("/www/qwerty-agent", branch="main"),
+        _session("/www/qwerty-salvage-drafts/apps/desktop"),
         _session("/tmp/scratch"),
     ]
-    on_disk = {"/www/hermes-agent"}
+    on_disk = {"/www/qwerty-agent"}
 
     tree = pt.build_tree([], sessions, [], resolve, hydrate=True, exists=lambda p: p in on_disk)
 
-    assert [p["id"] for p in tree["projects"]] == ["/www/hermes-agent"]
+    assert [p["id"] for p in tree["projects"]] == ["/www/qwerty-agent"]
 
 
 def test_existing_non_git_workspace_still_becomes_a_project():

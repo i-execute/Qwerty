@@ -7,8 +7,8 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _ensure_redaction_enabled(monkeypatch):
-    """Ensure redaction is active regardless of host HERMES_REDACT_SECRETS."""
-    monkeypatch.delenv("HERMES_REDACT_SECRETS", raising=False)
+    """Ensure redaction is active regardless of host QWERTY_REDACT_SECRETS."""
+    monkeypatch.delenv("QWERTY_REDACT_SECRETS", raising=False)
     monkeypatch.setattr("agent.redact._REDACT_ENABLED", True)
 
 
@@ -61,11 +61,11 @@ class TestBrowserSecretExfil:
         from tools.browser_tool import browser_navigate
         # Patch the actual browser command — we only care that the secret
         # check doesn't block a clean URL, not that Chrome starts in CI.
-        mock_result = {"success": True, "data": {"title": "ok", "url": "https://github.com/NousResearch/hermes-agent"}}
+        mock_result = {"success": True, "data": {"title": "ok", "url": "https://github.com/NousResearch/qwerty-agent"}}
         with patch("tools.browser_tool._run_browser_command", return_value=mock_result), \
              patch("tools.browser_tool._get_session_info", return_value={"_first_nav": False}), \
              patch("tools.browser_tool._is_local_backend", return_value=True):
-            result = browser_navigate("https://github.com/NousResearch/hermes-agent")
+            result = browser_navigate("https://github.com/NousResearch/qwerty-agent")
         parsed = json.loads(result)
         # Should NOT be blocked by secret detection
         assert "API key or token" not in parsed.get("error", "")
@@ -128,7 +128,7 @@ class TestWebExtractSecretExfil:
 
         for url in (
             "https://leetcode.com/problems/two-sum/?code=twosum",
-            "https://github.com/search?q=hermes&code=1",
+            "https://github.com/search?q=qwerty&code=1",
             "https://example.com/blog?session=summer",
         ):
             result = await web_extract_tool(urls=[url])

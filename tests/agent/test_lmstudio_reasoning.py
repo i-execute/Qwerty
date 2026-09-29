@@ -1,6 +1,6 @@
 """Reasoning-effort resolution for LM Studio.
 
-Covers the contract that Hermes' generic effort ladder must stay monotonic
+Covers the contract that Qwerty' generic effort ladder must stay monotonic
 once it is mapped onto LM Studio's narrower vocabulary: a stronger requested
 level may resolve to an equal-or-stronger LM Studio level, never a weaker one.
 """
@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 
 from agent.lmstudio_reasoning import resolve_lmstudio_effort
-from hermes_constants import VALID_REASONING_EFFORTS
+from qwerty_constants import VALID_REASONING_EFFORTS
 
 # Rank of each value LM Studio accepts, weakest to strongest. Used to assert
 # the resolved ladder never inverts.
@@ -28,7 +28,7 @@ def test_strong_efforts_clamp_to_lmstudio_ceiling(effort):
 
 
 def test_effort_ladder_is_monotonic():
-    """Resolving Hermes' canonical ladder never produces an inversion."""
+    """Resolving Qwerty' canonical ladder never produces an inversion."""
     resolved = [
         resolve_lmstudio_effort({"enabled": True, "effort": effort}, None)
         for effort in VALID_REASONING_EFFORTS

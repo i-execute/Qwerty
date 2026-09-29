@@ -24,9 +24,9 @@ def _build_artifact(kind: str, tmp_path, *, nix_build: bool) -> subprocess.Compl
     # a distributable artifact.
     env["NIX_BUILD_TOP"] = "/build/devshell"
     if nix_build:
-        env["HERMES_NIX_BUILD"] = "1"
+        env["QWERTY_NIX_BUILD"] = "1"
     else:
-        env.pop("HERMES_NIX_BUILD", None)
+        env.pop("QWERTY_NIX_BUILD", None)
     # Redirect setuptools' scratch dirs (build/, *.egg-info) into tmp_path so
     # the allowed-marker build doesn't litter the real worktree.
     scratch = tmp_path / "scratch"
@@ -58,12 +58,12 @@ def test_artifact_build_rejects_nix_development_shell_environment(kind, tmp_path
     result = _build_artifact(kind, tmp_path, nix_build=False)
 
     assert result.returncode != 0
-    assert "Building wheels or sdists for hermes-agent is not supported" in result.stderr
+    assert "Building wheels or sdists for qwerty-agent is not supported" in result.stderr
 
 
 @pytest.mark.parametrize(
     ("kind", "artifact_glob"),
-    [("sdist", "hermes_agent-*.tar.gz"), ("wheel", "hermes_agent-*.whl")],
+    [("sdist", "qwerty_agent-*.tar.gz"), ("wheel", "qwerty_agent-*.whl")],
 )
 def test_artifact_build_allows_explicit_nix_package_build_marker(kind, artifact_glob, tmp_path):
     result = _build_artifact(kind, tmp_path, nix_build=True)

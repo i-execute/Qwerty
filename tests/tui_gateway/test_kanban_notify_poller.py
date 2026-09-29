@@ -1,7 +1,7 @@
 """Tests for the TUI-side kanban notification poller (issue #59890).
 
 ``kanban_create`` auto-subscribes TUI/desktop sessions with
-``platform="tui"`` / ``chat_id=HERMES_SESSION_KEY``, but no component ever
+``platform="tui"`` / ``chat_id=QWERTY_SESSION_KEY``, but no component ever
 read those rows back: the gateway notifier skips them (no "tui" messaging
 adapter) and the TUI notification poller only watched process completions.
 ``last_event_id`` stayed 0 forever and no notification was ever delivered.
@@ -13,7 +13,7 @@ unsubscribe) and ``_format_kanban_event_text``.
 
 from types import SimpleNamespace
 
-from hermes_cli import kanban_db as kb
+from qwerty_cli import kanban_db as kb
 from tui_gateway.server import (
     _collect_kanban_notifications,
     _format_kanban_event_text,
@@ -116,16 +116,16 @@ class TestCollectKanbanNotifications:
 
     def test_profile_scoped_session_reads_the_shared_board(self, tmp_path):
         """The kanban board is shared across profiles BY DESIGN (see the
-        hermes_cli/kanban_db.py module docstring): ``kanban_home()`` anchors on
-        ``get_default_hermes_root()``, which resolves the process env and
+        qwerty_cli/kanban_db.py module docstring): ``kanban_home()`` anchors on
+        ``get_default_qwerty_root()``, which resolves the process env and
         ignores context-local profile overrides. A Desktop session bound to a
         non-launch profile (``session["profile_home"]``) must therefore still
         have its subscription claimed from the one shared board — the poller
         needs no per-profile home binding.
         """
-        from hermes_constants import (
-            reset_hermes_home_override,
-            set_hermes_home_override,
+        from qwerty_constants import (
+            reset_qwerty_home_override,
+            set_qwerty_home_override,
         )
 
         tid = _create_subscribed_task()
@@ -139,11 +139,11 @@ class TestCollectKanbanNotifications:
         }
         # Simulate the strictest case: a context-local profile override is
         # active while the poller collects (as a profile-bound RPC would set).
-        token = set_hermes_home_override(str(other_profile_home))
+        token = set_qwerty_home_override(str(other_profile_home))
         try:
             texts = _collect_kanban_notifications(session)
         finally:
-            reset_hermes_home_override(token)
+            reset_qwerty_home_override(token)
 
         assert len(texts) == 1
         assert tid in texts[0]

@@ -21,13 +21,13 @@ def _wire(text: str, *, platform: str = "slack") -> dict:
 @pytest.mark.parametrize(
     ("wire_text", "expected"),
     [
-        ("/hermes sethome", "/sethome"),
-        ("/hermes\tsethome", "/sethome"),
+        ("/qwerty sethome", "/sethome"),
+        ("/qwerty\tsethome", "/sethome"),
         (
-            "/hermes model gpt-5.6 --provider openai",
+            "/qwerty model gpt-5.6 --provider openai",
             "/model gpt-5.6 --provider openai",
         ),
-        ("/hermes", "/help"),
+        ("/qwerty", "/help"),
     ],
 )
 def test_slack_relay_parent_becomes_gateway_command(wire_text: str, expected: str):
@@ -40,14 +40,14 @@ def test_slack_relay_parent_becomes_gateway_command(wire_text: str, expected: st
 
 
 def test_slack_relay_parent_freeform_text_matches_native_adapter():
-    event = _event_from_wire(_wire("/hermes explain this"))
+    event = _event_from_wire(_wire("/qwerty explain this"))
 
     assert event.text == "explain this"
     assert event.message_type == MessageType.TEXT
 
 
 def test_non_slack_relay_message_is_not_rewritten():
-    event = _event_from_wire(_wire("/hermes sethome", platform="discord"))
+    event = _event_from_wire(_wire("/qwerty sethome", platform="discord"))
 
-    assert event.text == "/hermes sethome"
+    assert event.text == "/qwerty sethome"
     assert event.message_type == MessageType.COMMAND

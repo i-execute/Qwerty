@@ -22,14 +22,14 @@ from tools.approval import (
 @pytest.fixture
 def isolated_session(monkeypatch, tmp_path):
     """Give each test a fresh session_key, clean approval-state, and isolated
-    HERMES_HOME so the real user's command_allowlist doesn't leak in."""
+    QWERTY_HOME so the real user's command_allowlist doesn't leak in."""
     import tools.approval as _am
 
     session_key = "test:session:approval_hooks"
     token = set_current_session_key(session_key)
-    monkeypatch.setenv("HERMES_SESSION_KEY", session_key)
+    monkeypatch.setenv("QWERTY_SESSION_KEY", session_key)
     # Make sure we don't skip guards via yolo / approvals.mode=off
-    monkeypatch.delenv("HERMES_YOLO_MODE", raising=False)
+    monkeypatch.delenv("QWERTY_YOLO_MODE", raising=False)
     # Isolate from the real user's permanent allowlist + session state
     _saved_permanent = _am._permanent_approved.copy()
     _saved_session = {k: v.copy() for k, v in _am._session_approved.items()}
@@ -48,15 +48,15 @@ def isolated_session(monkeypatch, tmp_path):
 
 
 class TestCliPathFiresHooks:
-    """CLI-interactive approval path: HERMES_INTERACTIVE is set, the
+    """CLI-interactive approval path: QWERTY_INTERACTIVE is set, the
     prompt_dangerous_approval() result decides the outcome."""
 
     def test_pre_and_post_fire_with_expected_kwargs(
         self, isolated_session, monkeypatch
     ):
-        monkeypatch.setenv("HERMES_INTERACTIVE", "1")
-        monkeypatch.delenv("HERMES_GATEWAY_SESSION", raising=False)
-        monkeypatch.delenv("HERMES_EXEC_ASK", raising=False)
+        monkeypatch.setenv("QWERTY_INTERACTIVE", "1")
+        monkeypatch.delenv("QWERTY_GATEWAY_SESSION", raising=False)
+        monkeypatch.delenv("QWERTY_EXEC_ASK", raising=False)
         # approvals.mode=manual so we actually reach the prompt site
         monkeypatch.setattr(approval_module, "_get_approval_mode", lambda: "manual")
 
@@ -70,7 +70,7 @@ class TestCliPathFiresHooks:
         def cb(command, description, *, allow_permanent=True):
             return "once"
 
-        with patch("hermes_cli.plugins.invoke_hook", side_effect=fake_invoke_hook):
+        with patch("qwerty_cli.plugins.invoke_hook", side_effect=fake_invoke_hook):
             result = check_all_command_guards(
                 "rm -rf /tmp/test-hook", "local", approval_callback=cb,
             )
@@ -95,9 +95,9 @@ class TestCliPathFiresHooks:
         assert post_kwargs["command"] == "rm -rf /tmp/test-hook"
 
     def test_deny_reported_to_post_hook(self, isolated_session, monkeypatch):
-        monkeypatch.setenv("HERMES_INTERACTIVE", "1")
-        monkeypatch.delenv("HERMES_GATEWAY_SESSION", raising=False)
-        monkeypatch.delenv("HERMES_EXEC_ASK", raising=False)
+        monkeypatch.setenv("QWERTY_INTERACTIVE", "1")
+        monkeypatch.delenv("QWERTY_GATEWAY_SESSION", raising=False)
+        monkeypatch.delenv("QWERTY_EXEC_ASK", raising=False)
         monkeypatch.setattr(approval_module, "_get_approval_mode", lambda: "manual")
 
         captured = []
@@ -109,7 +109,7 @@ class TestCliPathFiresHooks:
         def cb(command, description, *, allow_permanent=True):
             return "deny"
 
-        with patch("hermes_cli.plugins.invoke_hook", side_effect=fake_invoke_hook):
+        with patch("qwerty_cli.plugins.invoke_hook", side_effect=fake_invoke_hook):
             result = check_all_command_guards(
                 "rm -rf /tmp/test-deny", "local", approval_callback=cb,
             )
@@ -124,9 +124,9 @@ class TestCliPathFiresHooks:
         """A crashing plugin must never prevent the approval flow from
         reaching the user. Hooks are observer-only and safety-critical
         behavior must be preserved."""
-        monkeypatch.setenv("HERMES_INTERACTIVE", "1")
-        monkeypatch.delenv("HERMES_GATEWAY_SESSION", raising=False)
-        monkeypatch.delenv("HERMES_EXEC_ASK", raising=False)
+        monkeypatch.setenv("QWERTY_INTERACTIVE", "1")
+        monkeypatch.delenv("QWERTY_GATEWAY_SESSION", raising=False)
+        monkeypatch.delenv("QWERTY_EXEC_ASK", raising=False)
         monkeypatch.setattr(approval_module, "_get_approval_mode", lambda: "manual")
 
         def boom(hook_name, **kwargs):
@@ -135,7 +135,7 @@ class TestCliPathFiresHooks:
         def cb(command, description, *, allow_permanent=True):
             return "once"
 
-        with patch("hermes_cli.plugins.invoke_hook", side_effect=boom):
+        with patch("qwerty_cli.plugins.invoke_hook", side_effect=boom):
             result = check_all_command_guards(
                 "rm -rf /tmp/test-crash", "local", approval_callback=cb,
             )
@@ -145,7 +145,7 @@ class TestCliPathFiresHooks:
 
 
 class TestGatewayPathFiresHooks:
-    """Async gateway approval path: HERMES_GATEWAY_SESSION is set and a
+    """Async gateway approval path: QWERTY_GATEWAY_SESSION is set and a
     gateway notify callback is registered. The agent thread blocks on the
     approval event until resolve_gateway_approval() is called from another
     thread."""
@@ -153,10 +153,10 @@ class TestGatewayPathFiresHooks:
 
 class TestSmartModeFiresHooks:
     def _configure(self, monkeypatch, verdict):
-        monkeypatch.setenv("HERMES_INTERACTIVE", "1")
-        monkeypatch.setenv("HERMES_EXEC_ASK", "1")
-        monkeypatch.delenv("HERMES_GATEWAY_SESSION", raising=False)
-        monkeypatch.delenv("HERMES_CRON_SESSION", raising=False)
+        monkeypatch.setenv("QWERTY_INTERACTIVE", "1")
+        monkeypatch.setenv("QWERTY_EXEC_ASK", "1")
+        monkeypatch.delenv("QWERTY_GATEWAY_SESSION", raising=False)
+        monkeypatch.delenv("QWERTY_CRON_SESSION", raising=False)
         monkeypatch.setattr(approval_module, "_YOLO_MODE_FROZEN", False)
         monkeypatch.setattr(approval_module, "_get_approval_mode", lambda: "smart")
         monkeypatch.setattr(approval_module, "_smart_approve", lambda *_: verdict)
@@ -183,7 +183,7 @@ class TestSmartModeFiresHooks:
         captured = []
 
         with patch(
-            "hermes_cli.plugins.invoke_hook",
+            "qwerty_cli.plugins.invoke_hook",
             side_effect=lambda name, **kwargs: captured.append((name, kwargs)),
         ):
             result = guard(value, "local")
@@ -223,7 +223,7 @@ class TestSmartModeFiresHooks:
 
         monkeypatch.setattr(approval_module, "_smart_approve", decide)
         with patch(
-            "hermes_cli.plugins.invoke_hook",
+            "qwerty_cli.plugins.invoke_hook",
             side_effect=lambda name, **kwargs: events.append(name),
         ):
             result = guard(value, "local")
@@ -251,7 +251,7 @@ class TestSmartModeFiresHooks:
 
         with (
             patch("agent.redact.redact_sensitive_text", side_effect=redact),
-            patch("hermes_cli.plugins.invoke_hook"),
+            patch("qwerty_cli.plugins.invoke_hook"),
         ):
             result = guard(value, "local")
 
@@ -268,7 +268,7 @@ class TestSmartModeFiresHooks:
     ):
         self._configure(monkeypatch, verdict)
         with patch(
-            "hermes_cli.plugins.invoke_hook",
+            "qwerty_cli.plugins.invoke_hook",
             side_effect=RuntimeError("observer failed"),
         ):
             result = guard(value, "local")
@@ -293,7 +293,7 @@ class TestSmartModeFiresHooks:
         with (
             patch("agent.redact.redact_sensitive_text", side_effect=fail_observer_redaction),
             patch(
-                "hermes_cli.plugins.invoke_hook",
+                "qwerty_cli.plugins.invoke_hook",
                 side_effect=lambda name, **kwargs: captured.append((name, kwargs)),
             ),
         ):
@@ -317,9 +317,9 @@ class TestSmartModeFiresHooks:
         self, isolated_session, monkeypatch, guard, first_value, second_value
     ):
         verdicts = iter(("approve", "deny"))
-        monkeypatch.setenv("HERMES_INTERACTIVE", "1")
-        monkeypatch.setenv("HERMES_EXEC_ASK", "1")
-        monkeypatch.delenv("HERMES_GATEWAY_SESSION", raising=False)
+        monkeypatch.setenv("QWERTY_INTERACTIVE", "1")
+        monkeypatch.setenv("QWERTY_EXEC_ASK", "1")
+        monkeypatch.delenv("QWERTY_GATEWAY_SESSION", raising=False)
         monkeypatch.setattr(approval_module, "_YOLO_MODE_FROZEN", False)
         monkeypatch.setattr(approval_module, "_get_approval_mode", lambda: "smart")
         monkeypatch.setattr(approval_module, "_smart_approve", lambda *_: next(verdicts))
@@ -329,7 +329,7 @@ class TestSmartModeFiresHooks:
         )
         captured = []
         with patch(
-            "hermes_cli.plugins.invoke_hook",
+            "qwerty_cli.plugins.invoke_hook",
             side_effect=lambda name, **kwargs: captured.append((name, kwargs)),
         ):
             first = guard(first_value, "local")

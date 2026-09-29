@@ -17,7 +17,7 @@ description: "通过 gh 或 REST 审查 PR：差异对比、行内评论"
 | 来源 | 内置（默认安装） |
 | 路径 | `skills/github/github-code-review` |
 | 版本 | `1.1.0` |
-| 作者 | Hermes Agent |
+| 作者 | Qwerty Agent |
 | 许可证 | MIT |
 | 平台 | linux, macos, windows |
 | 标签 | `GitHub`, `Code-Review`, `Pull-Requests`, `Git`, `Quality` |
@@ -26,7 +26,7 @@ description: "通过 gh 或 REST 审查 PR：差异对比、行内评论"
 ## 参考：完整 SKILL.md
 
 :::info
-以下是 Hermes 在触发此 skill 时加载的完整 skill 定义。这是 agent 在 skill 激活时所看到的指令内容。
+以下是 Qwerty 在触发此 skill 时加载的完整 skill 定义。这是 agent 在 skill 激活时所看到的指令内容。
 :::
 
 # GitHub Code Review
@@ -46,10 +46,10 @@ if command -v gh &>/dev/null && gh auth status &>/dev/null; then
 else
   AUTH="git"
   if [ -z "$GITHUB_TOKEN" ]; then
-    if [ -f ~/.hermes/.env ] && grep -q "^GITHUB_TOKEN=" ~/.hermes/.env; then
-      GITHUB_TOKEN=$(grep "^GITHUB_TOKEN=" ~/.hermes/.env | head -1 | cut -d= -f2 | tr -d '\n\r')
+    if [ -f ~/.qwerty/.env ] && grep -q "^GITHUB_TOKEN=" ~/.qwerty/.env; then
+      GITHUB_TOKEN=$(grep "^GITHUB_TOKEN=" ~/.qwerty/.env | head -1 | cut -d= -f2 | tr -d '\n\r')
     elif grep -q "github.com" ~/.git-credentials 2>/dev/null; then
-      GITHUB_TOKEN=$(uv run python3 "${HERMES_HOME:-$HOME/.hermes}/skills/github/github-auth/scripts/git-credential-token.py")
+      GITHUB_TOKEN=$(uv run python3 "${QWERTY_HOME:-$HOME/.qwerty}/skills/github/github-auth/scripts/git-credential-token.py")
     fi
   fi
 fi
@@ -280,7 +280,7 @@ curl -s -X POST \
   -d "{
     \"commit_id\": \"$HEAD_SHA\",
     \"event\": \"COMMENT\",
-    \"body\": \"Code review from Hermes Agent\",
+    \"body\": \"Code review from Qwerty Agent\",
     \"comments\": [
       {\"path\": \"src/auth.py\", \"line\": 45, \"body\": \"Use parameterized queries to prevent SQL injection.\"},
       {\"path\": \"src/models/user.py\", \"line\": 23, \"body\": \"Hash passwords with bcrypt before storing.\"},
@@ -353,7 +353,7 @@ curl -s -X POST \
 ### 第一步：设置环境
 
 ```bash
-source "${HERMES_HOME:-$HOME/.hermes}/skills/github/github-auth/scripts/gh-env.sh"
+source "${QWERTY_HOME:-$HOME/.qwerty}/skills/github/github-auth/scripts/gh-env.sh"
 # 或运行本 skill 顶部的内联设置代码块
 ```
 
@@ -427,7 +427,7 @@ ruff check . 2>&1 | head -30
 **使用 gh：**
 ```bash
 # 若无问题——批准
-gh pr review $PR_NUMBER --approve --body "Reviewed by Hermes Agent. Code looks clean — good test coverage, no security concerns."
+gh pr review $PR_NUMBER --approve --body "Reviewed by Qwerty Agent. Code looks clean — good test coverage, no security concerns."
 
 # 若发现问题——请求变更并附行内评论
 gh pr review $PR_NUMBER --request-changes --body "Found a few issues — see inline comments."
@@ -446,7 +446,7 @@ curl -s -X POST \
   -d "{
     \"commit_id\": \"$HEAD_SHA\",
     \"event\": \"REQUEST_CHANGES\",
-    \"body\": \"## Hermes Agent Review\n\nFound 2 issues, 1 suggestion. See inline comments.\",
+    \"body\": \"## Qwerty Agent Review\n\nFound 2 issues, 1 suggestion. See inline comments.\",
     \"comments\": [
       {\"path\": \"src/auth.py\", \"line\": 45, \"body\": \"🔴 **Critical:** User input passed directly to SQL query — use parameterized queries.\"},
       {\"path\": \"src/models.py\", \"line\": 23, \"body\": \"⚠️ **Warning:** Password stored without hashing.\"},
@@ -480,7 +480,7 @@ gh pr comment $PR_NUMBER --body "$(cat <<'EOF'
 - Good error handling in the middleware layer
 
 ---
-*Reviewed by Hermes Agent*
+*Reviewed by Qwerty Agent*
 EOF
 )"
 ```

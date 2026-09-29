@@ -10,8 +10,8 @@ import {
   getCronJobs,
   getGlobalModelInfo,
   getGlobalModelOptions,
-  getHermesConfig,
-  getHermesConfigDefaults,
+  getQwertyConfig,
+  getQwertyConfigDefaults,
   getProfiles,
   getSessionMessages,
   getStatus,
@@ -21,7 +21,7 @@ import {
   resetSidebarBatchCapability,
   speakText,
   transcribeAudio
-} from './hermes'
+} from './qwerty'
 import { refreshActiveProfile } from './store/profile'
 
 const emptySessionsResponse = {
@@ -31,13 +31,13 @@ const emptySessionsResponse = {
   total: 0
 }
 
-describe('Hermes REST helpers', () => {
+describe('Qwerty REST helpers', () => {
   let api: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     resetSidebarBatchCapability()
     api = vi.fn().mockResolvedValue(emptySessionsResponse)
-    Object.defineProperty(window, 'hermesDesktop', {
+    Object.defineProperty(window, 'qwertyDesktop', {
       configurable: true,
       value: { api }
     })
@@ -45,7 +45,7 @@ describe('Hermes REST helpers', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
-    Reflect.deleteProperty(window, 'hermesDesktop')
+    Reflect.deleteProperty(window, 'qwertyDesktop')
   })
 
   it('uses a longer timeout for the single-profile session list', async () => {
@@ -117,7 +117,7 @@ describe('Hermes REST helpers', () => {
         // The exact skew failure: Electron surfaces the backend catch-all.
         return Promise.reject(
           new Error(
-            'Error invoking remote method \'hermes:api\': Error: 404: {"detail":"No such API endpoint: /api/profiles/sessions/sidebar"}'
+            'Error invoking remote method \'qwerty:api\': Error: 404: {"detail":"No such API endpoint: /api/profiles/sessions/sidebar"}'
           )
         )
       }
@@ -293,8 +293,8 @@ describe('Hermes REST helpers', () => {
     api.mockResolvedValue({})
 
     const bootCalls: [() => Promise<unknown>, string][] = [
-      [getHermesConfig, '/api/config'],
-      [getHermesConfigDefaults, '/api/config/defaults'],
+      [getQwertyConfig, '/api/config'],
+      [getQwertyConfigDefaults, '/api/config/defaults'],
       [getGlobalModelInfo, '/api/model/info'],
       [() => getGlobalModelOptions(), '/api/model/options?explicit_only=1'],
       [getCronJobs, '/api/cron/jobs']

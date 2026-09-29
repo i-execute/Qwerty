@@ -1,12 +1,12 @@
-"""Session <-> workspace grouping key (hermes_state.workspace_key).
+"""Session <-> workspace grouping key (qwerty_state.workspace_key).
 
-The key is what `hermes sessions list --workspace` groups/filters on. It is a
+The key is what `qwerty sessions list --workspace` groups/filters on. It is a
 coarse workspace identity derived from fields already recorded on sessions
 (git_repo_root, cwd) — no git shelling, no new columns. Branch is deliberately
 NOT part of the key.
 """
 
-from hermes_state import workspace_key
+from qwerty_state import workspace_key
 
 
 def test_repo_root_is_the_key_when_known():

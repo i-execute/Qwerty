@@ -2,10 +2,10 @@
 name: telegram-rich-gateway
 description: "Complete Telegram Bot API 10.2 rich messaging guide: 103 premium custom emoji registry, LaTeX math, markdown tables, blockquotes, code blocks, lists, dropdowns, streaming drafts, and verified gateway deployment."
 version: 3.0.0
-author: Hermes Agent
+author: Qwerty Agent
 license: MIT
 metadata:
-  hermes:
+  qwerty:
     tags: [telegram, rich-messages, bot-api, custom-emoji, latex, gateway]
     related_skills: [telegram-rich-messages, telegram-rich-custom-emoji]
 ---
@@ -438,7 +438,7 @@ platforms:
 
 ### **Verify Gateway is Using This Skill**
 
-The Hermes gateway (`plugins/platforms/telegram/adapter.py`) automatically:
+The Qwerty gateway (`plugins/platforms/telegram/adapter.py`) automatically:
 1. Detects this skill in the system prompt
 2. Routes all responses through `_needs_rich_rendering()`
 3. Converts Markdown to HTML for rich messages

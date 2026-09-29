@@ -109,12 +109,12 @@ async function setupSeededMockBackend(): Promise<MockBackendFixture> {
 
   // 2. Create sandbox + write config
   const sandbox = createSandbox('warm-seed')
-  writeMockProviderConfig(sandbox.hermesHome, mock.url)
-  writeEnvFile(sandbox.hermesHome)
+  writeMockProviderConfig(sandbox.qwertyHome, mock.url)
+  writeEnvFile(sandbox.qwertyHome)
 
   // 3. Produce all 16 user/assistant pairs through the real TUI gateway,
   // AIAgent, mock provider, and SessionDB persistence path before desktop starts.
-  const builder = await RealSessionBuilder.start(sandbox.hermesHome)
+  const builder = await RealSessionBuilder.start(sandbox.qwertyHome)
   try {
     await builder.createSession({ title: SESSION_TITLE, turns: generateSessionTurns() })
   } finally {

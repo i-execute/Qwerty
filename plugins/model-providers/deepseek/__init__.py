@@ -2,7 +2,7 @@
 
 DeepSeek's V4 family defaults to thinking-mode ON when ``extra_body.thinking``
 is unset.  The API then returns ``reasoning_content`` and starts enforcing
-the contract that subsequent turns echo it back; combined with how Hermes
+the contract that subsequent turns echo it back; combined with how Qwerty
 replays history this lands on the notorious HTTP 400
 ``reasoning_content must be passed back`` error after the first tool call
 (#15700, #17212, #17825).
@@ -17,8 +17,8 @@ Non-thinking models (``deepseek-v3-*`` variants) are left as no-ops so we
 don't perturb the V3 wire format.
 
 The legacy aliases ``deepseek-chat`` / ``deepseek-reasoner`` were retired on
-2026-07-24.  Use ``deepseek-v4-flash`` or ``deepseek-v4-pro``; Hermes remaps
-the retired IDs in ``hermes_cli.model_normalize``.
+2026-07-24.  Use ``deepseek-v4-flash`` or ``deepseek-v4-pro``; Qwerty remaps
+the retired IDs in ``qwerty_cli.model_normalize``.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ def _model_supports_thinking(model: str | None) -> bool:
 
     Currently covers the V4 family (``deepseek-v4-pro``, ``deepseek-v4-flash``,
     and any future ``deepseek-v4-*`` variants).  Retired aliases are remapped
-    before requests leave Hermes, so they are not listed here.
+    before requests leave Qwerty, so they are not listed here.
     """
     m = (model or "").strip().lower()
     if not m:

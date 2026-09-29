@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from hermes_state import SessionDB
+from qwerty_state import SessionDB
 from tools.todo_tool import TodoStore
 
 
@@ -76,7 +76,7 @@ class _FakeAgent:
 
 
 def _make_cli(env_overrides=None, config_overrides=None, **kwargs):
-    """Create a HermesCLI instance with minimal mocking."""
+    """Create a QwertyCLI instance with minimal mocking."""
     _clean_config = {
         "model": {
             "default": "anthropic/claude-opus-4.6",
@@ -89,7 +89,7 @@ def _make_cli(env_overrides=None, config_overrides=None, **kwargs):
     }
     if config_overrides:
         _clean_config.update(config_overrides)
-    clean_env = {"LLM_MODEL": "", "HERMES_MAX_ITERATIONS": ""}
+    clean_env = {"LLM_MODEL": "", "QWERTY_MAX_ITERATIONS": ""}
     if env_overrides:
         clean_env.update(env_overrides)
     prompt_toolkit_stubs = {
@@ -118,7 +118,7 @@ def _make_cli(env_overrides=None, config_overrides=None, **kwargs):
         with patch.object(_cli_mod, "get_tool_definitions", return_value=[]), patch.dict(
             _cli_mod.__dict__, {"CLI_CONFIG": _clean_config}
         ):
-            return _cli_mod.HermesCLI(**kwargs)
+            return _cli_mod.QwertyCLI(**kwargs)
 
 
 def _prepare_cli_with_active_session(tmp_path):
@@ -145,8 +145,8 @@ def _reset_session_id_context():
     from gateway.session_context import _UNSET, _VAR_MAP
 
     yield
-    os.environ.pop("HERMES_SESSION_ID", None)
-    _VAR_MAP["HERMES_SESSION_ID"].set(_UNSET)
+    os.environ.pop("QWERTY_SESSION_ID", None)
+    _VAR_MAP["QWERTY_SESSION_ID"].set(_UNSET)
 
 
 def test_new_command_creates_real_fresh_session_and_resets_agent_state(tmp_path):
@@ -256,19 +256,19 @@ def test_run_cleanup_flushes_pending_memory_manager_work(tmp_path):
     mm.flush_pending.assert_called_once_with(timeout=10)
 
 
-def test_new_command_rotates_hermes_session_id_env_and_context(tmp_path):
+def test_new_command_rotates_qwerty_session_id_env_and_context(tmp_path):
     from gateway.session_context import _VAR_MAP, get_session_env
 
     cli = _prepare_cli_with_active_session(tmp_path)
     old_session_id = cli.session_id
-    os.environ["HERMES_SESSION_ID"] = old_session_id
-    _VAR_MAP["HERMES_SESSION_ID"].set(old_session_id)
+    os.environ["QWERTY_SESSION_ID"] = old_session_id
+    _VAR_MAP["QWERTY_SESSION_ID"].set(old_session_id)
 
     cli.process_command("/new")
 
     assert cli.session_id != old_session_id
-    assert os.environ["HERMES_SESSION_ID"] == cli.session_id
-    assert get_session_env("HERMES_SESSION_ID") == cli.session_id
+    assert os.environ["QWERTY_SESSION_ID"] == cli.session_id
+    assert get_session_env("QWERTY_SESSION_ID") == cli.session_id
 
 
 def test_reset_command_is_alias_for_new_session(tmp_path):

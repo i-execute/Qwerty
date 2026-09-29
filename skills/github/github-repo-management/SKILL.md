@@ -2,11 +2,11 @@
 name: github-repo-management
 description: "Clone/create/fork repos; manage remotes, releases."
 version: 1.1.0
-author: Hermes Agent
+author: Qwerty Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  qwerty:
     tags: [GitHub, Repositories, Git, Releases, Secrets, Configuration]
     related_skills: [github-auth, github-pr-workflow, github-issues]
 ---
@@ -27,10 +27,10 @@ if command -v gh &>/dev/null && gh auth status &>/dev/null; then
 else
   AUTH="git"
   if [ -z "$GITHUB_TOKEN" ]; then
-    if _hermes_env="${HERMES_HOME:-$HOME/.hermes}/.env"; [ -f "$_hermes_env" ] && grep -q "^GITHUB_TOKEN=" "$_hermes_env"; then
-      GITHUB_TOKEN=$(grep "^GITHUB_TOKEN=" "$_hermes_env" | head -1 | cut -d= -f2 | tr -d '\n\r')
+    if _qwerty_env="${QWERTY_HOME:-$HOME/.qwerty}/.env"; [ -f "$_qwerty_env" ] && grep -q "^GITHUB_TOKEN=" "$_qwerty_env"; then
+      GITHUB_TOKEN=$(grep "^GITHUB_TOKEN=" "$_qwerty_env" | head -1 | cut -d= -f2 | tr -d '\n\r')
     elif grep -q "github.com" ~/.git-credentials 2>/dev/null; then
-      GITHUB_TOKEN=$(uv run python3 "${HERMES_HOME:-$HOME/.hermes}/skills/github/github-auth/scripts/git-credential-token.py")
+      GITHUB_TOKEN=$(uv run python3 "${QWERTY_HOME:-$HOME/.qwerty}/skills/github/github-auth/scripts/git-credential-token.py")
     fi
   fi
 fi

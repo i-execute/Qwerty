@@ -1,1 +1,1 @@
-# Hermes plugins package
+# Qwerty plugins package

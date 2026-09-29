@@ -9,7 +9,7 @@ change-detector.
 from __future__ import annotations
 
 from agent import learning_graph
-from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+from qwerty_constants import reset_qwerty_home_override, set_qwerty_home_override
 
 
 def _node(name: str, category: str, related=None):
@@ -73,11 +73,11 @@ def test_memory_is_cards_split_on_separator(tmp_path):
         "Project uses pytest with xdist\n§\nUser prefers concise responses",
         encoding="utf-8",
     )
-    token = set_hermes_home_override(home)
+    token = set_qwerty_home_override(home)
     try:
         graph = learning_graph.build_learning_graph()
     finally:
-        reset_hermes_home_override(token)
+        reset_qwerty_home_override(token)
 
     titles = [c["title"] for c in graph["memory"]]
     assert "Project uses pytest with xdist" in titles
@@ -106,20 +106,20 @@ def test_malformed_frontmatter_metadata_does_not_crash(tmp_path):
     assert node.related == []
 
 
-def test_hermes_meta_tolerates_non_dict():
-    assert learning_graph._hermes_meta({"metadata": "junk"}) == {}
-    assert learning_graph._hermes_meta({"metadata": {"hermes": "junk"}}) == {}
-    assert learning_graph._hermes_meta({"metadata": {"hermes": {"category": "x"}}}) == {"category": "x"}
+def test_qwerty_meta_tolerates_non_dict():
+    assert learning_graph._qwerty_meta({"metadata": "junk"}) == {}
+    assert learning_graph._qwerty_meta({"metadata": {"qwerty": "junk"}}) == {}
+    assert learning_graph._qwerty_meta({"metadata": {"qwerty": {"category": "x"}}}) == {"category": "x"}
 
 
 def test_full_payload_shape_and_edge_integrity(tmp_path):
     home = tmp_path / ".hermes"
     home.mkdir()
-    token = set_hermes_home_override(home)
+    token = set_qwerty_home_override(home)
     try:
         graph = learning_graph.build_learning_graph()
     finally:
-        reset_hermes_home_override(token)
+        reset_qwerty_home_override(token)
 
     ids = {n["id"] for n in graph["nodes"]}
     assert all(e["source"] in ids and e["target"] in ids for e in graph["edges"])

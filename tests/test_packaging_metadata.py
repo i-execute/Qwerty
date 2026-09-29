@@ -30,7 +30,7 @@ def test_packaging_declared_as_core_dependency():
 
     ``packaging`` is imported directly on three production paths
     (plugins/memory/hindsight/__init__.py, tools/lazy_deps.py,
-    hermes_cli/main.py) yet was undeclared, so it only reached users
+    qwerty_cli/main.py) yet was undeclared, so it only reached users
     transitively. The slim Docker image shipped without it, silently
     disabling Hindsight append-mode and version-constraint checks. It must
     be a declared core dependency so it installs everywhere and the
@@ -65,7 +65,7 @@ def test_faster_whisper_is_not_a_base_dependency():
 # enforce the floor in both pyproject and the committed lockfile.
 _STARLETTE_CVE_FLOOR = (1, 0, 1)
 _UPDATE_DOWNGRADE_GUARD_FLOORS = {
-    # `hermes update` reinstalls exact pins from pyproject/lazy_deps. These
+    # `qwerty update` reinstalls exact pins from pyproject/lazy_deps. These
     # reviewed CVE pins must not slide back to stale versions that downgrade
     # already-patched user environments.
     "cryptography": (48, 0, 1),
@@ -150,7 +150,7 @@ def test_locked_starlette_is_not_vulnerable_to_cve_2026_48710():
 
 
 def test_update_cve_pins_do_not_downgrade_reviewed_current_versions():
-    """`hermes update` must not reinstall stale reviewed CVE pins.
+    """`qwerty update` must not reinstall stale reviewed CVE pins.
 
     The project intentionally exact-pins reviewed dependency versions. When
     security pins get stale, update reinstalls can downgrade environments that

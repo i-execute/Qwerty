@@ -31,7 +31,7 @@ loader.ConfigValue(
 
 ### 3. Environment Files
 ```bash
-# ~/.hermes/.env
+# ~/.qwerty/.env
 GITHUB_TOKEN=ghp_xxxxxxxxxxxx
 
 # Project .env
@@ -51,7 +51,7 @@ grep -r "ConfigValue.*github_token" /home/forget/Heroku/loaded_modules/
 grep -r "GITHUB_TOKEN" /home/forget/ --include="*.env" 2>/dev/null
 ```
 
-## Scopes Required for Hermes Agent Development
+## Scopes Required for Qwerty Agent Development
 
 | Scope | Purpose |
 |-------|---------|
@@ -62,7 +62,7 @@ grep -r "GITHUB_TOKEN" /home/forget/ --include="*.env" 2>/dev/null
 ## Creating a New PAT (Personal Access Token)
 
 1. Go to: https://github.com/settings/tokens/new
-2. **Name:** `hermes-agent-fork-<date>`
+2. **Name:** `qwerty-agent-fork-<date>`
 3. **Expiration:** 90 days (recommended) or No expiration
 4. **Scopes:** ✅ `repo` ✅ `workflow` ✅ `read:org`
 5. **Generate** → Copy immediately (shown once)

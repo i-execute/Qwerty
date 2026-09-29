@@ -107,12 +107,12 @@ def test_fetch_auth_failure_gets_friendly_error(monkeypatch, tmp_path):
 
 def test_bitwarden_auth_remediation_points_at_token_command():
     hint = BitwardenSource().remediation(ErrorKind.AUTH_FAILED, {})
-    assert "hermes secrets bitwarden token" in hint
+    assert "qwerty secrets bitwarden token" in hint
 
 
 def test_onepassword_auth_remediation_points_at_token_command():
     hint = OnePasswordSource().remediation(ErrorKind.AUTH_FAILED, {})
-    assert "hermes secrets onepassword token" in hint
+    assert "qwerty secrets onepassword token" in hint
     assert "OP_SERVICE_ACCOUNT_TOKEN" in hint
 
 
@@ -139,7 +139,7 @@ def test_base_remediation_covers_common_kinds():
         assert hint, f"no default hint for {kind}"
         if kind in (ErrorKind.NOT_CONFIGURED, ErrorKind.BINARY_MISSING,
                     ErrorKind.AUTH_FAILED, ErrorKind.AUTH_EXPIRED):
-            assert "hermes secrets dummy" in hint
+            assert "qwerty secrets dummy" in hint
     # Kinds without a sensible generic action stay silent.
     assert _Src().remediation(ErrorKind.INTERNAL, {}) == ""
     assert _Src().remediation(None, {}) == ""
@@ -157,7 +157,7 @@ def test_remediation_never_raises_on_junk_cfg():
 
 
 def test_env_loader_prints_remediation_hint(tmp_path, monkeypatch, capsys):
-    from hermes_cli import env_loader
+    from qwerty_cli import env_loader
     from agent.secret_sources import registry
 
     registry._reset_registry_for_tests()
@@ -189,12 +189,12 @@ def test_env_loader_prints_remediation_hint(tmp_path, monkeypatch, capsys):
 
     err = capsys.readouterr().err
     assert "rejected the machine-account access token" in err
-    assert "hermes secrets bitwarden token" in err
+    assert "qwerty secrets bitwarden token" in err
 
 
 def test_env_loader_hint_survives_broken_remediation(tmp_path, monkeypatch, capsys):
     """A plugin source whose remediation() raises must not break startup."""
-    from hermes_cli import env_loader
+    from qwerty_cli import env_loader
     from agent.secret_sources import registry
 
     class _Broken(SecretSource):

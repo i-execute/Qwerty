@@ -906,20 +906,20 @@ class TestFreshnessHelpers:
         assert _last_transcript_timestamp(history) is None
 
     def test_auto_continue_freshness_window_reads_env(self, monkeypatch):
-        monkeypatch.setenv("HERMES_AUTO_CONTINUE_FRESHNESS", "7200")
+        monkeypatch.setenv("QWERTY_AUTO_CONTINUE_FRESHNESS", "7200")
         assert _auto_continue_freshness_window() == 7200.0
 
     def test_auto_continue_freshness_window_default_when_unset(self, monkeypatch):
-        monkeypatch.delenv("HERMES_AUTO_CONTINUE_FRESHNESS", raising=False)
+        monkeypatch.delenv("QWERTY_AUTO_CONTINUE_FRESHNESS", raising=False)
         # Default is 1 hour
         assert _auto_continue_freshness_window() == 3600.0
 
     def test_auto_continue_freshness_window_malformed_falls_back(self, monkeypatch):
-        monkeypatch.setenv("HERMES_AUTO_CONTINUE_FRESHNESS", "not-a-number")
+        monkeypatch.setenv("QWERTY_AUTO_CONTINUE_FRESHNESS", "not-a-number")
         assert _auto_continue_freshness_window() == 3600.0
 
     def test_auto_continue_freshness_window_empty_falls_back(self, monkeypatch):
-        monkeypatch.setenv("HERMES_AUTO_CONTINUE_FRESHNESS", "")
+        monkeypatch.setenv("QWERTY_AUTO_CONTINUE_FRESHNESS", "")
         assert _auto_continue_freshness_window() == 3600.0
 
 
@@ -1645,7 +1645,7 @@ class TestStuckLoopEscalation:
         counts_file = tmp_path / ".restart_failure_counts"
         counts_file.write_text(json.dumps({entry.session_key: 3}))
 
-        monkeypatch.setattr("gateway.run._hermes_home", tmp_path)
+        monkeypatch.setattr("gateway.run._qwerty_home", tmp_path)
         runner = object.__new__(GatewayRunner)
         runner.session_store = store
 
@@ -1675,7 +1675,7 @@ class TestStuckLoopEscalation:
         counts_file = tmp_path / ".restart_failure_counts"
         counts_file.write_text(json.dumps({entry.session_key: 2}))
 
-        monkeypatch.setattr("gateway.run._hermes_home", tmp_path)
+        monkeypatch.setattr("gateway.run._qwerty_home", tmp_path)
         runner = object.__new__(GatewayRunner)
         runner.session_store = store
 
@@ -1693,7 +1693,7 @@ class TestStuckLoopEscalation:
         source = _make_source()
         session_key = _make_store(tmp_path).get_or_create_session(source).session_key
 
-        monkeypatch.setattr("gateway.run._hermes_home", tmp_path)
+        monkeypatch.setattr("gateway.run._qwerty_home", tmp_path)
         calls = []
 
         def _fake_atomic_json_write(path, payload, **kwargs):
@@ -1728,7 +1728,7 @@ class TestStuckLoopEscalation:
             encoding="utf-8",
         )
 
-        monkeypatch.setattr("gateway.run._hermes_home", tmp_path)
+        monkeypatch.setattr("gateway.run._qwerty_home", tmp_path)
         calls = []
 
         def _fake_atomic_json_write(path, payload, **kwargs):
@@ -1957,7 +1957,7 @@ async def test_startup_restore_gate_releases_when_resume_turn_outlives_timeout(
     turn holds the gate — and therefore every channel's inbound queue —
     for the entire duration of that turn.
     """
-    monkeypatch.setenv("HERMES_STARTUP_RESTORE_DRAIN_TIMEOUT", "0.05")
+    monkeypatch.setenv("QWERTY_STARTUP_RESTORE_DRAIN_TIMEOUT", "0.05")
 
     runner, adapter = make_restart_runner()
     runner._startup_restore_in_progress = True
@@ -2013,7 +2013,7 @@ async def test_startup_restore_gate_still_waits_for_a_prompt_resume_turn(
     that completes promptly is still fully awaited before the gate opens, so
     the queued inbound lands behind a finished turn.
     """
-    monkeypatch.delenv("HERMES_STARTUP_RESTORE_DRAIN_TIMEOUT", raising=False)
+    monkeypatch.delenv("QWERTY_STARTUP_RESTORE_DRAIN_TIMEOUT", raising=False)
 
     runner, adapter = make_restart_runner()
     runner._startup_restore_in_progress = True
@@ -2056,7 +2056,7 @@ async def test_startup_restore_drain_timeout_zero_restores_unbounded_wait(
     monkeypatch,
 ):
     """A non-positive bound opts back into the historical wait-forever gate."""
-    monkeypatch.setenv("HERMES_STARTUP_RESTORE_DRAIN_TIMEOUT", "0")
+    monkeypatch.setenv("QWERTY_STARTUP_RESTORE_DRAIN_TIMEOUT", "0")
 
     runner, adapter = make_restart_runner()
     runner._startup_restore_in_progress = True
@@ -2098,17 +2098,17 @@ def test_startup_restore_drain_timeout_reads_config_bridged_env(monkeypatch):
         _startup_restore_drain_timeout_secs,
     )
 
-    monkeypatch.delenv("HERMES_STARTUP_RESTORE_DRAIN_TIMEOUT", raising=False)
+    monkeypatch.delenv("QWERTY_STARTUP_RESTORE_DRAIN_TIMEOUT", raising=False)
     assert (
         _startup_restore_drain_timeout_secs()
         == _STARTUP_RESTORE_DRAIN_TIMEOUT_SECS_DEFAULT
     )
 
-    monkeypatch.setenv("HERMES_STARTUP_RESTORE_DRAIN_TIMEOUT", "12.5")
+    monkeypatch.setenv("QWERTY_STARTUP_RESTORE_DRAIN_TIMEOUT", "12.5")
     assert _startup_restore_drain_timeout_secs() == 12.5
 
     # A malformed value must fall back to the default, never raise.
-    monkeypatch.setenv("HERMES_STARTUP_RESTORE_DRAIN_TIMEOUT", "not-a-number")
+    monkeypatch.setenv("QWERTY_STARTUP_RESTORE_DRAIN_TIMEOUT", "not-a-number")
     assert (
         _startup_restore_drain_timeout_secs()
         == _STARTUP_RESTORE_DRAIN_TIMEOUT_SECS_DEFAULT
@@ -2117,7 +2117,7 @@ def test_startup_restore_drain_timeout_reads_config_bridged_env(monkeypatch):
 
 def test_startup_restore_drain_timeout_is_a_documented_config_key():
     """agent.gateway_startup_restore_drain_timeout ships in DEFAULT_CONFIG."""
-    from hermes_cli.config import DEFAULT_CONFIG
+    from qwerty_cli.config import DEFAULT_CONFIG
 
     assert (
         "gateway_startup_restore_drain_timeout" in DEFAULT_CONFIG["agent"]

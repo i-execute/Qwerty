@@ -1,7 +1,7 @@
 import type { Unstable_TriggerAdapter, Unstable_TriggerItem } from '@assistant-ui/core'
 import { type MutableRefObject, type RefObject, useCallback, useEffect, useRef, useState } from 'react'
 
-import { hermesDirectiveFormatter } from '@/components/assistant-ui/directive-text'
+import { qwertyDirectiveFormatter } from '@/components/assistant-ui/directive-text'
 import { desktopSlashCommandArgumentMode } from '@/lib/desktop-slash-commands'
 
 import {
@@ -216,7 +216,7 @@ export function useComposerTrigger({
       return
     }
 
-    const serialized = hermesDirectiveFormatter.serialize(item)
+    const serialized = qwertyDirectiveFormatter.serialize(item)
     const starter = serialized.endsWith(':')
 
     // Picking a bare arg-taking command (e.g. `/personality`) shouldn't commit

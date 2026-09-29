@@ -2,10 +2,10 @@
 name: telegram-bot-api-10-2
 description: "Complete reference for Telegram Bot API 10.2 (July 14, 2026) — Ephemeral Messages, Rich Messages enhancements (InputRichMessageMedia, InputMediaVoiceNote), Communities, Mini App security hardening"
 version: 1.0.0
-author: Hermes Agent
+author: Qwerty Agent
 license: MIT
 metadata:
-  hermes:
+  qwerty:
     tags: [telegram, bot-api, bot-api-10.2, ephemeral-messages, communities, rich-messages, mini-apps]
     related_skills: [telegram-bot-api-10-rich-messages, telegram-rich-messages, xurl, github-issues]
 ---

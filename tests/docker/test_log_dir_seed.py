@@ -1,11 +1,11 @@
-"""Runtime smoke test for Docker $HERMES_HOME/logs/gateways seeding.
+"""Runtime smoke test for Docker $QWERTY_HOME/logs/gateways seeding.
 
 Build the real image and verify logs/ and logs/gateways/ exist and are
-owned by the hermes user after container boot.
+owned by the qwerty user after container boot.
 
 Regression guard for #45258: if the first gateway log service runs in
 root context, logs/gateways/ is created root-owned; every profile
-registered later runs its log service as the dropped hermes user and
+registered later runs its log service as the dropped qwerty user and
 s6-log crash-loops on mkdir: Permission denied.
 """
 from __future__ import annotations
@@ -17,10 +17,10 @@ from tests.docker.conftest import (
 )
 
 
-def test_logs_gateways_seeded_and_hermes_owned(
+def test_logs_gateways_seeded_and_qwerty_owned(
     built_image: str, container_name: str,
 ) -> None:
-    """logs/ and logs/gateways/ must exist and be owned by hermes after boot."""
+    """logs/ and logs/gateways/ must exist and be owned by qwerty after boot."""
     start_container(built_image, container_name)
 
     # Both directories must exist
@@ -35,7 +35,7 @@ def test_logs_gateways_seeded_and_hermes_owned(
         f"logs/ or logs/gateways/ not seeded: {r.stdout}"
     )
 
-    # Both must be owned by hermes
+    # Both must be owned by qwerty
     r = docker_exec_sh(
         container_name,
         'logs_owner=$(stat -c "%U" /opt/data/logs); '
@@ -43,11 +43,11 @@ def test_logs_gateways_seeded_and_hermes_owned(
         'echo "logs=$logs_owner gateways=$gateways_owner"',
         timeout=10,
     )
-    assert "logs=hermes" in r.stdout, (
-        f"logs/ not owned by hermes: {r.stdout}"
+    assert "logs=qwerty" in r.stdout, (
+        f"logs/ not owned by qwerty: {r.stdout}"
     )
-    assert "gateways=hermes" in r.stdout, (
-        f"logs/gateways/ not owned by hermes: {r.stdout}"
+    assert "gateways=qwerty" in r.stdout, (
+        f"logs/gateways/ not owned by qwerty: {r.stdout}"
     )
 
 
@@ -56,7 +56,7 @@ def test_logs_gateways_healed_when_parent_root_owned(
 ) -> None:
     """Warm-boot stage2 must heal root-owned logs/gateways (#45258).
 
-    Mimics a poisoned volume: HERMES_HOME already hermes-owned (so the
+    Mimics a poisoned volume: QWERTY_HOME already qwerty-owned (so the
     bulk data-volume chown is skipped) while logs/gateways is root-owned.
     Restartable log/run no longer root-chowns that path (symlink TOCTOU),
     so stage2 must repair the parent on every boot.
@@ -73,7 +73,7 @@ def test_logs_gateways_healed_when_parent_root_owned(
         timeout=10,
     )
     assert poison.returncode == 0, (poison.stdout, poison.stderr)
-    assert "home=hermes" in poison.stdout, poison.stdout
+    assert "home=qwerty" in poison.stdout, poison.stdout
     assert "gateways=root" in poison.stdout, poison.stdout
 
     denied = docker_exec_sh(
@@ -94,5 +94,5 @@ def test_logs_gateways_healed_when_parent_root_owned(
         timeout=10,
     )
     assert healed.returncode == 0, (healed.stdout, healed.stderr)
-    assert "gateways=hermes" in healed.stdout, healed.stdout
+    assert "gateways=qwerty" in healed.stdout, healed.stdout
     assert "MKDIR_OK" in healed.stdout, healed.stdout

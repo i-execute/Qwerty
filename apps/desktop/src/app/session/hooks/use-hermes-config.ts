@@ -1,6 +1,6 @@
 import { type MutableRefObject, useCallback, useRef, useState } from 'react'
 
-import { getHermesConfig, getHermesConfigDefaults } from '@/hermes'
+import { getQwertyConfig, getQwertyConfigDefaults } from '@/qwerty'
 import { BUILTIN_PERSONALITIES, normalizePersonalityValue, personalityNamesFromConfig } from '@/lib/chat-runtime'
 import { normalize } from '@/lib/text'
 import {
@@ -40,16 +40,16 @@ function normalizeConfigEffort(value: unknown): string {
   return effort === 'false' || effort === 'disabled' ? 'none' : effort
 }
 
-interface HermesConfigOptions {
+interface QwertyConfigOptions {
   activeSessionIdRef: MutableRefObject<string | null>
 }
 
-export function useHermesConfig({ activeSessionIdRef }: HermesConfigOptions) {
+export function useQwertyConfig({ activeSessionIdRef }: QwertyConfigOptions) {
   const [voiceMaxRecordingSeconds, setVoiceMaxRecordingSeconds] = useState(DEFAULT_VOICE_SECONDS)
   const [sttEnabled, setSttEnabled] = useState(true)
   const profileRefreshEpochRef = useRef(0)
 
-  const refreshHermesConfig = useCallback(
+  const refreshQwertyConfig = useCallback(
     async (force = false) => {
       if (force) {
         profileRefreshEpochRef.current += 1
@@ -59,7 +59,7 @@ export function useHermesConfig({ activeSessionIdRef }: HermesConfigOptions) {
       const selectionGeneration = getComposerSelectionGeneration()
 
       try {
-        const [config, defaults] = await Promise.all([getHermesConfig(), getHermesConfigDefaults().catch(() => ({}))])
+        const [config, defaults] = await Promise.all([getQwertyConfig(), getQwertyConfigDefaults().catch(() => ({}))])
 
         if (profileRefreshEpochRef.current !== profileRefreshEpoch) {
           return
@@ -87,7 +87,7 @@ export function useHermesConfig({ activeSessionIdRef }: HermesConfigOptions) {
         // Publish the profile default regardless of whether the composer is
         // reseeded below: picker rows and preset application resolve "the
         // default" from here, so a manual model pick must not leave them
-        // rendering/applying Hermes' built-in medium over the user's config.
+        // rendering/applying Qwerty' built-in medium over the user's config.
         setDefaultReasoningEffort(reasoning)
 
         const shouldSeedComposer =
@@ -112,5 +112,5 @@ export function useHermesConfig({ activeSessionIdRef }: HermesConfigOptions) {
     [activeSessionIdRef]
   )
 
-  return { refreshHermesConfig, sttEnabled, voiceMaxRecordingSeconds }
+  return { refreshQwertyConfig, sttEnabled, voiceMaxRecordingSeconds }
 }

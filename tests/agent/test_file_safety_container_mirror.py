@@ -1,9 +1,9 @@
 """Tests for the container-context sandbox-mirror guard (#32049 follow-up).
 
 Brian's shape-based guard (#32213) catches paths that carry the full
-``…/sandboxes/<backend>/<task>/home/.hermes/…`` prefix. This covers the
+``…/sandboxes/<backend>/<task>/home/.qwerty/…`` prefix. This covers the
 complementary inner-container case: when file tools execute inside Docker,
-the bind-mount strips that prefix and the guard sees plain ``/root/.hermes/…``.
+the bind-mount strips that prefix and the guard sees plain ``/root/.qwerty/…``.
 The root:root ownership on the divergent SOUL.md in #32049 confirms this
 is the primary failure mode.
 """
@@ -45,7 +45,7 @@ class TestClassifyContainerMirrorTarget:
         assert result is not None
         assert result["inner_path"] == inner
 
-    def test_non_hermes_path_not_flagged(self):
+    def test_non_qwerty_path_not_flagged(self):
         """/root/workspace/… is not .hermes state and must not be blocked."""
         from agent.file_safety import classify_container_mirror_target
 

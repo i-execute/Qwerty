@@ -6,7 +6,7 @@
  * the familiar `kimi-…` naming of sibling models.
  *
  * Keep in sync with ui-tui/src/lib/model-search-text.ts and
- * hermes_cli/model_search.py. Behavioural tests live in the TUI package.
+ * qwerty_cli/model_search.py. Behavioural tests live in the TUI package.
  */
 const MODEL_SEARCH_ALIASES: Record<string, readonly string[]> = {
   k3: ["kimi-k3", "kimi"],

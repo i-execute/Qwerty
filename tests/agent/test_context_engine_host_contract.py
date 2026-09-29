@@ -1,7 +1,7 @@
 """Regressions for the context-engine host contract.
 
 These tests pin the five generic host-side guarantees that external context
-engine plugins (e.g. hermes-lcm) rely on:
+engine plugins (e.g. qwerty-lcm) rely on:
 
 1. ``_transition_context_engine_session`` drives the full lifecycle
    (on_session_end → on_session_reset → on_session_start → optional
@@ -29,7 +29,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 from agent.context_compressor import ContextCompressor
-from hermes_state import SessionDB
+from qwerty_state import SessionDB
 from run_agent import AIAgent
 
 
@@ -237,8 +237,8 @@ def test_update_from_response_forwards_canonical_cache_buckets():
 
 
 def test_discover_context_engines_includes_plugin_registered_engines(monkeypatch):
-    """Plugin-registered context engines appear in the ``hermes plugins`` picker."""
-    from hermes_cli import plugins_cmd
+    """Plugin-registered context engines appear in the ``qwerty plugins`` picker."""
+    from qwerty_cli import plugins_cmd
 
     fake_repo = lambda: [("compressor", "built-in", True)]
 
@@ -250,11 +250,11 @@ def test_discover_context_engines_includes_plugin_registered_engines(monkeypatch
         fake_repo,
     )
     monkeypatch.setattr(
-        "hermes_cli.plugins.discover_plugins",
+        "qwerty_cli.plugins.discover_plugins",
         lambda *_a, **_kw: None,
     )
     monkeypatch.setattr(
-        "hermes_cli.plugins.get_plugin_context_engine",
+        "qwerty_cli.plugins.get_plugin_context_engine",
         lambda: FakePluginEngine(),
     )
 
@@ -266,7 +266,7 @@ def test_discover_context_engines_includes_plugin_registered_engines(monkeypatch
 
 def test_discover_context_engines_dedupes_by_name(monkeypatch):
     """Repo-shipped engine wins when name collides with a plugin-registered one."""
-    from hermes_cli import plugins_cmd
+    from qwerty_cli import plugins_cmd
 
     class FakePluginEngine:
         name = "compressor"  # same name as repo-shipped
@@ -276,11 +276,11 @@ def test_discover_context_engines_dedupes_by_name(monkeypatch):
         lambda: [("compressor", "built-in compressor", True)],
     )
     monkeypatch.setattr(
-        "hermes_cli.plugins.discover_plugins",
+        "qwerty_cli.plugins.discover_plugins",
         lambda *_a, **_kw: None,
     )
     monkeypatch.setattr(
-        "hermes_cli.plugins.get_plugin_context_engine",
+        "qwerty_cli.plugins.get_plugin_context_engine",
         lambda: FakePluginEngine(),
     )
 
@@ -292,7 +292,7 @@ def test_discover_context_engines_dedupes_by_name(monkeypatch):
 def test_engine_collector_forwards_register_command_to_plugin_manager():
     """A plugin context engine can register a slash command via ``ctx.register_command``."""
     from plugins.context_engine import _EngineCollector
-    from hermes_cli.plugins import get_plugin_manager
+    from qwerty_cli.plugins import get_plugin_manager
 
     handler = lambda raw_args: f"echo: {raw_args}"
 
@@ -319,7 +319,7 @@ def test_engine_collector_forwards_register_command_to_plugin_manager():
 def test_engine_collector_rejects_builtin_command_conflicts():
     """Context engine cannot shadow built-in slash commands like /help."""
     from plugins.context_engine import _EngineCollector
-    from hermes_cli.plugins import get_plugin_manager
+    from qwerty_cli.plugins import get_plugin_manager
 
     collector = _EngineCollector(engine_name="my-lcm")
     collector.register_command("help", lambda *_: "shadow")

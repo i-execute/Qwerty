@@ -3,7 +3,7 @@
 Ollama Cloud's ``/v1/chat/completions`` endpoint supports top-level
 ``reasoning_effort`` with values ``none``, ``low``, ``medium``, ``high``,
 and (undocumented but empirically confirmed) ``max``.  The profile maps
-Hermes's ``xhigh`` → ``max`` to unlock DeepSeek V4's "Max thinking" tier
+Qwerty's ``xhigh`` → ``max`` to unlock DeepSeek V4's "Max thinking" tier
 and passes the standard levels through unchanged.
 
 These tests pin the profile's wire-shape contract so Ollama Cloud
@@ -126,7 +126,7 @@ class TestOllamaCloudReasoningEffort:
         assert top_level == {}
 
     def test_minimal_effort_omitted(self, ollama_cloud_profile):
-        """``minimal`` is a real Hermes effort level but is not documented for
+        """``minimal`` is a real Qwerty effort level but is not documented for
         Ollama Cloud's /v1/chat/completions, so it is omitted rather than sent
         verbatim (which could trigger a 400)."""
         _, top_level = ollama_cloud_profile.build_api_kwargs_extras(
@@ -229,7 +229,7 @@ class TestOllamaModelSupportsThinking:
         monkeypatch.setattr(httpx, "Client", _Client)
 
     def test_thinking_capability_true(self, monkeypatch):
-        from hermes_cli.models import ollama_model_supports_thinking
+        from qwerty_cli.models import ollama_model_supports_thinking
 
         self._patch_show(monkeypatch, capabilities=["completion", "tools", "thinking"])
         assert (
@@ -240,7 +240,7 @@ class TestOllamaModelSupportsThinking:
         )
 
     def test_no_thinking_capability_false(self, monkeypatch):
-        from hermes_cli.models import ollama_model_supports_thinking
+        from qwerty_cli.models import ollama_model_supports_thinking
 
         self._patch_show(monkeypatch, capabilities=["completion", "vision"])
         assert (
@@ -249,7 +249,7 @@ class TestOllamaModelSupportsThinking:
         )
 
     def test_probe_failure_returns_none(self, monkeypatch):
-        from hermes_cli.models import ollama_model_supports_thinking
+        from qwerty_cli.models import ollama_model_supports_thinking
 
         self._patch_show(monkeypatch, status=404)
         assert (
@@ -257,7 +257,7 @@ class TestOllamaModelSupportsThinking:
         )
 
     def test_exception_returns_none(self, monkeypatch):
-        from hermes_cli.models import ollama_model_supports_thinking
+        from qwerty_cli.models import ollama_model_supports_thinking
 
         self._patch_show(monkeypatch, raise_exc=RuntimeError("boom"))
         assert (

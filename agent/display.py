@@ -55,7 +55,7 @@ def _diff_ansi() -> dict[str, str]:
     plus = "\033[38;2;255;255;255;48;2;20;90;20m"
 
     try:
-        from hermes_cli.skin_engine import get_active_skin
+        from qwerty_cli.skin_engine import get_active_skin
         skin = get_active_skin()
 
         def _hex_fg(key: str, fallback_rgb: tuple[int, int, int]) -> str:
@@ -130,7 +130,7 @@ def get_tool_preview_max_len() -> int:
 def _get_skin():
     """Get the active skin config, or None if not available."""
     try:
-        from hermes_cli.skin_engine import get_active_skin
+        from qwerty_cli.skin_engine import get_active_skin
         return get_active_skin()
     except Exception:
         return None
@@ -652,7 +652,7 @@ def build_status_phrase(tool_name: str, args: dict | None, max_len: int = 49) ->
     ``assistant.threads.setStatus`` line) to show what the agent is doing
     right now: ``is running scripts/run_tests.sh…`` instead of a static
     ``is thinking...``.  The phrase is phrased to follow the bot's display
-    name ("Hermes is running …"), so it starts lowercase with "is".
+    name ("Qwerty is running …"), so it starts lowercase with "is".
 
     Pass ``args=None`` for a verb-only phrase (``is running…``) — used when
     ``display.live_status`` is ``verb`` to keep argument previews out of
@@ -888,7 +888,7 @@ def _emit_inline_diff(diff_text: str, print_fn) -> bool:
 
 
 def _render_inline_unified_diff(diff: str) -> list[str]:
-    """Render unified diff lines in Hermes' inline transcript style."""
+    """Render unified diff lines in Qwerty' inline transcript style."""
     rendered: list[str] = []
     from_file = None
     to_file = None
@@ -1167,7 +1167,7 @@ class KawaiiSpinner:
         wings = skin.get_spinner_wings() if skin else []
 
         while self.running:
-            if os.getenv("HERMES_SPINNER_PAUSE"):
+            if os.getenv("QWERTY_SPINNER_PAUSE"):
                 time.sleep(0.1)
                 continue
             frame = self.spinner_frames[self.frame_idx % len(self.spinner_frames)]

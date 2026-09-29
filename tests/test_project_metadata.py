@@ -73,7 +73,7 @@ def test_lazy_installable_extras_excluded_from_all():
     for extra in lazy_covered_extras:
         offending = [
             spec for spec in all_extra_specs
-            if f"hermes-agent[{extra}]" in spec
+            if f"qwerty-agent[{extra}]" in spec
         ]
         assert not offending, (
             f"[{extra}] is in [all] but also in LAZY_DEPS. "
@@ -99,7 +99,7 @@ def test_pyproject_aiohttp_pins_match_lazy_slack_pin():
 
     pyproject extras (messaging/slack/homeassistant/sms) exact-pin aiohttp.
     The Slack lazy-install deps (LAZY_DEPS['platform.slack']) also pin it.
-    If the two drift, `hermes update` resolves the pyproject pin and
+    If the two drift, `qwerty update` resolves the pyproject pin and
     downgrades aiohttp, reopening the CVEs the lazy pin fixed (#31817) —
     only for Slack's lazy refresh to upgrade it again on next use.
     """
@@ -122,7 +122,7 @@ def test_pyproject_aiohttp_pins_match_lazy_slack_pin():
     }
     assert not mismatches, (
         "pyproject.toml aiohttp pins must match "
-        "LAZY_DEPS['platform.slack'] to avoid hermes update downgrading "
+        "LAZY_DEPS['platform.slack'] to avoid qwerty update downgrading "
         "aiohttp before Slack's lazy refresh upgrades it again. "
         f"lazy aiohttp=={lazy_aiohttp}; mismatched extras: {mismatches}"
     )
@@ -133,7 +133,7 @@ def test_pyproject_pins_match_lazy_deps_pins():
 
     Any package that is exact-pinned in BOTH a pyproject extra and a
     `tools/lazy_deps.py` LAZY_DEPS entry must use the SAME version in both
-    places. When they drift, `hermes update` resolves the pyproject extra
+    places. When they drift, `qwerty update` resolves the pyproject extra
     pin and downgrades the package to the older version, reopening whatever
     the lazy pin fixed (the aiohttp #31817 case, and the anthropic
     CVE-2026-34450/34452 case found alongside it) — only for the lazy
@@ -173,7 +173,7 @@ def test_pyproject_pins_match_lazy_deps_pins():
     }
     assert not drift, (
         "pyproject extras pins must match tools/lazy_deps.py LAZY_DEPS pins "
-        "for every shared package — otherwise `hermes update` downgrades the "
+        "for every shared package — otherwise `qwerty update` downgrades the "
         "package below the security-current lazy pin (see #31817). Drift: "
         f"{drift}"
     )
@@ -185,7 +185,7 @@ def test_dev_extra_excluded_from_all():
 
     assert "dev" in optional_dependencies
     assert not any(
-        spec == "hermes-agent[dev]"
+        spec == "qwerty-agent[dev]"
         for spec in optional_dependencies["all"]
     )
 
@@ -198,7 +198,7 @@ def test_messaging_extra_includes_qrcode_for_weixin_setup():
 
 
 def test_dingtalk_extra_includes_qrcode_for_qr_auth():
-    """DingTalk's QR-code device-flow auth (hermes_cli/dingtalk_auth.py)
+    """DingTalk's QR-code device-flow auth (qwerty_cli/dingtalk_auth.py)
     needs the qrcode package."""
     optional_dependencies = _load_optional_dependencies()
 
@@ -220,7 +220,7 @@ def test_nemo_relay_extra_uses_supported_official_distribution_range():
 
     assert optional_dependencies["nemo-relay"] == ["nemo-relay>=0.5,<1.0"]
     assert not any(
-        spec == "hermes-agent[nemo-relay]"
+        spec == "qwerty-agent[nemo-relay]"
         for spec in optional_dependencies["all"]
     )
 
@@ -253,7 +253,7 @@ def test_every_lazy_deps_exact_pin_matches_uv_lock():
 
     Any package that is BOTH exact-pinned in ``tools/lazy_deps.py`` AND
     resolved in the committed uv.lock is a *shared* package: the core
-    install ships the locked version, and the ``hermes update`` lazy-refresh
+    install ships the locked version, and the ``qwerty update`` lazy-refresh
     pass re-asserts the LAZY_DEPS pin whenever the package is present
     (``active_features()``). If the two disagree, every update churns the
     package — and when the lazy pin is older, it force-DOWNGRADES a version
@@ -285,7 +285,7 @@ def test_every_lazy_deps_exact_pin_matches_uv_lock():
 
     assert not drift, (
         "LAZY_DEPS exact pins must match the uv.lock resolved version for "
-        "every package the core lock also ships — otherwise `hermes update` "
+        "every package the core lock also ships — otherwise `qwerty update` "
         "churns/downgrades the shared package out from under its other "
         "consumers (#60783, #31817). Bump the pin AND run "
         "`uv lock --upgrade-package <name>` in the same commit. Drift: "
@@ -300,7 +300,7 @@ def test_huggingface_hub_lazy_pin_matches_uv_lock():
     faster-whisper/tokenizers, and transformers/sentence-transformers when
     local Hindsight embeddings are installed), and LAZY_DEPS
     ['tool.trace_upload'] exact-pins it. Because active_features() activates
-    a feature from mere package presence, the `hermes update` lazy-refresh
+    a feature from mere package presence, the `qwerty update` lazy-refresh
     pass re-asserts the LAZY_DEPS pin on every install where hub is present.
     If that pin drifts from the lock's resolved version, every update churns
     the shared package — and a pin below transformers' floor (>=1.5.0)
@@ -316,7 +316,7 @@ def test_huggingface_hub_lazy_pin_matches_uv_lock():
         "LAZY_DEPS['tool.trace_upload'] pins huggingface-hub=="
         f"{lazy_pin} but uv.lock resolves {locked}. These must move in "
         "lockstep (bump the pin AND run `uv lock --upgrade-package "
-        "huggingface-hub`), or `hermes update` will churn/downgrade the "
+        "huggingface-hub`), or `qwerty update` will churn/downgrade the "
         "shared package and break Hindsight local embeddings (#60783)."
     )
 

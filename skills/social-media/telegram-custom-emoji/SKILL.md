@@ -2,10 +2,10 @@
 name: telegram-custom-emoji
 description: "Telegram Custom Emoji IDs for Rich Messages - Ready-to-use RichTextCustomEmoji objects for Bot API 10.1+"
 version: 1.0.0
-author: Hermes Agent
+author: Qwerty Agent
 license: MIT
 metadata:
-  hermes:
+  qwerty:
     tags: [telegram, custom-emoji, rich-messages, bot-api-10.1]
     related_skills: [telegram-rich-messages, telegram-bot-api-10-rich-messages, telegram-bot-api-10-2]
 ---

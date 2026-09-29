@@ -4,7 +4,7 @@
 Bug: the block read ``self._model`` / ``self._base_url`` to resolve the
 model/base_url for ``get_model_context_length_async``. ``GatewayRunner``
 never assigns either attribute (that pattern was copy-pasted from
-``HermesCLI``, which does carry ``self.model``/``self.base_url`` — see
+``QwertyCLI``, which does carry ``self.model``/``self.base_url`` — see
 commit da44c196b). Every message containing "@" raised ``AttributeError``
 inside the ``try`` block, which the surrounding ``except Exception`` silently
 swallowed at debug level, so ``preprocess_context_references_async`` never
@@ -257,7 +257,7 @@ async def test_at_reference_passes_compatible_custom_provider_context(monkeypatc
         lambda: {"provider": "custom:private", "api_key": "test", "base_url": "https://private.example/v1"},
     )
 
-    import hermes_cli.config as config_mod
+    import qwerty_cli.config as config_mod
     import agent.model_metadata as model_meta_mod
     import agent.context_references as ctx_mod
 
@@ -300,7 +300,7 @@ async def test_at_reference_applies_custom_runtime_budget_to_preprocessor(monkey
         {"provider": "custom:private", "api_key": "test", "base_url": "https://private.example/v1"},
     ))
 
-    import hermes_cli.config as config_mod
+    import qwerty_cli.config as config_mod
     import agent.model_metadata as model_meta_mod
     import agent.context_references as ctx_mod
 

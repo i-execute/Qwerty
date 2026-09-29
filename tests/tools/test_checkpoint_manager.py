@@ -138,7 +138,7 @@ class TestStoreInit:
         err = _init_shadow_repo(store, str(work_dir))
         assert err is None
         assert (store / "HEAD").exists()
-        assert (store / "HERMES_WORKDIR").exists()
+        assert (store / "QWERTY_WORKDIR").exists()
 
     def test_legacy_migration_archives_prev2_repos(
         self, checkpoint_base, work_dir,
@@ -150,7 +150,7 @@ class TestStoreInit:
         fake_repo = base / "deadbeefcafebabe"
         fake_repo.mkdir()
         (fake_repo / "HEAD").write_text("ref: refs/heads/main\n")
-        (fake_repo / "HERMES_WORKDIR").write_text(str(work_dir) + "\n")
+        (fake_repo / "QWERTY_WORKDIR").write_text(str(work_dir) + "\n")
         (fake_repo / "objects").mkdir()
 
         # Init store — should migrate the fake pre-v2 repo
@@ -765,7 +765,7 @@ def _seed_legacy_repo(base: Path, name: str, workdir: Path, mtime: float = None)
     shadow = base / name
     shadow.mkdir(parents=True)
     (shadow / "HEAD").write_text("ref: refs/heads/main\n")
-    (shadow / "HERMES_WORKDIR").write_text(str(workdir) + "\n")
+    (shadow / "QWERTY_WORKDIR").write_text(str(workdir) + "\n")
     (shadow / "info").mkdir()
     (shadow / "info" / "exclude").write_text("node_modules/\n")
     if mtime is not None:
@@ -1005,12 +1005,12 @@ class TestPruneCheckpointsOrphanAllowlist:
 
     def test_end_to_end_timing_change_during_confirmation_prompt(self, tmp_path, monkeypatch):
         """Reproduces the exact PR #69141 review scenario end-to-end through
-        `hermes checkpoints prune`: the preview shows one pre-v2 orphan; a
+        `qwerty checkpoints prune`: the preview shows one pre-v2 orphan; a
         second project's workdir is removed by the input() callback while
         the human is "answering" the prompt. Only the previewed orphan may
         be deleted.
         """
-        import hermes_cli.checkpoints as checkpoints_cli
+        import qwerty_cli.checkpoints as checkpoints_cli
 
         base = tmp_path / "checkpoints"
         monkeypatch.setattr("tools.checkpoint_manager.CHECKPOINT_BASE", base)

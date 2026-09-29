@@ -40,18 +40,18 @@ import pytest
 
 @pytest.fixture
 def isolated_home(monkeypatch):
-    """Temp HERMES_HOME with config + clean credential env vars."""
-    test_home = tempfile.mkdtemp(prefix="hermes_test_31179_")
-    hermes_home = os.path.join(test_home, ".hermes")
-    os.makedirs(hermes_home)
-    monkeypatch.setenv("HERMES_HOME", hermes_home)
+    """Temp QWERTY_HOME with config + clean credential env vars."""
+    test_home = tempfile.mkdtemp(prefix="qwerty_test_31179_")
+    qwerty_home = os.path.join(test_home, ".hermes")
+    os.makedirs(qwerty_home)
+    monkeypatch.setenv("QWERTY_HOME", qwerty_home)
 
     # Strip all credential-shaped env vars so each scenario starts hermetic.
     for k in list(os.environ.keys()):
         if k.endswith("_API_KEY") or k.endswith("_TOKEN"):
             monkeypatch.delenv(k, raising=False)
 
-    yield hermes_home
+    yield qwerty_home
     shutil.rmtree(test_home, ignore_errors=True)
 
 
@@ -61,11 +61,11 @@ def _write_config(home: str, text: str) -> None:
 
 
 def _fresh_modules():
-    """Drop cached hermes modules so each test reloads against current env."""
+    """Drop cached qwerty modules so each test reloads against current env."""
     for mod in list(sys.modules.keys()):
         if mod.startswith(("agent.auxiliary_client", "agent.image_routing",
                            "tools.vision_tools", "tools.browser_tool",
-                           "hermes_cli.config")):
+                           "qwerty_cli.config")):
             del sys.modules[mod]
 
 

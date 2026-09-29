@@ -1,6 +1,6 @@
 """Regression tests for credential-pool OAuth refresh write-through to root.
 
-Companion to ``tests/hermes_cli/test_xai_oauth_writethrough.py``. That file
+Companion to ``tests/qwerty_cli/test_xai_oauth_writethrough.py``. That file
 covers the *non-pool* xAI refresh path (``_save_xai_oauth_tokens``). These
 cover the **credential-pool** refresh path
 (``CredentialPool._sync_device_code_entry_to_auth_store``): when a profile
@@ -27,7 +27,7 @@ from agent.credential_pool import (
     CredentialPool,
     PooledCredential,
 )
-from hermes_cli import auth as A
+from qwerty_cli import auth as A
 
 
 def _write_store(path, store):
@@ -57,7 +57,7 @@ def profile_and_root(tmp_path, monkeypatch):
     """Wire a profile auth store + a distinct global-root auth store on disk.
 
     The pytest seat belt in ``_write_through_provider_state_to_global_root``
-    only refuses the *real* user's ``$HOME/.hermes/auth.json``; a tmp_path
+    only refuses the *real* user's ``$HOME/.qwerty/auth.json``; a tmp_path
     root is allowed, so point HOME away from the tmp root to keep the guard
     from tripping on these fixtures.
     """
@@ -285,7 +285,7 @@ def test_global_write_through_preserves_concurrent_root_update(
 def test_codex_pool_refresh_holds_auth_store_lock_across_post(monkeypatch, tmp_path):
     """The Codex OAuth pool refresh must POST under the cross-process auth lock.
 
-    Codex refresh tokens are single-use. If two Hermes processes both read the
+    Codex refresh tokens are single-use. If two Qwerty processes both read the
     same on-disk token and both POST it, the loser gets ``refresh_token_reused``.
     Serializing the sync -> refresh POST -> write-back sequence through the
     shared ``_auth_store_lock`` closes that window: a second process blocks on

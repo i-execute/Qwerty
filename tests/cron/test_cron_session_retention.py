@@ -8,7 +8,7 @@ job execution and trims that job's runs down to ``cron.session_retention``
 """
 
 from cron.scheduler import _apply_cron_session_retention
-from hermes_state import SessionDB
+from qwerty_state import SessionDB
 
 
 def _seed_runs(db, job_id, count, base=1_700_000_000.0):
@@ -30,12 +30,12 @@ def _open_db(home):
 
 class TestApplyCronSessionRetention:
     def test_trims_to_configured_window(self, tmp_path, monkeypatch):
-        home = tmp_path / "hermes_home"
+        home = tmp_path / "qwerty_home"
         home.mkdir()
         (home / "config.yaml").write_text(
             "cron:\n  session_retention: 5\n", encoding="utf-8"
         )
-        monkeypatch.setattr("cron.scheduler._hermes_home", home)
+        monkeypatch.setattr("cron.scheduler._qwerty_home", home)
         db = _open_db(home)
         _seed_runs(db, "alpha", 12)
 
@@ -47,9 +47,9 @@ class TestApplyCronSessionRetention:
         db.close()
 
     def test_default_retention_50_without_config(self, tmp_path, monkeypatch):
-        home = tmp_path / "hermes_home"
+        home = tmp_path / "qwerty_home"
         home.mkdir()
-        monkeypatch.setattr("cron.scheduler._hermes_home", home)
+        monkeypatch.setattr("cron.scheduler._qwerty_home", home)
         db = _open_db(home)
         _seed_runs(db, "alpha", 55)
 
@@ -61,12 +61,12 @@ class TestApplyCronSessionRetention:
         db.close()
 
     def test_null_retention_disables_trimming(self, tmp_path, monkeypatch):
-        home = tmp_path / "hermes_home"
+        home = tmp_path / "qwerty_home"
         home.mkdir()
         (home / "config.yaml").write_text(
             "cron:\n  session_retention: null\n", encoding="utf-8"
         )
-        monkeypatch.setattr("cron.scheduler._hermes_home", home)
+        monkeypatch.setattr("cron.scheduler._qwerty_home", home)
         db = _open_db(home)
         _seed_runs(db, "alpha", 60)
 
@@ -78,12 +78,12 @@ class TestApplyCronSessionRetention:
         db.close()
 
     def test_all_string_disables_trimming(self, tmp_path, monkeypatch):
-        home = tmp_path / "hermes_home"
+        home = tmp_path / "qwerty_home"
         home.mkdir()
         (home / "config.yaml").write_text(
             "cron:\n  session_retention: all\n", encoding="utf-8"
         )
-        monkeypatch.setattr("cron.scheduler._hermes_home", home)
+        monkeypatch.setattr("cron.scheduler._qwerty_home", home)
         db = _open_db(home)
         _seed_runs(db, "alpha", 60)
 
@@ -95,12 +95,12 @@ class TestApplyCronSessionRetention:
         db.close()
 
     def test_keeps_newest_runs_only(self, tmp_path, monkeypatch):
-        home = tmp_path / "hermes_home"
+        home = tmp_path / "qwerty_home"
         home.mkdir()
         (home / "config.yaml").write_text(
             "cron:\n  session_retention: 3\n", encoding="utf-8"
         )
-        monkeypatch.setattr("cron.scheduler._hermes_home", home)
+        monkeypatch.setattr("cron.scheduler._qwerty_home", home)
         db = _open_db(home)
         _seed_runs(db, "alpha", 8)
 
@@ -121,12 +121,12 @@ class TestApplyCronSessionRetention:
         db.close()
 
     def test_other_jobs_untouched(self, tmp_path, monkeypatch):
-        home = tmp_path / "hermes_home"
+        home = tmp_path / "qwerty_home"
         home.mkdir()
         (home / "config.yaml").write_text(
             "cron:\n  session_retention: 3\n", encoding="utf-8"
         )
-        monkeypatch.setattr("cron.scheduler._hermes_home", home)
+        monkeypatch.setattr("cron.scheduler._qwerty_home", home)
         db = _open_db(home)
         _seed_runs(db, "alpha", 8)
         _seed_runs(db, "beta", 8)
@@ -139,12 +139,12 @@ class TestApplyCronSessionRetention:
         db.close()
 
     def test_no_runs_is_noop(self, tmp_path, monkeypatch):
-        home = tmp_path / "hermes_home"
+        home = tmp_path / "qwerty_home"
         home.mkdir()
         (home / "config.yaml").write_text(
             "cron:\n  session_retention: 3\n", encoding="utf-8"
         )
-        monkeypatch.setattr("cron.scheduler._hermes_home", home)
+        monkeypatch.setattr("cron.scheduler._qwerty_home", home)
         db = _open_db(home)
 
         _apply_cron_session_retention(db, "ghost")
@@ -155,12 +155,12 @@ class TestApplyCronSessionRetention:
         db.close()
 
     def test_invalid_retention_value_never_raises(self, tmp_path, monkeypatch):
-        home = tmp_path / "hermes_home"
+        home = tmp_path / "qwerty_home"
         home.mkdir()
         (home / "config.yaml").write_text(
             "cron:\n  session_retention: bananas\n", encoding="utf-8"
         )
-        monkeypatch.setattr("cron.scheduler._hermes_home", home)
+        monkeypatch.setattr("cron.scheduler._qwerty_home", home)
         db = _open_db(home)
         _seed_runs(db, "alpha", 8)
 

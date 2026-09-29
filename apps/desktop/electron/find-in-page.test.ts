@@ -165,14 +165,14 @@ describe('installFoundInPageForwarder', () => {
     // Drive the fake's emit directly — this exercises the same code path
     // as Electron's actual `webContents.emit('found-in-page', …)`.
     wc.emit('found-in-page', {}, { activeMatchOrdinal: 2, matches: 5 })
-    assert.deepEqual(wc.calls.send, [{ channel: 'hermes:found-in-page', payload: { activeMatchOrdinal: 2, count: 5 } }])
+    assert.deepEqual(wc.calls.send, [{ channel: 'qwerty:found-in-page', payload: { activeMatchOrdinal: 2, count: 5 } }])
   })
 
   test('handles missing fields without throwing', () => {
     const wc = makeFakeWebContents()
     installFoundInPageForwarder(asWC(wc))
     wc.emit('found-in-page', {}, {})
-    assert.deepEqual(wc.calls.send, [{ channel: 'hermes:found-in-page', payload: { activeMatchOrdinal: 0, count: 0 } }])
+    assert.deepEqual(wc.calls.send, [{ channel: 'qwerty:found-in-page', payload: { activeMatchOrdinal: 0, count: 0 } }])
   })
 
   test('skips send when webContents is destroyed at fire time', () => {
@@ -215,7 +215,7 @@ describe('installFoundInPageForwarder', () => {
     installFoundInPageForwarder(asWC(wcB))
     wcA.emit('found-in-page', {}, { activeMatchOrdinal: 1, matches: 1 })
     assert.deepEqual(wcA.calls.send, [
-      { channel: 'hermes:found-in-page', payload: { activeMatchOrdinal: 1, count: 1 } }
+      { channel: 'qwerty:found-in-page', payload: { activeMatchOrdinal: 1, count: 1 } }
     ])
     assert.equal(wcB.calls.send.length, 0, 'wcB must not receive wcA results')
   })

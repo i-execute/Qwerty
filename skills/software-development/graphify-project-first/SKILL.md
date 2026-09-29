@@ -2,10 +2,10 @@
 name: graphify-project-first
 description: Use when beginning work in an existing software project. Generate and inspect a Graphify architecture graph before diagnosis, planning, edits, or implementation.
 version: 1.0.0
-author: Hermes Agent
+author: Qwerty Agent
 license: MIT
 metadata:
-  hermes:
+  qwerty:
     tags: [graphify, architecture, codebase, discovery, planning]
     related_skills: [plan, systematic-debugging, test-driven-development]
 ---

@@ -35,10 +35,10 @@ def _restore_stdout():
 @pytest.fixture()
 def server():
     with patch.dict("sys.modules", {
-        "hermes_constants": MagicMock(get_hermes_home=MagicMock(return_value="/tmp/hermes_test")),
-        "hermes_cli.env_loader": MagicMock(),
-        "hermes_cli.banner": MagicMock(),
-        "hermes_state": MagicMock(),
+        "qwerty_constants": MagicMock(get_qwerty_home=MagicMock(return_value="/tmp/qwerty_test")),
+        "qwerty_cli.env_loader": MagicMock(),
+        "qwerty_cli.banner": MagicMock(),
+        "qwerty_state": MagicMock(),
     }):
         import importlib
         mod = importlib.import_module("tui_gateway.server")

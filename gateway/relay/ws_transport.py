@@ -133,13 +133,13 @@ def _normalize_slack_parent_command(
     text: str,
     message_type: MessageType,
 ) -> tuple[str, MessageType]:
-    """Mirror native Slack ``/hermes`` routing for authenticated relay text."""
+    """Mirror native Slack ``/qwerty`` routing for authenticated relay text."""
     stripped = text.strip()
     parent_parts = stripped.split(maxsplit=1)
-    if not parent_parts or parent_parts[0] != "/hermes":
+    if not parent_parts or parent_parts[0] != "/qwerty":
         return text, message_type
 
-    from hermes_cli.commands import slack_subcommand_map
+    from qwerty_cli.commands import slack_subcommand_map
 
     payload = parent_parts[1].strip() if len(parent_parts) > 1 else ""
     subcommand_map = slack_subcommand_map()
@@ -236,9 +236,9 @@ def _event_from_wire(raw: Dict[str, Any]) -> MessageEvent:
     text = raw.get("text", "")
     if platform_enum == Platform.SLACK:
         # Team Gateway carries Slack slash text over the authenticated message
-        # relay, bypassing Hermes' native Slack command callback. Normalize at
+        # relay, bypassing Qwerty' native Slack command callback. Normalize at
         # the wire boundary so adapter-level active-session gates see the real
-        # gateway command rather than the legacy `hermes` parent name.
+        # gateway command rather than the legacy `qwerty` parent name.
         text, msg_type = _normalize_slack_parent_command(text, msg_type)
 
     return MessageEvent(

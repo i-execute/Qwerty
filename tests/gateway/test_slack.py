@@ -540,7 +540,7 @@ class TestAppMentionHandler:
         assert "assistant_thread_started" in registered_events
         assert "assistant_thread_context_changed" in registered_events
         # Slack slash commands are registered via a single regex matcher
-        # covering every COMMAND_REGISTRY entry (e.g. /hermes, /btw, /stop,
+        # covering every COMMAND_REGISTRY entry (e.g. /qwerty, /btw, /stop,
         # /model, ...) so users get native-slash parity with Discord and
         # Telegram. Verify the regex matches the key expected slashes.
         assert (
@@ -550,7 +550,7 @@ class TestAppMentionHandler:
         import re as _re
 
         assert isinstance(slash_matcher, _re.Pattern)
-        for expected in ("/hermes", "/btw", "/stop", "/model", "/help"):
+        for expected in ("/qwerty", "/btw", "/stop", "/model", "/help"):
             assert slash_matcher.match(
                 expected
             ), f"Slack slash regex does not match {expected}"
@@ -808,7 +808,7 @@ class TestSlackConnectCleanup:
     async def test_disconnect_closes_workspace_clients_and_clears_runtime_state(self):
         """Regression for #51465: shutdown must close Slack WebClients.
 
-        ``hermes gateway run --replace`` takes the old process through the
+        ``qwerty gateway run --replace`` takes the old process through the
         normal adapter.disconnect() path. If Slack leaves AsyncWebClient
         instances open there, aiohttp logs ``Unclosed client session`` while
         the old gateway exits after SIGTERM.
@@ -1390,19 +1390,19 @@ class TestSlackProxyBehavior:
         assert adapter._handler is not None
         assert adapter._handler.proxy == "http://proxy.example.com:3128"
         assert adapter._handler.client.proxy == "http://proxy.example.com:3128"
-        assert "hermes_feedback" in created_apps[0].registered_actions
-        assert "hermes_clarify_other" in created_apps[0].registered_actions
+        assert "qwerty_feedback" in created_apps[0].registered_actions
+        assert "qwerty_clarify_other" in created_apps[0].registered_actions
         clarify_choice_patterns = [
             action_id
             for action_id in created_apps[0].registered_actions
             if hasattr(action_id, "fullmatch")
         ]
         assert any(
-            pattern.fullmatch("hermes_clarify_choice_0")
+            pattern.fullmatch("qwerty_clarify_choice_0")
             for pattern in clarify_choice_patterns
         )
         assert not any(
-            pattern.fullmatch("hermes_clarify_choice")
+            pattern.fullmatch("qwerty_clarify_choice")
             for pattern in clarify_choice_patterns
         )
 
@@ -2287,11 +2287,11 @@ class TestBangPrefixCommands:
 
     @pytest.mark.asyncio
     async def test_bang_with_bot_suffix_resolves(self, adapter):
-        """``!stop@hermes`` matches the get_command() ``@suffix`` stripping."""
-        await adapter._handle_slack_message(self._make_event("!stop@hermes"))
+        """``!stop@qwerty`` matches the get_command() ``@suffix`` stripping."""
+        await adapter._handle_slack_message(self._make_event("!stop@qwerty"))
 
         msg_event = adapter.handle_message.call_args[0][0]
-        assert msg_event.text.startswith("/stop@hermes")
+        assert msg_event.text.startswith("/stop@qwerty")
         assert msg_event.message_type == MessageType.COMMAND
 
     @pytest.mark.asyncio
@@ -5904,13 +5904,13 @@ class TestSlashCommands:
 
     # ------------------------------------------------------------------
     # Native slash commands — /btw, /stop, /model, ... dispatched directly
-    # instead of as /hermes subcommands. This is the Discord/Telegram parity
+    # instead of as /qwerty subcommands. This is the Discord/Telegram parity
     # fix: the slash name itself becomes the command.
     # ------------------------------------------------------------------
 
     @pytest.mark.asyncio
     async def test_native_btw_slash(self, adapter):
-        """/btw with args must dispatch to /background, not /hermes btw."""
+        """/btw with args must dispatch to /background, not /qwerty btw."""
         command = {
             "command": "/btw",
             "text": "fix the failing test",
@@ -6002,15 +6002,15 @@ class TestSlashCommands:
         assert msg.get_command_args() == "--flag  value  "
 
     @pytest.mark.asyncio
-    async def test_legacy_hermes_prefix_still_works(self, adapter):
-        """Backward compat: /hermes btw foo must still route to /btw foo.
+    async def test_legacy_qwerty_prefix_still_works(self, adapter):
+        """Backward compat: /qwerty btw foo must still route to /btw foo.
 
-        Old workspace manifests only declared /hermes as the single slash.
+        Old workspace manifests only declared /qwerty as the single slash.
         After users refresh their manifest they get /btw natively, but the
         legacy form must keep working during the transition.
         """
         command = {
-            "command": "/hermes",
+            "command": "/qwerty",
             "text": "btw run the tests",
             "user_id": "U1",
             "channel_id": "C1",
@@ -6020,10 +6020,10 @@ class TestSlashCommands:
         assert msg.text == "/btw run the tests"
 
     @pytest.mark.asyncio
-    async def test_legacy_hermes_freeform_question(self, adapter):
-        """/hermes <free-form text> must stay as the raw text (non-command)."""
+    async def test_legacy_qwerty_freeform_question(self, adapter):
+        """/qwerty <free-form text> must stay as the raw text (non-command)."""
         command = {
-            "command": "/hermes",
+            "command": "/qwerty",
             "text": "what's the weather today?",
             "user_id": "U1",
             "channel_id": "C1",
@@ -7090,10 +7090,10 @@ class TestSlashEphemeralAck:
         assert ("C_Q", "U_Q") in adapter._slash_command_contexts
 
     @pytest.mark.asyncio
-    async def test_legacy_hermes_slash_stashes_context(self, adapter):
-        """Legacy /hermes <subcommand> also stashes context."""
+    async def test_legacy_qwerty_slash_stashes_context(self, adapter):
+        """Legacy /qwerty <subcommand> also stashes context."""
         command = {
-            "command": "/hermes",
+            "command": "/qwerty",
             "text": "help",
             "user_id": "U_H",
             "channel_id": "C_H",
@@ -7105,10 +7105,10 @@ class TestSlashEphemeralAck:
         assert ("C_H", "U_H") in adapter._slash_command_contexts
 
     @pytest.mark.asyncio
-    async def test_freeform_hermes_question_does_not_stash_context(self, adapter):
-        """Free-form /hermes <question> must NOT route agent reply ephemeral."""
+    async def test_freeform_qwerty_question_does_not_stash_context(self, adapter):
+        """Free-form /qwerty <question> must NOT route agent reply ephemeral."""
         command = {
-            "command": "/hermes",
+            "command": "/qwerty",
             "text": "what's the weather",
             "user_id": "U_FREE",
             "channel_id": "C_FREE",
@@ -7587,7 +7587,7 @@ class TestMissingCredentials:
         assert fatal_errors[0]["code"] == "missing_slack_bot_token"
         assert fatal_errors[0]["retryable"] is False
         assert "SLACK_BOT_TOKEN" in fatal_errors[0]["message"]
-        assert "hermes gateway setup" in fatal_errors[0]["message"].lower() or ".env" in fatal_errors[0]["message"]
+        assert "qwerty gateway setup" in fatal_errors[0]["message"].lower() or ".env" in fatal_errors[0]["message"]
 
     @pytest.mark.asyncio
     async def test_missing_app_token_sets_fatal_error(self):
@@ -7613,7 +7613,7 @@ class TestMissingCredentials:
         assert fatal_errors[0]["code"] == "missing_slack_app_token"
         assert fatal_errors[0]["retryable"] is False
         assert "SLACK_APP_TOKEN" in fatal_errors[0]["message"]
-        assert "hermes gateway setup" in fatal_errors[0]["message"].lower() or ".env" in fatal_errors[0]["message"]
+        assert "qwerty gateway setup" in fatal_errors[0]["message"].lower() or ".env" in fatal_errors[0]["message"]
 
 
 
@@ -7837,10 +7837,10 @@ class TestTrackingStructureBounds:
     @pytest.mark.asyncio
     async def test_slash_command_contexts_bounded(self, adapter):
         adapter._SLASH_CTX_MAX = 4
-        adapter.handle_hermes_command = AsyncMock(return_value=None)
+        adapter.handle_qwerty_command = AsyncMock(return_value=None)
         for i in range(10):
             command = {
-                "command": "/hermes",
+                "command": "/qwerty",
                 "text": "/status",
                 "user_id": f"U{i}",
                 "channel_id": "C1",
@@ -8222,7 +8222,7 @@ class TestThreadImageContext:
             ("T_TEAM", "U_ALICE"): "Alice",
             ("T_TEAM", "U_USER"): "User",
         }
-        a._download_slack_file = AsyncMock(return_value="/tmp/hermes-cached.png")
+        a._download_slack_file = AsyncMock(return_value="/tmp/qwerty-cached.png")
         return a
 
     @pytest.fixture()
@@ -8299,7 +8299,7 @@ class TestThreadImageContext:
 
         a.handle_message.assert_awaited_once()
         msg_event = a.handle_message.call_args[0][0]
-        assert msg_event.media_urls == ["/tmp/hermes-cached.png"]
+        assert msg_event.media_urls == ["/tmp/qwerty-cached.png"]
         assert msg_event.media_types == ["image/png"]
         assert msg_event.message_type == MessageType.PHOTO
         # The context marker AND the delivered image coexist.
@@ -8485,7 +8485,7 @@ class TestThreadImageContext:
         urls, types = await a._collect_thread_root_images(
             channel_id="C123", thread_ts="123.000", team_id="T_TEAM"
         )
-        assert urls == ["/tmp/hermes-cached.png"]
+        assert urls == ["/tmp/qwerty-cached.png"]
         assert types == ["image/png"]
         a._app.client.files_info.assert_awaited_once_with(file="F1")
 
@@ -8755,20 +8755,20 @@ class TestSlackUserAgent:
 
     Slack platform partners (analytics, abuse-detection, etc.) attribute
     outbound API traffic by ``User-Agent``. The Slack adapter sets
-    ``user_agent_prefix=_HERMES_SLACK_USER_AGENT_PREFIX`` on every
+    ``user_agent_prefix=_QWERTY_SLACK_USER_AGENT_PREFIX`` on every
     ``AsyncWebClient`` it builds and threads the primary client into
     ``AsyncApp(client=...)`` so the prefix sticks on the app-owned client too.
     Pin both behaviors at the actual call sites — a future refactor that
     drops either kwarg would silently break attribution otherwise.
     """
 
-    def test_hermes_slack_user_agent_prefix_format(self):
-        """Module constant matches the HermesAgent/<version> convention used
+    def test_qwerty_slack_user_agent_prefix_format(self):
+        """Module constant matches the QwertyAgent/<version> convention used
         elsewhere in the codebase for platform-partner attribution."""
-        assert _slack_mod._HERMES_SLACK_USER_AGENT_PREFIX.startswith("HermesAgent/")
+        assert _slack_mod._QWERTY_SLACK_USER_AGENT_PREFIX.startswith("QwertyAgent/")
 
     @pytest.mark.asyncio
-    async def test_async_web_client_constructed_with_hermes_user_agent_prefix(self):
+    async def test_async_web_client_constructed_with_qwerty_user_agent_prefix(self):
         """Every AsyncWebClient built by ``connect()`` carries the prefix, and
         ``AsyncApp`` receives a pre-built ``client=`` so the prefix sticks."""
         # Multi-token config exercises both construction sites:
@@ -8814,7 +8814,7 @@ class TestSlackUserAgent:
         ):
             await adapter.connect()
 
-        expected_prefix = _slack_mod._HERMES_SLACK_USER_AGENT_PREFIX
+        expected_prefix = _slack_mod._QWERTY_SLACK_USER_AGENT_PREFIX
 
         # AsyncWebClient must be constructed at least once (primary) and
         # every construction must pass user_agent_prefix.

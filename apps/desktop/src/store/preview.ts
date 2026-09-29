@@ -61,8 +61,8 @@ export interface FilePreviewTab {
   target: PreviewTarget
 }
 
-const REGISTRY_STORAGE_KEY = 'hermes.desktop.sessionPreviews.v1'
-const TABS_STORAGE_KEY = 'hermes.desktop.filePreviewTabs.v1'
+const REGISTRY_STORAGE_KEY = 'qwerty.desktop.sessionPreviews.v1'
+const TABS_STORAGE_KEY = 'qwerty.desktop.filePreviewTabs.v1'
 const MAX_RECORDS_PER_SESSION = 1
 const MAX_SESSIONS = 120
 

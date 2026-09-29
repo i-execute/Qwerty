@@ -1,20 +1,20 @@
 ---
-name: hermes-agent-customization
-description: "Fork, modify, and contribute to Hermes Agent — local development workflow, forking, PRs, testing, and syncing with upstream."
+name: qwerty-agent-customization
+description: "Fork, modify, and contribute to Qwerty Agent — local development workflow, forking, PRs, testing, and syncing with upstream."
 version: 1.0.0
-author: Hermes Agent
+author: Qwerty Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
-    tags: [Hermes, Fork, Development, Contribution, GitHub, PR, Testing]
-    related_skills: [github-repo-management, github-auth, github-pr-workflow, hermes-agent-skill-authoring]
+  qwerty:
+    tags: [Qwerty, Fork, Development, Contribution, GitHub, PR, Testing]
+    related_skills: [github-repo-management, github-auth, github-pr-workflow, qwerty-agent-skill-authoring]
 
 ---
 
-# Hermes Agent Customization & Fork Development
+# Qwerty Agent Customization & Fork Development
 
-Class-level skill for forking the Hermes Agent repository, making local changes (skills, plugins, core), testing, and opening pull requests. Complements the bundled `hermes-agent` skill (which covers configuration/extension) by focusing on the **fork → develop → PR** workflow.
+Class-level skill for forking the Qwerty Agent repository, making local changes (skills, plugins, core), testing, and opening pull requests. Complements the bundled `qwerty-agent` skill (which covers configuration/extension) by focusing on the **fork → develop → PR** workflow.
 
 ## Prerequisites
 
@@ -27,17 +27,17 @@ Class-level skill for forking the Hermes Agent repository, making local changes 
 
 ## 1. Local Repository Location
 
-The Hermes Agent source lives at:
+The Qwerty Agent source lives at:
 ```
-~/.hermes/hermes-agent/
+~/.qwerty/qwerty-agent/
 ```
-This is a clone of `https://github.com/NousResearch/hermes-agent.git` (origin).
+This is a clone of `https://github.com/NousResearch/qwerty-agent.git` (origin).
 
 ```bash
-cd ~/.hermes/hermes-agent
+cd ~/.qwerty/qwerty-agent
 git remote -v
-# origin  https://github.com/NousResearch/hermes-agent.git (fetch)
-# origin  https://github.com/NousResearch/hermes-agent.git (push)
+# origin  https://github.com/NousResearch/qwerty-agent.git (fetch)
+# origin  https://github.com/NousResearch/qwerty-agent.git (push)
 ```
 
 ## 2. GitHub Authentication
@@ -67,16 +67,16 @@ git config --global url."git@github.com:".insteadOf "https://github.com/"
 
 ```bash
 # 1. Fork upstream to your account
-gh repo fork NousResearch/hermes-agent --clone --remote-name origin
-cd hermes-agent  # or your fork directory name
+gh repo fork NousResearch/qwerty-agent --clone --remote-name origin
+cd qwerty-agent  # or your fork directory name
 
 # 2. Add upstream for syncing
-git remote add upstream https://github.com/NousResearch/hermes-agent.git
+git remote add upstream https://github.com/NousResearch/qwerty-agent.git
 
 # 3. Verify remotes
 git remote -v
-# origin    https://github.com/YOUR-USER/hermes-agent.git (fetch/push)
-# upstream  https://github.com/NousResearch/hermes-agent.git (fetch)
+# origin    https://github.com/YOUR-USER/qwerty-agent.git (fetch/push)
+# upstream  https://github.com/NousResearch/qwerty-agent.git (fetch)
 ```
 
 ## 4. Branch & Develop
@@ -119,10 +119,10 @@ Closes #123"
 | **Tests** | `tests/` | Unit/integration tests |
 
 ### Skill Authoring
-Use `hermes-agent-skill-authoring` skill for skill structure, frontmatter, validation.
+Use `qwerty-agent-skill-authoring` skill for skill structure, frontmatter, validation.
 
 ### Plugin Development
-See `hermes-desktop-plugins` skill for desktop plugin structure (UI panes, commands).
+See `qwerty-desktop-plugins` skill for desktop plugin structure (UI panes, commands).
 
 ## 6. Push & Pull Request
 
@@ -149,7 +149,7 @@ git merge upstream/main
 git push origin main
 ```
 
-## 8. Migrate a Live Hermes Checkout to a Standalone Fork
+## 8. Migrate a Live Qwerty Checkout to a Standalone Fork
 
 Use this when the systemd gateway is already running from a source checkout and
 must remain connected while Git remotes and duplicate files are cleaned up.
@@ -164,19 +164,19 @@ copies is safe; replacing the active directory is not.
 
 1. Inspect the live unit and process before touching files:
    ```bash
-   systemctl --user cat hermes-gateway.service
-   pid=$(systemctl --user show -p MainPID --value hermes-gateway.service)
+   systemctl --user cat qwerty-gateway.service
+   pid=$(systemctl --user show -p MainPID --value qwerty-gateway.service)
    readlink -f /proc/$pid/cwd
    readlink -f /proc/$pid/exe
    ```
    `ExecStart`, `WorkingDirectory`, and `VIRTUAL_ENV` identify the active
-   checkout. The launcher (`command -v hermes`) may point there too.
+   checkout. The launcher (`command -v qwerty`) may point there too.
 
 2. Measure before cleaning:
    ```bash
-   du -sh ~/.hermes/hermes-agent
-   du -xhd1 ~/.hermes/hermes-agent | sort -h | tail -30
-   git -C ~/.hermes/hermes-agent count-objects -vH
+   du -sh ~/.qwerty/qwerty-agent
+   du -xhd1 ~/.qwerty/qwerty-agent | sort -h | tail -30
+   git -C ~/.qwerty/qwerty-agent count-objects -vH
    ```
    Large `node_modules` (Electron/UI) and duplicate Python venvs are often the
    largest consumers; Git temporary packs can also be reclaimed.
@@ -184,7 +184,7 @@ copies is safe; replacing the active directory is not.
 3. Keep the official project as `upstream` and point `origin` at the standalone
    fork, preserving a former fork under a clear remote name:
    ```bash
-   cd ~/.hermes/hermes-agent
+   cd ~/.qwerty/qwerty-agent
    git remote rename origin upstream
    git remote rename fork old-fork              # only if `fork` exists
    git remote add origin https://github.com/OWNER/FORK.git
@@ -228,8 +228,8 @@ copies is safe; replacing the active directory is not.
 
 6. Verify no disruption:
    ```bash
-   systemctl --user is-active hermes-gateway.service
-   systemctl --user show hermes-gateway.service -p MainPID -p ActiveEnterTimestamp
+   systemctl --user is-active qwerty-gateway.service
+   systemctl --user show qwerty-gateway.service -p MainPID -p ActiveEnterTimestamp
    git remote get-url origin
    git branch --show-current
    ```
@@ -239,7 +239,7 @@ copies is safe; replacing the active directory is not.
 - A live gateway imports from the path in its systemd unit, not simply the repo
   visible in the shell. Verify the unit first.
 - `node_modules` is often the dominant footprint. Do not remove it blindly:
-  Hermes desktop, web UI, and build tooling can require it.
+  Qwerty desktop, web UI, and build tooling can require it.
 - A local branch can be ahead of or unrelated to a same-named branch in a new
   standalone remote. Treat it as a history-integration decision, not cleanup.
 - `git gc` cannot run with a stale `.git/shallow.lock`. Confirm no real Git
@@ -257,7 +257,7 @@ When changing or debugging credential rotation for a custom OpenAI-compatible en
 6. Run focused tests before committing, then inspect the live gateway process/unit and logs. Source changes do not affect the already-running gateway until a verified restart.
 7. Verify the push with the remote SHA. If HTTPS push lacks credentials, stop and report the exact blocker; do not claim success. Prefer `gh auth status`/`gh auth setup-git` or a configured credential helper, and use a fresh worktree under `/home/forget/QwertyWork` when repairing a beta branch.
 8. The all-key `hi` probe is a conclusive quota verdict, not another ordinary request: persist a probe's 429 as `STATUS_EXHAUSTED`. Reapplying the normal 65-second custom-429 cooldown here would reintroduce a proven-dead key into routing after the cooldown.
-9. Deploying code with `git reset --hard origin/beta` does not erase custom pools: they are stored in `$HERMES_HOME/auth.json`. Before telling a user whether re-entry is necessary, inspect the *active named pool* and count unique `runtime_api_key` values; `config:<provider>` and `model_config` can duplicate the primary key and must not be reported as extra rotation slots.
+9. Deploying code with `git reset --hard origin/beta` does not erase custom pools: they are stored in `$QWERTY_HOME/auth.json`. Before telling a user whether re-entry is necessary, inspect the *active named pool* and count unique `runtime_api_key` values; `config:<provider>` and `model_config` can duplicate the primary key and must not be reported as extra rotation slots.
 
 See `references/custom-provider-key-rotation.md for the safe inspection recipe, in-memory rotation probe, and test-runner notes. See `references/custom-provider-429-rotation.md` for the 65-second cooldown contract, full-pool `hi` probe behavior, focused tests, and broken-push recovery recipe. See `references/beta-runtime-compatibility.md` for the missing-helper regression pattern and verification checklist.
 

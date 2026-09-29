@@ -25,7 +25,7 @@ from agent.trace_upload import (
 
 def _sample_messages():
     return [
-        {"role": "system", "content": "you are hermes"},
+        {"role": "system", "content": "you are qwerty"},
         {"role": "user", "content": "list files"},
         {"role": "assistant", "content": "Listing.", "tool_calls": [
             {"id": "call_1", "function": {"name": "terminal", "arguments": '{"command": "ls"}'}},
@@ -195,12 +195,12 @@ def test_upload_happy_path_mocked(monkeypatch):
         msg = upload_session_trace("20260531_abc", cwd="/tmp")
 
     # Returned a viewer URL
-    assert "huggingface.co/datasets/alice/hermes-traces" in msg
+    assert "huggingface.co/datasets/alice/qwerty-traces" in msg
 
     # Created private dataset repo
     fake_api.create_repo.assert_called_once()
     _, kwargs = fake_api.create_repo.call_args
-    assert kwargs["repo_id"] == "alice/hermes-traces"
+    assert kwargs["repo_id"] == "alice/qwerty-traces"
     assert kwargs["repo_type"] == "dataset"
     assert kwargs["private"] is True
 
@@ -208,7 +208,7 @@ def test_upload_happy_path_mocked(monkeypatch):
     fake_api.upload_file.assert_called_once()
     _, ukwargs = fake_api.upload_file.call_args
     assert ukwargs["path_in_repo"] == "sessions/20260531_abc.jsonl"
-    assert ukwargs["repo_id"] == "alice/hermes-traces"
+    assert ukwargs["repo_id"] == "alice/qwerty-traces"
     body = ukwargs["path_or_fileobj"]
     if isinstance(body, bytes):
         body = body.decode("utf-8")
@@ -247,7 +247,7 @@ def test_do_upload_missing_huggingface_hub(monkeypatch):
     """If huggingface_hub import fails, return a clear install hint."""
     # Disable lazy-install so the import path deterministically fails here
     # instead of attempting a real pip install in CI.
-    monkeypatch.setenv("HERMES_DISABLE_LAZY_INSTALLS", "1")
+    monkeypatch.setenv("QWERTY_DISABLE_LAZY_INSTALLS", "1")
     import builtins
     real_import = builtins.__import__
 

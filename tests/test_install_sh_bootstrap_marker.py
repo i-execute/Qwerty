@@ -1,6 +1,6 @@
 """install.sh must stamp the desktop bootstrap-complete marker.
 
-The marker at ``$INSTALL_DIR/.hermes-bootstrap-complete`` is what the desktop
+The marker at ``$INSTALL_DIR/.qwerty-bootstrap-complete`` is what the desktop
 app (apps/desktop/electron/main.ts) and the macOS launcher fast path
 (apps/bootstrap-installer) use to decide "a real install finished here."
 install.sh never wrote it, so a CLI-installed Mac/Linux box re-ran first-run
@@ -43,7 +43,7 @@ write_bootstrap_marker
 
 
 def make_checkout(tmp_path):
-    install_dir = tmp_path / "hermes-agent"
+    install_dir = tmp_path / "qwerty-agent"
     install_dir.mkdir()
     subprocess.run(["git", "init", "-q"], cwd=install_dir, check=True)
     subprocess.run(

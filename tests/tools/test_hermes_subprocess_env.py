@@ -1,4 +1,4 @@
-"""Tests for hermes_subprocess_env() — the centralized credential-safe env
+"""Tests for qwerty_subprocess_env() — the centralized credential-safe env
 builder for the non-terminal subprocess spawn surface.
 
 Covers GHSA-m4m8-xjp4-5rmm / issue #29157: subprocesses spawned by the
@@ -7,7 +7,7 @@ full credential environment. Two tiers:
 
   * Tier 1 (_ALWAYS_STRIP_KEYS): gateway bot tokens, GitHub auth, infra
     secrets — stripped even when inherit_credentials=True.
-  * Tier 2 (_HERMES_PROVIDER_ENV_BLOCKLIST): LLM provider/tool keys — stripped
+  * Tier 2 (_QWERTY_PROVIDER_ENV_BLOCKLIST): LLM provider/tool keys — stripped
     unless the caller opts into inherit_credentials=True.
 """
 
@@ -15,9 +15,9 @@ import os
 from unittest.mock import patch
 
 from tools.environments.local import (
-    hermes_subprocess_env,
+    qwerty_subprocess_env,
     _ALWAYS_STRIP_KEYS,
-    _HERMES_PROVIDER_ENV_FORCE_PREFIX,
+    _QWERTY_PROVIDER_ENV_FORCE_PREFIX,
 )
 
 
@@ -26,7 +26,7 @@ _TIER1_SAMPLE = {
     "TELEGRAM_BOT_TOKEN": "bot-token",
     "SLACK_APP_TOKEN": "xapp-secret",
     "MODAL_TOKEN_SECRET": "modal-secret",
-    "HERMES_DASHBOARD_SESSION_TOKEN": "dash-secret",
+    "QWERTY_DASHBOARD_SESSION_TOKEN": "dash-secret",
 }
 
 _PROVIDER_SAMPLE = {
@@ -48,7 +48,7 @@ def _build(extra=None, *, inherit_credentials=False):
     if extra:
         env.update(extra)
     with patch.dict(os.environ, env, clear=True):
-        return hermes_subprocess_env(inherit_credentials=inherit_credentials)
+        return qwerty_subprocess_env(inherit_credentials=inherit_credentials)
 
 
 class TestStripByDefault:
@@ -70,8 +70,8 @@ class TestStripByDefault:
         assert result["MY_APP_VAR"] == "keep-me"
 
     def test_force_prefix_hints_stripped(self):
-        result = _build({f"{_HERMES_PROVIDER_ENV_FORCE_PREFIX}OPENAI_API_KEY": "sk-x"})
-        assert f"{_HERMES_PROVIDER_ENV_FORCE_PREFIX}OPENAI_API_KEY" not in result
+        result = _build({f"{_QWERTY_PROVIDER_ENV_FORCE_PREFIX}OPENAI_API_KEY": "sk-x"})
+        assert f"{_QWERTY_PROVIDER_ENV_FORCE_PREFIX}OPENAI_API_KEY" not in result
         assert "OPENAI_API_KEY" not in result
 
     def test_pythonutf8_set(self):
@@ -139,7 +139,7 @@ class TestBrowserPassthroughPattern:
             "TELEGRAM_BOT_TOKEN": "bot-should-go",
         }
         with patch.dict(os.environ, {**_SAFE_SAMPLE, **leaked}, clear=True):
-            env = hermes_subprocess_env(inherit_credentials=False)
+            env = qwerty_subprocess_env(inherit_credentials=False)
             for key in _BROWSER_PASSTHROUGH_KEYS:
                 if key in os.environ:
                     env[key] = os.environ[key]
@@ -159,21 +159,21 @@ class TestDelegatedChildMarker:
             os.environ,
             {
                 **_SAFE_SAMPLE,
-                "HERMES_KANBAN_TASK": "t_parent",
-                "HERMES_KANBAN_RUN_ID": "123",
-                "HERMES_KANBAN_DB": "/tmp/parent-kanban.db",
-                "HERMES_KANBAN_WORKSPACE": "/tmp/parent-workspace",
+                "QWERTY_KANBAN_TASK": "t_parent",
+                "QWERTY_KANBAN_RUN_ID": "123",
+                "QWERTY_KANBAN_DB": "/tmp/parent-kanban.db",
+                "QWERTY_KANBAN_WORKSPACE": "/tmp/parent-workspace",
             },
             clear=True,
         ):
             with delegated_child_context():
-                env = hermes_subprocess_env(inherit_credentials=True)
+                env = qwerty_subprocess_env(inherit_credentials=True)
 
-        assert env["HERMES_DELEGATED_CHILD_CONTEXT"] == "1"
-        assert "HERMES_KANBAN_TASK" not in env
-        assert "HERMES_KANBAN_RUN_ID" not in env
-        assert "HERMES_KANBAN_DB" not in env
-        assert "HERMES_KANBAN_WORKSPACE" not in env
+        assert env["QWERTY_DELEGATED_CHILD_CONTEXT"] == "1"
+        assert "QWERTY_KANBAN_TASK" not in env
+        assert "QWERTY_KANBAN_RUN_ID" not in env
+        assert "QWERTY_KANBAN_DB" not in env
+        assert "QWERTY_KANBAN_WORKSPACE" not in env
         assert env["MY_APP_VAR"] == "keep-me"
 
 

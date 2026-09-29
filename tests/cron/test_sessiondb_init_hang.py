@@ -4,14 +4,14 @@ Real-world incident: a cron job's ``SessionDB()`` construction inside
 ``run_job`` blocked forever (a wedged sqlite3.connect against state.db, no
 other process holding a competing lock by the time it was diagnosed). Because
 that call had no timeout of its own — unlike the agent's run_conversation,
-which is already bounded by HERMES_CRON_TIMEOUT — the worker thread submitted
+which is already bounded by QWERTY_CRON_TIMEOUT — the worker thread submitted
 by ``_submit_with_guard`` never returned. Its ``finally`` block, which is the
 only thing that discards the job ID from ``_running_job_ids``, never ran.
 Every later tick logged "already running — skipping" and the job never fired
 again until the whole gateway process was restarted days later.
 
 These tests prove ``run_job`` now bounds the SessionDB init with its own
-timeout (HERMES_CRON_SESSION_DB_TIMEOUT, default 10s) so a hang there can
+timeout (QWERTY_CRON_SESSION_DB_TIMEOUT, default 10s) so a hang there can
 never again wedge the job past that bound, and — end to end — that the
 dispatch guard is released and the job becomes dispatchable again afterward.
 
@@ -32,7 +32,7 @@ from cron.scheduler import run_job
 
 
 def _hanging_session_db(never_set: threading.Event):
-    """Stand-in for hermes_state.SessionDB() that blocks until released —
+    """Stand-in for qwerty_state.SessionDB() that blocks until released —
     like the real incident's wedged sqlite3.connect, but bounded so the test
     process can still exit cleanly once the assertions are done."""
     never_set.wait(timeout=30)
@@ -42,18 +42,18 @@ def _hanging_session_db(never_set: threading.Event):
 class TestSessionDbInitTimeout:
     def test_run_job_does_not_hang_when_sessiondb_init_wedges(self, tmp_path, monkeypatch):
         """run_job returns promptly even if SessionDB() never returns."""
-        monkeypatch.setenv("HERMES_CRON_SESSION_DB_TIMEOUT", "0.2")
+        monkeypatch.setenv("QWERTY_CRON_SESSION_DB_TIMEOUT", "0.2")
         never_set = threading.Event()
         job = {"id": "wedged-sessiondb", "name": "test", "prompt": "hello"}
 
         try:
-            with patch("cron.scheduler._hermes_home", tmp_path), \
+            with patch("cron.scheduler._qwerty_home", tmp_path), \
                  patch("cron.scheduler._resolve_origin", return_value=None), \
-                 patch("hermes_cli.env_loader.load_hermes_dotenv"), \
-                 patch("hermes_cli.env_loader.reset_secret_source_cache"), \
-                 patch("hermes_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
+                 patch("qwerty_cli.env_loader.load_qwerty_dotenv"), \
+                 patch("qwerty_cli.env_loader.reset_secret_source_cache"), \
+                 patch("qwerty_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
                  patch(
-                     "hermes_cli.runtime_provider.resolve_runtime_provider",
+                     "qwerty_cli.runtime_provider.resolve_runtime_provider",
                      return_value={
                          "api_key": "test-key",
                          "base_url": "https://example.invalid/v1",
@@ -82,19 +82,19 @@ class TestSessionDbInitTimeout:
         assert kwargs["session_db"] is None
 
     def test_invalid_timeout_env_falls_back_to_default(self, tmp_path, monkeypatch, caplog):
-        """A malformed HERMES_CRON_SESSION_DB_TIMEOUT logs a warning and still
-        bounds the call (mirrors HERMES_CRON_TIMEOUT's own fallback)."""
-        monkeypatch.setenv("HERMES_CRON_SESSION_DB_TIMEOUT", "not-a-number")
+        """A malformed QWERTY_CRON_SESSION_DB_TIMEOUT logs a warning and still
+        bounds the call (mirrors QWERTY_CRON_TIMEOUT's own fallback)."""
+        monkeypatch.setenv("QWERTY_CRON_SESSION_DB_TIMEOUT", "not-a-number")
         fake_db = MagicMock()
         job = {"id": "bad-timeout-env", "name": "test", "prompt": "hello"}
 
-        with patch("cron.scheduler._hermes_home", tmp_path), \
+        with patch("cron.scheduler._qwerty_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("hermes_cli.env_loader.load_hermes_dotenv"), \
-             patch("hermes_cli.env_loader.reset_secret_source_cache"), \
-             patch("hermes_state.SessionDB", return_value=fake_db), \
+             patch("qwerty_cli.env_loader.load_qwerty_dotenv"), \
+             patch("qwerty_cli.env_loader.reset_secret_source_cache"), \
+             patch("qwerty_state.SessionDB", return_value=fake_db), \
              patch(
-                 "hermes_cli.runtime_provider.resolve_runtime_provider",
+                 "qwerty_cli.runtime_provider.resolve_runtime_provider",
                  return_value={
                      "api_key": "test-key",
                      "base_url": "https://example.invalid/v1",
@@ -117,7 +117,7 @@ class TestSessionDbInitTimeout:
         # is observable — otherwise it silently falls back and operators can't
         # diagnose why their custom timeout isn't taking effect.
         assert any(
-            "HERMES_CRON_SESSION_DB_TIMEOUT" in rec.message
+            "QWERTY_CRON_SESSION_DB_TIMEOUT" in rec.message
             for rec in caplog.records
         ), f"Expected warning about invalid timeout env var; got: {[r.message for r in caplog.records]}"
 
@@ -126,8 +126,8 @@ class TestSessionDbInitTimeout:
         the env var is not set — the canonical config-first resolution path."""
         import yaml
 
-        monkeypatch.delenv("HERMES_CRON_SESSION_DB_TIMEOUT", raising=False)
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.delenv("QWERTY_CRON_SESSION_DB_TIMEOUT", raising=False)
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         (tmp_path / "config.yaml").write_text(
             yaml.safe_dump({"cron": {"session_db_timeout_seconds": 0.2}})
         )
@@ -135,13 +135,13 @@ class TestSessionDbInitTimeout:
         job = {"id": "config-timeout", "name": "test", "prompt": "hello"}
 
         try:
-            with patch("cron.scheduler._hermes_home", tmp_path), \
+            with patch("cron.scheduler._qwerty_home", tmp_path), \
                  patch("cron.scheduler._resolve_origin", return_value=None), \
-                 patch("hermes_cli.env_loader.load_hermes_dotenv"), \
-                 patch("hermes_cli.env_loader.reset_secret_source_cache"), \
-                 patch("hermes_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
+                 patch("qwerty_cli.env_loader.load_qwerty_dotenv"), \
+                 patch("qwerty_cli.env_loader.reset_secret_source_cache"), \
+                 patch("qwerty_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
                  patch(
-                     "hermes_cli.runtime_provider.resolve_runtime_provider",
+                     "qwerty_cli.runtime_provider.resolve_runtime_provider",
                      return_value={
                          "api_key": "test-key",
                          "base_url": "https://example.invalid/v1",
@@ -173,7 +173,7 @@ class TestDispatchGuardReleasedAfterHang:
     def test_guard_is_released_and_job_refires_after_sessiondb_hang(self, tmp_path, monkeypatch):
         import cron.scheduler as sched
 
-        monkeypatch.setenv("HERMES_CRON_SESSION_DB_TIMEOUT", "0.2")
+        monkeypatch.setenv("QWERTY_CRON_SESSION_DB_TIMEOUT", "0.2")
         sched._parallel_pool = None
         sched._parallel_pool_max_workers = None
         sched._running_job_ids.clear()
@@ -190,13 +190,13 @@ class TestDispatchGuardReleasedAfterHang:
         }
 
         try:
-            with patch("cron.scheduler._hermes_home", tmp_path), \
+            with patch("cron.scheduler._qwerty_home", tmp_path), \
                  patch("cron.scheduler._resolve_origin", return_value=None), \
-                 patch("hermes_cli.env_loader.load_hermes_dotenv"), \
-                 patch("hermes_cli.env_loader.reset_secret_source_cache"), \
-                 patch("hermes_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
+                 patch("qwerty_cli.env_loader.load_qwerty_dotenv"), \
+                 patch("qwerty_cli.env_loader.reset_secret_source_cache"), \
+                 patch("qwerty_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
                  patch(
-                     "hermes_cli.runtime_provider.resolve_runtime_provider",
+                     "qwerty_cli.runtime_provider.resolve_runtime_provider",
                      return_value={
                          "api_key": "test-key",
                          "base_url": "https://example.invalid/v1",

@@ -41,8 +41,8 @@ def test_slash_worker_popen_uses_utf8_replace():
     UnicodeDecodeError inside the drain threads (#53137).
     """
     with patch.dict("sys.modules", {
-        "hermes_constants": MagicMock(
-            get_hermes_home=MagicMock(return_value="/tmp/hermes_test")
+        "qwerty_constants": MagicMock(
+            get_qwerty_home=MagicMock(return_value="/tmp/qwerty_test")
         ),
     }):
         with patch("subprocess.Popen") as mock_popen:
@@ -69,7 +69,7 @@ def test_slash_worker_popen_uses_utf8_replace():
 # ── cli.exec handler ─────────────────────────────────────────────────────
 
 def test_cli_exec_uses_utf8_replace():
-    """The cli.exec RPC handler runs `python -m hermes_cli.main` via
+    """The cli.exec RPC handler runs `python -m qwerty_cli.main` via
     subprocess.run; it must pass encoding="utf-8" and errors="replace"
     (#53137)."""
     handler = server._methods["cli.exec"]

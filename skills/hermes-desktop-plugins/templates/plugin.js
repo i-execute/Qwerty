@@ -1,16 +1,16 @@
 /**
- * Hermes desktop plugin template. Save as:
- *   <hermes home>/desktop-plugins/<id>/plugin.js   (folder name == id)
- * where <hermes home> is ~/.hermes by default, or ~/.hermes/profiles/<name>
- * when running a named profile (`hermes -p <name>`). Run `hermes doctor` (or
+ * Qwerty desktop plugin template. Save as:
+ *   <qwerty home>/desktop-plugins/<id>/plugin.js   (folder name == id)
+ * where <qwerty home> is ~/.qwerty by default, or ~/.qwerty/profiles/<name>
+ * when running a named profile (`qwerty -p <name>`). Run `qwerty doctor` (or
  * check the app's Settings → Plugins folder path) if unsure which is active.
  * Then run "Reload desktop plugins" from ⌘K in the desktop app.
  *
  * Plain ESM, loaded uncompiled — UI is jsx() calls, not JSX syntax.
- * Only these imports resolve: @hermes/plugin-sdk, react, react/jsx-runtime.
+ * Only these imports resolve: @qwerty/plugin-sdk, react, react/jsx-runtime.
  */
 
-import { cn, haptic, host, Tip, useValue } from '@hermes/plugin-sdk'
+import { cn, haptic, host, Tip, useValue } from '@qwerty/plugin-sdk'
 import { jsx, jsxs } from 'react/jsx-runtime'
 
 function MyPane() {

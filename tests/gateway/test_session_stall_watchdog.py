@@ -172,7 +172,7 @@ def _pending_event(chat_id: str = "chat-1", thread_id: str | None = None):
 async def test_check_session_stalls_notifies_once(monkeypatch):
     adapter = _FakeAdapter()
     runner = _runner_for_stall(adapter)
-    monkeypatch.setenv("HERMES_SESSION_STALL_TIMEOUT", "60")
+    monkeypatch.setenv("QWERTY_SESSION_STALL_TIMEOUT", "60")
     session_key = "agent:main:telegram:dm:1"
     adapter._pending_messages[session_key] = _pending_event()
     runner._running_agents[session_key] = _FakeAgent(time.time() - 120)
@@ -264,7 +264,7 @@ async def test_check_session_stalls_ignores_raw_clock_without_summary():
 async def test_session_stall_watcher_disabled_when_timeout_zero(monkeypatch):
     adapter = _FakeAdapter()
     runner = _runner_for_stall(adapter)
-    monkeypatch.setenv("HERMES_SESSION_STALL_TIMEOUT", "0")
+    monkeypatch.setenv("QWERTY_SESSION_STALL_TIMEOUT", "0")
     session_key = "agent:main:telegram:dm:6"
     adapter._pending_messages[session_key] = _pending_event()
     runner._running_agents[session_key] = _FakeAgent(time.time() - 999)
@@ -455,7 +455,7 @@ def test_resolve_idle_rejects_nonfinite_seconds_since_activity():
 
 
 def test_session_stall_timeout_in_default_config():
-    from hermes_cli.config import DEFAULT_CONFIG
+    from qwerty_cli.config import DEFAULT_CONFIG
 
     timeout = DEFAULT_CONFIG["agent"]["session_stall_timeout"]
     assert isinstance(timeout, (int, float))

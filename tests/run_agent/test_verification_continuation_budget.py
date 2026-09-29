@@ -19,7 +19,7 @@ def _response(content="composed report"):
 
 @pytest.fixture
 def agent(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
     with (
         patch("run_agent.get_tool_definitions", return_value=[]),
         patch("run_agent.check_toolset_requirements", return_value={}),
@@ -67,11 +67,11 @@ def test_verify_on_stop_preserves_composed_report_at_budget_limit(agent, monkeyp
 
     agent._interruptible_api_call = model_call
     agent._handle_max_iterations = MagicMock(return_value="replacement summary")
-    monkeypatch.setenv("HERMES_VERIFY_ON_STOP", "1")
+    monkeypatch.setenv("QWERTY_VERIFY_ON_STOP", "1")
 
     with (
         patch("agent.verification_stop.build_verify_on_stop_nudge", return_value="verify it"),
-        patch("hermes_cli.plugins.invoke_hook", return_value=[]),
+        patch("qwerty_cli.plugins.invoke_hook", return_value=[]),
     ):
         result = agent.run_conversation("edit changed.py")
 
@@ -87,16 +87,16 @@ def test_pre_verify_preserves_composed_report_at_budget_limit(agent, monkeypatch
 
     agent._interruptible_api_call = model_call
     agent._handle_max_iterations = MagicMock(return_value="replacement summary")
-    monkeypatch.setenv("HERMES_VERIFY_ON_STOP", "0")
+    monkeypatch.setenv("QWERTY_VERIFY_ON_STOP", "0")
 
     with (
-        patch("hermes_cli.plugins.has_hook", side_effect=lambda name: name == "pre_verify"),
+        patch("qwerty_cli.plugins.has_hook", side_effect=lambda name: name == "pre_verify"),
         patch(
-            "hermes_cli.plugins.get_pre_verify_continue_message",
+            "qwerty_cli.plugins.get_pre_verify_continue_message",
             return_value="run project tests",
         ),
         patch("agent.verify_hooks.max_verify_nudges", return_value=2),
-        patch("hermes_cli.plugins.invoke_hook", return_value=[]),
+        patch("qwerty_cli.plugins.invoke_hook", return_value=[]),
     ):
         result = agent.run_conversation("edit changed.py")
 
@@ -111,11 +111,11 @@ def test_intermediate_ack_uses_summary_instead_of_premature_text(agent, monkeypa
     agent._looks_like_codex_intermediate_ack = MagicMock(return_value=True)
     agent._interruptible_api_call = lambda _kwargs: _response("I'll inspect the files now")
     agent._handle_max_iterations = MagicMock(return_value="verified summary.")
-    monkeypatch.setenv("HERMES_VERIFY_ON_STOP", "0")
+    monkeypatch.setenv("QWERTY_VERIFY_ON_STOP", "0")
 
     with (
-        patch("hermes_cli.plugins.has_hook", return_value=False),
-        patch("hermes_cli.plugins.invoke_hook", return_value=[]),
+        patch("qwerty_cli.plugins.has_hook", return_value=False),
+        patch("qwerty_cli.plugins.invoke_hook", return_value=[]),
     ):
         result = agent.run_conversation("inspect /tmp/project")
 
@@ -130,14 +130,14 @@ def test_later_verified_response_supersedes_pending_report(agent, monkeypatch):
     answers = iter([_response("premature report"), _response("verified final report")])
     agent._interruptible_api_call = lambda _kwargs: next(answers)
     agent._handle_max_iterations = MagicMock(return_value="replacement summary")
-    monkeypatch.setenv("HERMES_VERIFY_ON_STOP", "1")
+    monkeypatch.setenv("QWERTY_VERIFY_ON_STOP", "1")
 
     with (
         patch(
             "agent.verification_stop.build_verify_on_stop_nudge",
             side_effect=["verify it", None],
         ),
-        patch("hermes_cli.plugins.invoke_hook", return_value=[]),
+        patch("qwerty_cli.plugins.invoke_hook", return_value=[]),
     ):
         result = agent.run_conversation("edit changed.py")
 
@@ -158,7 +158,7 @@ def test_multiple_verification_retries_publish_each_candidate_once(agent, monkey
     ])
     agent._interruptible_api_call = lambda _kwargs: next(answers)
     agent._handle_max_iterations = MagicMock(return_value="replacement summary")
-    monkeypatch.setenv("HERMES_VERIFY_ON_STOP", "1")
+    monkeypatch.setenv("QWERTY_VERIFY_ON_STOP", "1")
 
     # Three nudges, then None (so the third candidate is the final response).
     nudge_side_effects = ["verify it", "verify it", None]
@@ -171,7 +171,7 @@ def test_multiple_verification_retries_publish_each_candidate_once(agent, monkey
             "agent.verification_stop.build_verify_on_stop_nudge",
             side_effect=nudge_side_effects,
         ),
-        patch("hermes_cli.plugins.invoke_hook", return_value=[]),
+        patch("qwerty_cli.plugins.invoke_hook", return_value=[]),
     ):
         result = agent.run_conversation("edit changed.py")
 
@@ -188,7 +188,7 @@ def test_verification_false_finalizes_candidate_once(agent, monkeypatch):
     """When verification returns false/exception, the candidate is finalized once."""
     agent._interruptible_api_call = lambda _kwargs: _response("the answer")
     agent._handle_max_iterations = MagicMock(return_value="replacement summary")
-    monkeypatch.setenv("HERMES_VERIFY_ON_STOP", "1")
+    monkeypatch.setenv("QWERTY_VERIFY_ON_STOP", "1")
 
     emitted = []
     agent.interim_assistant_callback = lambda text, **kw: emitted.append(text)
@@ -199,7 +199,7 @@ def test_verification_false_finalizes_candidate_once(agent, monkeypatch):
             "agent.verification_stop.build_verify_on_stop_nudge",
             side_effect=RuntimeError("verify check crashed"),
         ),
-        patch("hermes_cli.plugins.invoke_hook", return_value=[]),
+        patch("qwerty_cli.plugins.invoke_hook", return_value=[]),
     ):
         result = agent.run_conversation("edit changed.py")
 
@@ -220,7 +220,7 @@ def test_verify_on_stop_emits_interim_response_to_ui(agent, monkeypatch):
     """
     agent._interruptible_api_call = lambda _kwargs: _response("composed report")
     agent._handle_max_iterations = MagicMock(return_value="replacement summary")
-    monkeypatch.setenv("HERMES_VERIFY_ON_STOP", "1")
+    monkeypatch.setenv("QWERTY_VERIFY_ON_STOP", "1")
 
     callback_calls = []
 
@@ -231,7 +231,7 @@ def test_verify_on_stop_emits_interim_response_to_ui(agent, monkeypatch):
 
     with (
         patch("agent.verification_stop.build_verify_on_stop_nudge", return_value="verify it"),
-        patch("hermes_cli.plugins.invoke_hook", return_value=[]),
+        patch("qwerty_cli.plugins.invoke_hook", return_value=[]),
     ):
         result = agent.run_conversation("edit changed.py")
 
@@ -260,14 +260,14 @@ def test_streamed_interim_then_different_summary_not_marked_previewed(agent, mon
     agent._looks_like_codex_intermediate_ack = MagicMock(return_value=True)
     agent._interruptible_api_call = lambda _kwargs: _response("I'll inspect the files now")
     agent._handle_max_iterations = MagicMock(return_value="Here is the summary of what I found.")
-    monkeypatch.setenv("HERMES_VERIFY_ON_STOP", "0")
+    monkeypatch.setenv("QWERTY_VERIFY_ON_STOP", "0")
 
     emitted = []
     agent.interim_assistant_callback = lambda text, **kw: emitted.append(text)
 
     with (
-        patch("hermes_cli.plugins.has_hook", return_value=False),
-        patch("hermes_cli.plugins.invoke_hook", return_value=[]),
+        patch("qwerty_cli.plugins.has_hook", return_value=False),
+        patch("qwerty_cli.plugins.invoke_hook", return_value=[]),
     ):
         result = agent.run_conversation("inspect /tmp/project")
 
@@ -289,7 +289,7 @@ def test_streamed_verification_candidate_reused_marked_previewed(agent, monkeypa
     """
     agent._interruptible_api_call = lambda _kwargs: _response("composed report")
     agent._handle_max_iterations = MagicMock(return_value="replacement summary")
-    monkeypatch.setenv("HERMES_VERIFY_ON_STOP", "1")
+    monkeypatch.setenv("QWERTY_VERIFY_ON_STOP", "1")
 
     agent._turn_file_mutation_paths = {"changed.py"}
 
@@ -307,7 +307,7 @@ def test_streamed_verification_candidate_reused_marked_previewed(agent, monkeypa
     with (
         patch.object(agent, "_interim_content_was_streamed", return_value=True),
         patch("agent.verification_stop.build_verify_on_stop_nudge", return_value="verify it"),
-        patch("hermes_cli.plugins.invoke_hook", return_value=[]),
+        patch("qwerty_cli.plugins.invoke_hook", return_value=[]),
     ):
         result = agent.run_conversation("edit changed.py")
 

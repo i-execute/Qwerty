@@ -3,7 +3,7 @@ from contextlib import nullcontext
 from agent.conversation_compression import (
     _queue_context_engine_compression_notification,
 )
-from cli import HermesCLI
+from cli import QwertyCLI
 
 
 class DummyAgent:
@@ -62,7 +62,7 @@ class DummyAgent:
 
 def test_manual_compress_does_not_pass_cached_system_prompt(monkeypatch):
     """Manual /compress should rebuild the next prompt without nesting the old one."""
-    cli = HermesCLI.__new__(HermesCLI)
+    cli = QwertyCLI.__new__(QwertyCLI)
     cli.conversation_history = [
         {"role": "user", "content": "one"},
         {"role": "assistant", "content": "two"},
@@ -99,7 +99,7 @@ def test_manual_compress_does_not_pass_cached_system_prompt(monkeypatch):
 
 
 def test_manual_compress_flush_failure_discards_notification(monkeypatch):
-    cli = HermesCLI.__new__(HermesCLI)
+    cli = QwertyCLI.__new__(QwertyCLI)
     cli.conversation_history = [
         {"role": "user", "content": "one"},
         {"role": "assistant", "content": "two"},

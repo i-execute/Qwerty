@@ -522,7 +522,7 @@ def test_stall_stays_finalizing_until_durable_persistence(tmp_path, monkeypatch)
         gate.wait(timeout=10)
         return {"status": "completed", "summary": "too late"}
 
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     monkeypatch.setattr(ad, "_persist_completion", blocking_persist)
     dispatched = ad.dispatch_async_delegation(
         goal="durable stall", context=None, toolsets=None, role="leaf",
@@ -555,7 +555,7 @@ def test_stall_stays_finalizing_until_durable_persistence(tmp_path, monkeypatch)
 
 def test_stalled_completion_restores_once_after_process_restart(tmp_path):
     repo = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    env = {**os.environ, "HERMES_HOME": str(tmp_path), "PYTHONPATH": repo}
+    env = {**os.environ, "QWERTY_HOME": str(tmp_path), "PYTHONPATH": repo}
     producer = r'''
 import json
 import threading
@@ -634,7 +634,7 @@ def test_completed_records_pruned_to_cap():
 
 def test_completion_is_persisted_and_delivery_can_be_acknowledged(tmp_path, monkeypatch):
     """A finished child remains pending on disk until its queue consumer acks it."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     dispatched = ad.dispatch_async_delegation(
         goal="durable", context="ctx", toolsets=["terminal"], role="leaf",
         model="m", session_key="owner", parent_session_id="parent",
@@ -660,7 +660,7 @@ def test_completion_is_persisted_and_delivery_can_be_acknowledged(tmp_path, monk
 def test_real_process_restart_restores_owned_completion_once(tmp_path):
     """Real-import E2E: a fresh interpreter restores a prior process's result."""
     repo = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    env = {**os.environ, "HERMES_HOME": str(tmp_path), "PYTHONPATH": repo}
+    env = {**os.environ, "QWERTY_HOME": str(tmp_path), "PYTHONPATH": repo}
     producer = r'''
 import time
 from tools import async_delegation as ad
@@ -712,7 +712,7 @@ assert ad.mark_completion_delivered({delegation_id!r})
 
 
 def test_submit_failure_removes_durable_running_record(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
 
     class _BrokenExecutor:
         def submit(self, *_args, **_kwargs):
@@ -730,7 +730,7 @@ def test_submit_failure_removes_durable_running_record(tmp_path, monkeypatch):
 
 
 def test_pending_retention_prunes_delivered_before_undelivered(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     monkeypatch.setattr(ad, "_MAX_RETAINED_COMPLETED", 2)
     for index, delivery_state in enumerate(("pending", "delivered", "pending")):
         delegation_id = f"deleg_{index}"
@@ -761,7 +761,7 @@ def test_pending_retention_prunes_delivered_before_undelivered(tmp_path, monkeyp
 
 
 def test_recover_marks_abandoned_running_record_unknown(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     record = {
         "delegation_id": "deleg_abandoned",
         "session_key": "owner",
@@ -790,7 +790,7 @@ def test_origin_session_id_survives_persistence_round_trip(tmp_path, monkeypatch
     persisted with the durable dispatch record and restored on recovery —
     otherwise completions recovered after a process restart are unroutable
     to api_server sessions (in-memory record is gone)."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     record = {
         "delegation_id": "deleg_wake_target",
         "session_key": "owner",
@@ -823,7 +823,7 @@ def test_origin_session_id_survives_persistence_round_trip(tmp_path, monkeypatch
 def test_origin_session_id_migration_backfills_legacy_rows(tmp_path, monkeypatch):
     """Rows written by a pre-origin_session_id build must survive the ALTER
     TABLE migration and read back as an empty wake target."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     # Create a legacy-schema DB (no origin_session_id column).
     import sqlite3
 
@@ -861,7 +861,7 @@ def test_origin_session_id_migration_backfills_legacy_rows(tmp_path, monkeypatch
 
 
 def test_durable_delivery_claim_is_exclusive_and_retryable(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     record = {
         "delegation_id": "deleg_claim", "session_key": "owner",
         "origin_ui_session_id": "", "parent_session_id": None,
@@ -958,7 +958,7 @@ def test_delegate_task_background_waits_inside_kanban_worker(monkeypatch):
     from unittest.mock import MagicMock
     import tools.delegate_tool as dt
 
-    monkeypatch.setenv("HERMES_KANBAN_TASK", "t_review")
+    monkeypatch.setenv("QWERTY_KANBAN_TASK", "t_review")
 
     parent = MagicMock()
     parent._delegate_depth = 0

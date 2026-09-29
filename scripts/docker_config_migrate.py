@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
-from hermes_cli.config import (
+from qwerty_cli.config import (
     check_config_version,
     get_config_path,
     get_env_path,
@@ -51,8 +51,8 @@ def _restore_backups(backups: dict[Path, Path]) -> list[Path]:
 
 
 def main() -> int:
-    if env_var_enabled("HERMES_SKIP_CONFIG_MIGRATION"):
-        print("[config-migrate] HERMES_SKIP_CONFIG_MIGRATION is set; skipping config migration")
+    if env_var_enabled("QWERTY_SKIP_CONFIG_MIGRATION"):
+        print("[config-migrate] QWERTY_SKIP_CONFIG_MIGRATION is set; skipping config migration")
         return 0
 
     current_ver, latest_ver = check_config_version()

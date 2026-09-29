@@ -185,7 +185,7 @@ def test_public_lifecycle_runs_host_aggregation(monkeypatch):
             "_child_cost_usd": 2.5,
         },
     )
-    monkeypatch.setattr("hermes_cli.plugins.invoke_hook", hook)
+    monkeypatch.setattr("qwerty_cli.plugins.invoke_hook", hook)
 
     service = SubagentLifecycleService(lambda: parent)
     handle = service.launch(SubagentLaunchRequest(goal="aggregate me"))
@@ -214,7 +214,7 @@ def test_public_lifecycle_runs_host_aggregation(monkeypatch):
 
 
 def test_plugin_context_uses_turn_scoped_parent(monkeypatch):
-    from hermes_cli.plugins import PluginContext, PluginManifest
+    from qwerty_cli.plugins import PluginContext, PluginManifest
 
     parent = SimpleNamespace(session_id="gateway-parent", enabled_toolsets=["file"])
     monkeypatch.setattr(

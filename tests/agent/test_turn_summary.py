@@ -238,7 +238,7 @@ class _StubAgent:
 def _make_cli(**overrides):
     """Bind the real CLI accounting methods onto a minimal stub object.
 
-    Avoids constructing HermesCLI (which loads config, sessions, and a
+    Avoids constructing QwertyCLI (which loads config, sessions, and a
     prompt_toolkit app) while still exercising the shipped gate + emit code.
     """
     import cli as cli_module
@@ -256,12 +256,12 @@ def _make_cli(**overrides):
         _spinner_text = "⚡ reading file"
         _tool_start_time = 0
 
-        _turn_summary_is_active = cli_module.HermesCLI._turn_summary_is_active
-        _turn_summary_begin = cli_module.HermesCLI._turn_summary_begin
-        _turn_summary_record = cli_module.HermesCLI._turn_summary_record
-        _turn_summary_emit = cli_module.HermesCLI._turn_summary_emit
-        _spinner_token_flow = cli_module.HermesCLI._spinner_token_flow
-        _render_spinner_text = cli_module.HermesCLI._render_spinner_text
+        _turn_summary_is_active = cli_module.QwertyCLI._turn_summary_is_active
+        _turn_summary_begin = cli_module.QwertyCLI._turn_summary_begin
+        _turn_summary_record = cli_module.QwertyCLI._turn_summary_record
+        _turn_summary_emit = cli_module.QwertyCLI._turn_summary_emit
+        _spinner_token_flow = cli_module.QwertyCLI._spinner_token_flow
+        _render_spinner_text = cli_module.QwertyCLI._render_spinner_text
 
     stub = _Stub()
     for key, value in overrides.items():
@@ -339,7 +339,7 @@ def test_spinner_token_flow_silent_without_agent_or_idle():
 
 
 def test_turn_summary_config_defaults_present():
-    from hermes_cli.config import DEFAULT_CONFIG
+    from qwerty_cli.config import DEFAULT_CONFIG
 
     display = DEFAULT_CONFIG["display"]
     assert display["turn_summary"] is True

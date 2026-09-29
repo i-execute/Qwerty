@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from hermes_cli import env_loader
+from qwerty_cli import env_loader
 
 
 @pytest.fixture(autouse=True)
@@ -83,7 +83,7 @@ def test_disabled_sources_do_not_mark_applied(tmp_path):
 
 def test_fetch_error_still_marks_applied(tmp_path, monkeypatch):
     """A real fetch attempt that FAILS still marks the home — otherwise every
-    import-time load_hermes_dotenv() would re-fetch and re-print the same
+    import-time load_qwerty_dotenv() would re-fetch and re-print the same
     error 3-5x per startup."""
     home = tmp_path / ".hermes"
     home.mkdir()

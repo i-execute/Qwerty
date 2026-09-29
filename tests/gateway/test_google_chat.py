@@ -162,7 +162,7 @@ def adapter(tmp_path):
 
     Redirects the persistent thread-count store to a tmp file so tests
     don't pollute (or read state from) the developer's real
-    ~/.hermes/google_chat_thread_counts.json.
+    ~/.qwerty/google_chat_thread_counts.json.
     """
     from plugins.platforms.google_chat.adapter import _ThreadCountStore
     a = GoogleChatAdapter(_base_config())
@@ -174,7 +174,7 @@ def adapter(tmp_path):
     a._subscription_path = "projects/test-project/subscriptions/test-sub"
     a._new_authed_http = MagicMock(return_value=MagicMock())
     a.handle_message = AsyncMock()
-    # Replace the production store (which would write to ~/.hermes/...)
+    # Replace the production store (which would write to ~/.qwerty/...)
     # with a tmp-path one so tests can roundtrip without side effects.
     a._thread_count_store = _ThreadCountStore(
         tmp_path / "google_chat_thread_counts.json"
@@ -658,7 +658,7 @@ class TestOnPubsubMessage:
         msg.nack.assert_not_called()
 
     def test_membership_created_caches_bot_user_id(self, adapter, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         adapter._bot_user_id = None
         envelope = {
             "chat": {
@@ -711,7 +711,7 @@ class TestOnPubsubMessage:
         envelope = {
             "event_type": "MESSAGE",
             "sender_email": "bot@bots.example.com",
-            "sender_display_name": "HermesBot",
+            "sender_display_name": "QwertyBot",
             "sender_type": "BOT",
             "text": "reply from bot",
             "space_name": "spaces/RELAY",
@@ -827,7 +827,7 @@ class TestExtractMessagePayload:
         """Format 3: flat fields from a custom Cloud Run relay.
 
         Some self-hosted setups put a relay in front of Pub/Sub to keep
-        GCP credentials off the Hermes host. The relay flattens Chat
+        GCP credentials off the Qwerty host. The relay flattens Chat
         events into top-level ``sender_email`` / ``text`` / ``space_name``
         / etc. The helper synthesizes a Chat-API-shaped ``message`` dict
         so downstream code (``_dispatch_message`` →
@@ -873,7 +873,7 @@ class TestExtractMessagePayload:
         envelope = {
             "event_type": "MESSAGE",
             "sender_email": "bot@bots.example.com",
-            "sender_display_name": "HermesBot",
+            "sender_display_name": "QwertyBot",
             "sender_type": "BOT",
             "text": "reply from bot",
             "space_name": "spaces/RELAY",
@@ -1291,7 +1291,7 @@ class TestSend:
         assert card["cardId"] == "clarify-clarify123"
         buttons = card["card"]["sections"][0]["widgets"][1]["buttonList"]["buttons"]
         assert buttons[0]["text"] == "Simple"
-        assert buttons[0]["onClick"]["action"]["function"] == "hermes_clarify"
+        assert buttons[0]["onClick"]["action"]["function"] == "qwerty_clarify"
         assert {"key": "choice", "value": "Simple"} in buttons[0]["onClick"]["action"]["parameters"]
         assert buttons[-1]["text"] == "Other / type answer"
         assert adapter._clarify_state["clarify123"] == "session-key"
@@ -1337,7 +1337,7 @@ class TestTypingLifecycle:
         )
         await adapter.send_typing("spaces/S")
         body = adapter._create_message.await_args.args[1]
-        assert body["text"] == "Hermes is thinking…"
+        assert body["text"] == "Qwerty is thinking…"
 
     @pytest.mark.asyncio
     async def test_send_typing_skips_when_already_tracking(self, adapter):
@@ -1385,7 +1385,7 @@ class TestTypingLifecycle:
         first call slow, the second arriving before the first stores
         its msg_id), only ONE create should hit the API. Without this
         guard the second call would create a duplicate card → orphan
-        'Hermes is thinking…' stuck in chat. Race fix via
+        'Qwerty is thinking…' stuck in chat. Race fix via
         _typing_card_inflight Event.
         """
         call_count = 0
@@ -1465,7 +1465,7 @@ class TestTypingLifecycle:
         already populated the slot (race), the orphan id is tracked in
         _orphan_typing_messages. on_processing_complete must patch each
         orphan to a benign marker so users don't see stuck
-        'Hermes is thinking…' messages."""
+        'Qwerty is thinking…' messages."""
         from plugins.platforms.google_chat.adapter import _TYPING_CONSUMED_SENTINEL
         adapter._orphan_typing_messages["spaces/S"] = [
             "spaces/S/messages/ORPHAN1",
@@ -1800,7 +1800,7 @@ class TestSetupFilesSlashCommand:
     async def test_no_arg_status_when_unconfigured(self, adapter, tmp_path, monkeypatch):
         """Without client_secret AND without token, status reply tells the
         user how to provide credentials on the host."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         adapter._create_message = AsyncMock(
             return_value=type("R", (), {"success": True, "message_id": "m",
                                         "error": None})()
@@ -1816,7 +1816,7 @@ class TestSetupFilesSlashCommand:
 
     @pytest.mark.asyncio
     async def test_revoke_clears_in_memory_creds(self, adapter, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         adapter._user_chat_api = MagicMock()
         adapter._user_credentials = MagicMock(valid=True)
         adapter._create_message = AsyncMock(
@@ -1843,12 +1843,12 @@ class TestUserOAuthHelper:
     def test_load_user_credentials_returns_none_when_no_token(self, tmp_path, monkeypatch):
         """Missing token file is the expected no-op case (user hasn't
         run /setup-files yet). Must NOT raise."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         from plugins.platforms.google_chat.oauth import load_user_credentials
         assert load_user_credentials() is None
 
     def test_load_user_credentials_returns_none_on_corrupt_token(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         (tmp_path / "google_chat_user_token.json").write_text("not json")
         from plugins.platforms.google_chat.oauth import load_user_credentials
         assert load_user_credentials() is None
@@ -1875,7 +1875,7 @@ class TestUserOAuthHelper:
     def test_per_user_token_path_isolated_from_legacy(self, tmp_path, monkeypatch):
         """Per-user files live under a dedicated subdirectory so the
         legacy single-user JSON stays addressable on disk."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         from plugins.platforms.google_chat.oauth import (
             _token_path, _legacy_token_path,
         )
@@ -1890,7 +1890,7 @@ class TestUserOAuthHelper:
     ):
         """A user who has not authorized has no token file; load returns
         ``None`` and never throws — same contract as the legacy path."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         from plugins.platforms.google_chat.oauth import load_user_credentials
         assert load_user_credentials("nobody@example.com") is None
 
@@ -1899,7 +1899,7 @@ class TestUserOAuthHelper:
     ):
         """``list_authorized_emails`` enumerates the per-user dir; the
         legacy file is intentionally excluded (its owner is unknown)."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         users_dir = tmp_path / "google_chat_user_tokens"
         users_dir.mkdir(parents=True)
         (users_dir / "alice@example.com.json").write_text("{}")
@@ -1915,7 +1915,7 @@ class TestUserOAuthHelper:
     def test_list_authorized_emails_empty_when_dir_missing(
         self, tmp_path, monkeypatch
     ):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         from plugins.platforms.google_chat.oauth import list_authorized_emails
         assert list_authorized_emails() == []
 
@@ -1925,7 +1925,7 @@ class TestUserOAuthHelper:
         """Two users running /setup-files start in parallel must not
         clobber each other's PKCE verifier — the pending state file
         is namespaced by email."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         from plugins.platforms.google_chat.oauth import _pending_auth_path
         a = _pending_auth_path("alice@example.com")
         b = _pending_auth_path("bob@example.com")
@@ -1935,7 +1935,7 @@ class TestUserOAuthHelper:
         assert "google_chat_user_oauth_pending" in str(a.parent)
 
     def test_persist_credentials_writes_private_json(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         from plugins.platforms.google_chat.oauth import _persist_credentials, _token_path
 
         creds = type(
@@ -1968,7 +1968,7 @@ class TestUserOAuthHelper:
         )
 
     def test_store_client_secret_writes_private_json(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         src = tmp_path / "client_secret.json"
         payload = {"installed": {"client_id": "cid", "client_secret": "secret"}}
         src.write_text(json.dumps(payload), encoding="utf-8")
@@ -1983,7 +1983,7 @@ class TestUserOAuthHelper:
         self._assert_private_json_file(_client_secret_path(), payload)
 
     def test_save_pending_auth_writes_private_json(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         from plugins.platforms.google_chat.oauth import (
             _REDIRECT_URI,
             _pending_auth_path,
@@ -2032,7 +2032,7 @@ class TestPerUserAttachmentRouting:
     ):
         """sender_email maps to a per-user file → that user's API client
         is built and used for the upload, NOT the legacy fallback."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         users_dir = tmp_path / "google_chat_user_tokens"
         users_dir.mkdir(parents=True)
         (users_dir / "alice@example.com.json").write_text(json.dumps({
@@ -2083,7 +2083,7 @@ class TestPerUserAttachmentRouting:
         """sender known but no per-user token → legacy creds fill in.
         This is the migration window: legacy keeps working until each
         user runs /setup-files."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         adapter._last_sender_by_chat["spaces/S"] = "newuser@example.com"
 
         legacy_api = MagicMock()
@@ -2145,7 +2145,7 @@ class TestPerUserAttachmentRouting:
     ):
         """A 401 from one user's token must NOT clobber another user's
         cache nor the legacy slot. The eviction is scoped."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         adapter._last_sender_by_chat["spaces/S"] = "alice@example.com"
 
         alice_api = MagicMock()
@@ -2186,7 +2186,7 @@ class TestPerUserAttachmentRouting:
     ):
         """``/setup-files <code>`` from sender alice writes to alice's
         token slot; bob's slot stays untouched."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         adapter._create_message = AsyncMock(
             return_value=type("R", (), {"success": True, "message_id": "m",
                                         "error": None})()
@@ -2220,7 +2220,7 @@ class TestPerUserAttachmentRouting:
         """Per-user revoke clears alice's slot; bob and the legacy
         fallback both keep working. Alice's choice to revoke must not
         knock out unrelated users."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         adapter._user_chat_api_by_email["alice@example.com"] = MagicMock()
         adapter._user_creds_by_email["alice@example.com"] = MagicMock()
         adapter._user_chat_api_by_email["bob@example.com"] = MagicMock()
@@ -2880,7 +2880,7 @@ class TestGoogleChatInteractiveSetup:
         answers = {
             "GCP project ID (e.g. my-project)": "demo-project",
             "Pub/Sub subscription (projects/<proj>/subscriptions/<sub>)": (
-                "projects/demo-project/subscriptions/hermes-chat"
+                "projects/demo-project/subscriptions/qwerty-chat"
             ),
             "Path to Service Account JSON (or inline JSON)": "/tmp/sa.json",
             "Allowed user emails (comma-separated)": "alice@example.com, bob@example.com",
@@ -2898,20 +2898,20 @@ class TestGoogleChatInteractiveSetup:
         def fake_prompt(question, default=None, password=False):
             return answers.get(question, default or "")
 
-        monkeypatch.setattr("hermes_cli.config.get_env_value", fake_get_env_value)
-        monkeypatch.setattr("hermes_cli.config.save_env_value", fake_save_env_value)
-        monkeypatch.setattr("hermes_cli.cli_output.prompt", fake_prompt)
+        monkeypatch.setattr("qwerty_cli.config.get_env_value", fake_get_env_value)
+        monkeypatch.setattr("qwerty_cli.config.save_env_value", fake_save_env_value)
+        monkeypatch.setattr("qwerty_cli.cli_output.prompt", fake_prompt)
         monkeypatch.setattr(
-            "hermes_cli.cli_output.prompt_yes_no", lambda *_a, **_kw: True
+            "qwerty_cli.cli_output.prompt_yes_no", lambda *_a, **_kw: True
         )
         monkeypatch.setattr(
-            "hermes_cli.cli_output.print_info", lambda *_a, **_kw: None
+            "qwerty_cli.cli_output.print_info", lambda *_a, **_kw: None
         )
         monkeypatch.setattr(
-            "hermes_cli.cli_output.print_success", lambda *_a, **_kw: None
+            "qwerty_cli.cli_output.print_success", lambda *_a, **_kw: None
         )
         monkeypatch.setattr(
-            "hermes_cli.cli_output.print_warning", lambda *_a, **_kw: None
+            "qwerty_cli.cli_output.print_warning", lambda *_a, **_kw: None
         )
 
         gc_mod.interactive_setup()
@@ -2919,7 +2919,7 @@ class TestGoogleChatInteractiveSetup:
         assert saved["GOOGLE_CHAT_PROJECT_ID"] == "demo-project"
         assert (
             saved["GOOGLE_CHAT_SUBSCRIPTION_NAME"]
-            == "projects/demo-project/subscriptions/hermes-chat"
+            == "projects/demo-project/subscriptions/qwerty-chat"
         )
         assert saved["GOOGLE_CHAT_SERVICE_ACCOUNT_JSON"] == "/tmp/sa.json"
         assert saved["GOOGLE_CHAT_ALLOWED_USERS"] == "alice@example.com,bob@example.com"
@@ -3067,7 +3067,7 @@ class TestCronSchedulerRegistry:
             return
         # Discover first so the plugin is loaded at all.
         try:
-            from hermes_cli.plugins import discover_plugins
+            from qwerty_cli.plugins import discover_plugins
             discover_plugins()
         except Exception:
             pass
