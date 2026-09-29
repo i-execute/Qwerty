@@ -12,6 +12,7 @@ import html as _html
 import dataclasses
 import faulthandler
 import inspect
+import io
 import json
 import logging
 import os
@@ -416,6 +417,122 @@ def _rich_normalize_linebreaks(text: str) -> str:
     tail = text[pos:]
     out.append(re.sub(r'(?<!\n)\n(?!\n)', '  \n', tail))
     return ''.join(out)
+
+
+def _tl_bytes(value: Any) -> bytes:
+    """Normalize a TL file_reference (bytes, or legacy hex/str) to bytes."""
+    if isinstance(value, (bytes, bytearray)):
+        return bytes(value)
+    if isinstance(value, str):
+        try:
+            return bytes.fromhex(value)
+        except ValueError:
+            return value.encode("utf-8")
+    return b""
+
+
+def _tl_largest_photo_size(photo: Any) -> Dict[str, Any]:
+    """Return the largest downloadable photo size dict (or {})."""
+    sizes = photo.get("sizes") if isinstance(photo, dict) else None
+    usable = [s for s in (sizes or []) if isinstance(s, dict) and str(s.get("type") or "")[:1] in "smxydwa"]
+    if not usable:
+        usable = [s for s in (sizes or []) if isinstance(s, dict) and s.get("size")]
+    return usable[-1] if usable else {}
+
+
+def _tl_photo_size_bytes(size: Any) -> int:
+    """Byte size of a photo size entry (progressive sizes carry a list)."""
+    if not isinstance(size, dict):
+        return 0
+    if size.get("size"):
+        return int(size["size"])
+    progressive = size.get("sizes") if isinstance(size.get("sizes"), list) else []
+    return int(max(progressive)) if progressive else 0
+
+
+def _mt_file_location(media: Any, thumb: Any = None) -> Dict[str, Any]:
+    """Build an MTProto inputFileLocation for a raw TL media dict."""
+    if not isinstance(media, dict):
+        raise ValueError("unsupported media source")
+    doc = media.get("document") if isinstance(media.get("document"), dict) else None
+    if doc is None and media.get("_") == "document":
+        doc = media
+    if isinstance(doc, dict) and doc.get("id") is not None:
+        return {
+            "_": "inputDocumentFileLocation",
+            "id": doc["id"],
+            "access_hash": doc.get("access_hash") or 0,
+            "file_reference": _tl_bytes(doc.get("file_reference")),
+            "thumb_size": thumb or "",
+        }
+    photo = media.get("photo") if isinstance(media.get("photo"), dict) else None
+    if photo is None and media.get("_") == "photo":
+        photo = media
+    if isinstance(photo, dict) and photo.get("id") is not None:
+        return {
+            "_": "inputPhotoFileLocation",
+            "id": photo["id"],
+            "access_hash": photo.get("access_hash") or 0,
+            "file_reference": _tl_bytes(photo.get("file_reference")),
+            "thumb_size": thumb or _tl_largest_photo_size(photo).get("type") or "",
+        }
+    raise ValueError("no downloadable media found in source")
+
+
+class _MTInboundMedia:
+    """PTB-shaped view over a raw goygram MTProto media dict.
+
+    The media handlers read PTB attributes (file_name/mime_type/file_size and
+    the sticker emoji/set_name flags) and call get_file().download_as_bytearray().
+    goygram hands the gateway raw TL dicts, so expose that surface here instead
+    of re-deriving it at every call site.
+    """
+
+    def __init__(
+        self,
+        adapter: Any,
+        media: Dict[str, Any],
+        kind: str,
+        thumb: Any = None,
+        size: Any = None,
+    ) -> None:
+        doc = media.get("document") if isinstance(media.get("document"), dict) else None
+        if doc is None and media.get("_") == "document":
+            doc = media
+        if doc is None:
+            doc = {}
+        attrs = [a for a in (doc.get("attributes") or []) if isinstance(a, dict)]
+
+        def attr(name: str) -> Dict[str, Any]:
+            return next((a for a in attrs if a.get("_") == name), {})
+
+        self._adapter = adapter
+        self._media = media
+        self._thumb = thumb
+        self.mime_type = str(doc.get("mime_type") or "")
+        self.file_size = int(size if size is not None else doc.get("size") or 0) or None
+        self.file_unique_id = str(doc.get("id") or media.get("id") or "")
+        self.file_name = str(attr("documentAttributeFilename").get("file_name") or "") or {
+            "voice": "voice.ogg",
+            "video": "video.mp4",
+            "audio": "audio.mp3",
+            "sticker": "sticker.webp",
+        }.get(kind, "")
+        self.file_path = self.file_name
+        sticker = attr("documentAttributeSticker")
+        self.emoji = str(sticker.get("alt") or "")
+        stickerset = sticker.get("stickerset") if isinstance(sticker.get("stickerset"), dict) else {}
+        self.set_name = str(stickerset.get("short_name") or "")
+        self.is_animated = bool(attr("documentAttributeAnimated")) or self.mime_type == "application/x-tgsticker"
+        self.is_video = bool(sticker) and self.mime_type == "video/webm"
+
+    async def get_file(self) -> "_MTInboundMedia":
+        return self
+
+    async def download_as_bytearray(self) -> bytearray:
+        data = await self._adapter._mt_download_inbound(self._media, thumb=self._thumb, size=self.file_size or 0)
+        return bytearray(data)
+
 
 
 class TelegramAdapter(BasePlatformAdapter):
@@ -2349,67 +2466,54 @@ class TelegramAdapter(BasePlatformAdapter):
                     path = tmp.name
             if not path or not os.path.isfile(path):
                 raise ValueError(f"unsupported media handle: {type(media).__name__}")
-            with open(path, "rb") as f:
-                data = f.read()
-            if fh is not None:
-                pass
             mime = "application/octet-stream"
             guessed, _ = mimetypes.guess_type(path)
             if guessed:
                 mime = guessed
-            file_id = secrets.randbits(63)
-            parts = [data[i:i + 524288] for i in range(0, len(data), 524288)] or [b""]
-            total = len(parts)
-            if total > 1:
-                for idx, part in enumerate(parts):
-                    await self._app.mt_req(
-                        "upload.saveBigFilePart",
-                        file_id=file_id,
-                        file_part=idx,
-                        file_total_parts=total,
-                        bytes=part.hex().encode() if isinstance(part, bytes) else part,
-                    )
-            else:
-                await self._app.mt_req(
-                    "upload.saveFilePart",
-                    file_id=file_id,
-                    file_part=0,
-                    bytes=parts[0].hex().encode() if isinstance(parts[0], bytes) else parts[0],
-                )
             file_name = os.path.basename(path) or "file"
+            # Charged upload: parallel parts over several connections, streamed
+            # from disk (the old hand-rolled saveFilePart loop read the whole
+            # file into memory and sent hex-encoded parts).
+            up = await self._app.charged_upload(path, file_name=file_name)
+            file_name = str(up.get("name") or file_name)
+            file_ref: Dict[str, Any] = {
+                "_": "inputFileBig" if up.get("big") else "inputFile",
+                "id": up["id"],
+                "parts": up["parts"],
+                "name": file_name,
+            }
             if force_document or kind == "document":
-                attributes = [
-                    {"_": "documentAttributeFilename", "file_name": file_name},
-                ]
                 return {
                     "_": "inputMediaUploadedDocument",
-                    "file": {
-                        "_": "inputFile",
-                        "id": file_id,
-                        "parts": total,
-                        "name": file_name,
-                        "md5_hex": "",
-                    },
+                    "file": file_ref,
                     "mime_type": mime,
-                    "attributes": attributes,
+                    "attributes": [
+                        {"_": "documentAttributeFilename", "file_name": file_name},
+                    ],
                     "force_file": True,
                 }
-            return {
-                "_": "inputMediaUploadedPhoto",
-                "file": {
-                    "_": "inputFile",
-                    "id": file_id,
-                    "parts": total,
-                    "name": file_name,
-                    "md5_hex": "",
-                },
-            }
+            return {"_": "inputMediaUploadedPhoto", "file": file_ref}
         finally:
             if fh is not None:
                 try:
                     fh.close()
                 except Exception:
                     pass
+
+    async def _mt_download_inbound(self, media: Any, *, thumb: Any = None, size: int = 0) -> bytes:
+        """Download an inbound attachment over MTProto, parallel where it pays.
+
+        ``charged_download`` spreads the file over multiple connections for
+        large payloads and degrades to a single sequential stream when the size
+        is unknown — both write into the in-memory buffer the media cache
+        (cache_image/audio/video/document_from_bytes) expects.
+        """
+        if self._app is None:
+            raise RuntimeError("MTProto client is not connected")
+        location = _mt_file_location(media, thumb)
+        buf = io.BytesIO()
+        await self._app.charged_download(location, buf, size=int(size or 0), media_source=media)
+        return buf.getvalue()
 
     def _mt_peer_dialog_to_chat_info(self, result: Any, chat_id: Any) -> Dict[str, Any]:
         """Convert messages.getPeerDialogs output into Bot API-shaped chat info."""
@@ -8265,30 +8369,50 @@ class TelegramAdapter(BasePlatformAdapter):
         out.has_protected_content = False
         out.is_automatic_forward = False
 
+        async def _reply_text(text: str, **kw: Any) -> Any:
+            """PTB-compatible reply on the inbound message (media failure notices)."""
+            if self._bot is None:
+                return None
+            return await self._bot.send_message(
+                chat_id=chat_id, text=text, reply_to_message_id=out.id, **kw
+            )
+
+        out.reply_text = _reply_text
+
         media = raw.get("media") or {}
         if isinstance(media, dict):
             media_type = media.get("_", "")
             if media_type == "messageMediaPhoto":
-                out.photo = media
+                size = _tl_largest_photo_size(media.get("photo"))
+                out.photo = [
+                    _MTInboundMedia(
+                        self, media, "photo", thumb=size.get("type"), size=_tl_photo_size_bytes(size)
+                    )
+                ]
                 out.caption = raw.get("message") or None
             elif media_type == "messageMediaDocument":
                 doc = media.get("document") or {}
-                mime = doc.get("mime_type", "") if isinstance(doc, dict) else ""
                 attrs = doc.get("attributes") or [] if isinstance(doc, dict) else []
-                is_voice = any(isinstance(a, dict) and a.get("_") == "documentAttributeVoice" for a in attrs)
+                # Voice notes are documentAttributeAudio with the voice flag set;
+                # there is no documentAttributeVoice constructor in the TL schema.
+                audio_attr = next(
+                    (a for a in attrs if isinstance(a, dict) and a.get("_") == "documentAttributeAudio"),
+                    {},
+                )
+                is_voice = bool(audio_attr.get("voice"))
+                is_audio = bool(audio_attr) and not is_voice
                 is_video = any(isinstance(a, dict) and a.get("_") == "documentAttributeVideo" for a in attrs)
-                is_audio = any(isinstance(a, dict) and a.get("_") == "documentAttributeAudio" for a in attrs)
                 is_sticker = any(isinstance(a, dict) and a.get("_") in ("documentAttributeSticker",) for a in attrs)
                 if is_sticker:
-                    out.sticker = media
+                    out.sticker = _MTInboundMedia(self, media, "sticker")
                 elif is_voice:
-                    out.voice = media
+                    out.voice = _MTInboundMedia(self, media, "voice")
                 elif is_video:
-                    out.video = media
+                    out.video = _MTInboundMedia(self, media, "video")
                 elif is_audio:
-                    out.audio = media
+                    out.audio = _MTInboundMedia(self, media, "audio")
                 else:
-                    out.document = media
+                    out.document = _MTInboundMedia(self, media, "document")
                 out.caption = raw.get("message") or None
             elif media_type == "messageMediaGeo":
                 out.location = media.get("geo") if isinstance(media.get("geo"), dict) else media
