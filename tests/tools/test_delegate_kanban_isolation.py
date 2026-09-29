@@ -26,7 +26,7 @@ def _python_with_repo_path(code: str) -> str:
 
 
 def _make_running_kanban_task(monkeypatch, tmp_path):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     attachments_root = tmp_path / "attachments"
     workspace = tmp_path / "parent-workspace"
@@ -68,7 +68,7 @@ def test_delegated_child_context_suppresses_env_gated_kanban_tools(monkeypatch, 
     """
     monkeypatch.setenv("QWERTY_KANBAN_TASK", "t_parent")
     monkeypatch.setenv("QWERTY_KANBAN_RUN_ID", "123")
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
 
@@ -197,7 +197,7 @@ def test_delegate_child_process_marker_scrubs_foreground_terminal_kanban_keys(mo
 
 def test_delegate_child_execute_code_env_preserves_process_marker(monkeypatch, tmp_path):
     """execute_code has its own env scrubber; it must preserve child lineage."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
 
@@ -237,7 +237,7 @@ def test_delegate_child_execute_code_env_bridges_contextvar_and_scrubs_kanban(
     ``os.environ`` and therefore never wrote QWERTY_DELEGATED_CHILD_CONTEXT into
     the sandbox env.
     """
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setenv("QWERTY_KANBAN_TASK", "t_parent")

@@ -156,7 +156,7 @@ class TestRenderers:
 
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     import qwerty_constants

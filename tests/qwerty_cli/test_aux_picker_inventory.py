@@ -53,7 +53,7 @@ CONFIG = {
 def configured_home(tmp_path, monkeypatch):
     """A QWERTY_HOME with one ``providers:`` entry and one legacy
     ``custom_providers:`` entry, both credentialled via env."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(yaml.safe_dump(CONFIG))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)

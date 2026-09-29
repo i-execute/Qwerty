@@ -332,9 +332,9 @@ async def test_blocks_sensitive_home_and_qwerty_paths(tmp_path: Path, monkeypatc
     from agent.context_references import preprocess_context_references_async
 
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
 
-    qwerty_env = tmp_path / ".hermes" / ".env"
+    qwerty_env = tmp_path / ".qwerty" / ".env"
     qwerty_env.parent.mkdir(parents=True)
     qwerty_env.write_text("API_KEY=super-secret\n", encoding="utf-8")
 
@@ -343,7 +343,7 @@ async def test_blocks_sensitive_home_and_qwerty_paths(tmp_path: Path, monkeypatc
     ssh_key.write_text("PRIVATE-KEY\n", encoding="utf-8")
 
     result = await preprocess_context_references_async(
-        "read @file:.hermes/.env and @file:.ssh/id_rsa",
+        "read @file:.qwerty/.env and @file:.ssh/id_rsa",
         cwd=tmp_path,
         allowed_root=tmp_path,
         context_length=100_000,
@@ -369,9 +369,9 @@ async def test_blocks_canonical_read_denylist_credential_stores(tmp_path: Path, 
     from agent.context_references import preprocess_context_references_async
 
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     (qwerty_home).mkdir(parents=True)
 
     auth_json = qwerty_home / "auth.json"
@@ -389,8 +389,8 @@ async def test_blocks_canonical_read_denylist_credential_stores(tmp_path: Path, 
     project_env.write_text("DB_PASSWORD=ENV-SECRET\n", encoding="utf-8")
 
     result = await preprocess_context_references_async(
-        "inspect @file:.hermes/auth.json and @file:.hermes/.anthropic_oauth.json "
-        "and @file:.hermes/mcp-tokens/github.json and @file:project/.env",
+        "inspect @file:.qwerty/auth.json and @file:.qwerty/.anthropic_oauth.json "
+        "and @file:.qwerty/mcp-tokens/github.json and @file:project/.env",
         cwd=tmp_path,
         allowed_root=tmp_path,
         context_length=100_000,
@@ -421,9 +421,9 @@ async def test_canonical_guard_fails_closed_when_lookup_raises(tmp_path: Path, m
     from agent.context_references import preprocess_context_references_async
 
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir(parents=True)
     auth_json = qwerty_home / "auth.json"
     auth_json.write_text('{"openai": "sk-AUTHJSON-SECRET"}\n', encoding="utf-8")
@@ -434,7 +434,7 @@ async def test_canonical_guard_fails_closed_when_lookup_raises(tmp_path: Path, m
     monkeypatch.setattr("agent.file_safety.get_read_block_error", _boom)
 
     result = await preprocess_context_references_async(
-        "inspect @file:.hermes/auth.json",
+        "inspect @file:.qwerty/auth.json",
         cwd=tmp_path,
         allowed_root=tmp_path,
         context_length=100_000,

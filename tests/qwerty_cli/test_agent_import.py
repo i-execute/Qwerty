@@ -32,9 +32,9 @@ from qwerty_cli.agent_import import (
 
 @pytest.fixture()
 def profile_env(tmp_path, monkeypatch):
-    """Isolated environment: Path.home() -> tmp_path, QWERTY_HOME -> tmp/.hermes."""
+    """Isolated environment: Path.home() -> tmp_path, QWERTY_HOME -> tmp/.qwerty."""
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    default_home = tmp_path / ".hermes"
+    default_home = tmp_path / ".qwerty"
     default_home.mkdir(exist_ok=True)
     monkeypatch.setenv("QWERTY_HOME", str(default_home))
     return tmp_path
@@ -42,7 +42,7 @@ def profile_env(tmp_path, monkeypatch):
 
 @pytest.fixture()
 def qwerty_home(profile_env):
-    return profile_env / ".hermes"
+    return profile_env / ".qwerty"
 
 
 # ---------------------------------------------------------------------------

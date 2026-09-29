@@ -146,7 +146,7 @@ the SAME code block as the token exchange (see pitfall 16).
 ### 1. Confirm it's a remote gateway
 
 ```bash
-env | grep -iE "HERMES|RAILWAY|CONTAINER"
+env | grep -iE "QWERTY|RAILWAY|CONTAINER"
 echo "$DISPLAY $WAYLAND_DISPLAY $SSH_CLIENT"
 ```
 

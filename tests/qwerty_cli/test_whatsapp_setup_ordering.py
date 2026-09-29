@@ -25,7 +25,7 @@ import pytest
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
     home = tmp_path / "home"
-    qwerty = home / ".hermes"
+    qwerty = home / ".qwerty"
     qwerty.mkdir(parents=True)
     monkeypatch.setattr(Path, "home", lambda: home)
     monkeypatch.setenv("QWERTY_HOME", str(qwerty))

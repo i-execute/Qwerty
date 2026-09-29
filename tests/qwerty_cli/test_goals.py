@@ -19,7 +19,7 @@ def qwerty_home(tmp_path, monkeypatch):
     """Isolated QWERTY_HOME so SessionDB.state_meta writes don't clobber the real one."""
     from pathlib import Path
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("QWERTY_HOME", str(home))

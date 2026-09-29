@@ -58,7 +58,7 @@ def _capture_spawn_env(kb, monkeypatch, workspace: str) -> dict:
 
 def test_terminal_cwd_pinned_to_workspace(monkeypatch, tmp_path):
     """A real, absolute workspace dir is pinned as TERMINAL_CWD."""
-    root = tmp_path / ".hermes"
+    root = tmp_path / ".qwerty"
     (root / "profiles" / "w").mkdir(parents=True)
     (root / "profiles" / "w" / "config.yaml").write_text("toolsets:\n  - kanban\n", encoding="utf-8")
     root.joinpath("config.yaml").write_text("toolsets:\n  - kanban\n", encoding="utf-8")
@@ -84,7 +84,7 @@ def test_terminal_cwd_not_pinned_for_nonexistent_workspace(monkeypatch, tmp_path
     meaningless (nonexistent) path would be worse than leaving the inherited
     one. The guard requires an existing absolute dir.
     """
-    root = tmp_path / ".hermes"
+    root = tmp_path / ".qwerty"
     (root / "profiles" / "w").mkdir(parents=True)
     (root / "profiles" / "w" / "config.yaml").write_text("toolsets:\n  - kanban\n", encoding="utf-8")
     root.joinpath("config.yaml").write_text("toolsets:\n  - kanban\n", encoding="utf-8")

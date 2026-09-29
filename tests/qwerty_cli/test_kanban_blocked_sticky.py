@@ -40,7 +40,7 @@ from qwerty_cli import kanban_db as kb
 @pytest.fixture
 def kanban_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Isolated QWERTY_HOME with an empty kanban DB."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)

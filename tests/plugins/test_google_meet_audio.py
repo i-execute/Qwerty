@@ -13,7 +13,7 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _isolate_home(tmp_path, monkeypatch):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
     yield qwerty_home

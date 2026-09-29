@@ -120,7 +120,7 @@ def boba_like(tmp_path, monkeypatch):
     """Install a synthetic 8-col × 9-row pet into a temp QWERTY_HOME."""
     from PIL import Image
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
 

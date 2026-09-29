@@ -166,7 +166,7 @@ def test_doctor_warns_without_adding_issues(monkeypatch, tmp_path, capsys):
     """Vulnerable SQLite is warn-only in doctor — not a blocking issues[] entry."""
     from qwerty_cli.doctor import run_doctor
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr("qwerty_constants.get_qwerty_home", lambda: home)

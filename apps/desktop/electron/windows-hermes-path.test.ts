@@ -141,7 +141,7 @@ test('resolveVenvQwertyCommand: returns the resolved python backend descriptor w
 test('resolveVenvQwertyCommand: is case-insensitive on qwerty.exe and the Scripts dir name', () => {
   const deps = makeDeps()
 
-  assert.ok(resolveVenvQwertyCommand('/root/venv/Scripts/HERMES.EXE', [], deps))
+  assert.ok(resolveVenvQwertyCommand('/root/venv/Scripts/QWERTY.EXE', [], deps))
   assert.ok(resolveVenvQwertyCommand('/root/venv/SCRIPTS/qwerty.exe', [], deps))
 })
 

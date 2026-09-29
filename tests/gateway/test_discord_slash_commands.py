@@ -926,7 +926,7 @@ def test_discord_auto_thread_config_bridge(monkeypatch, tmp_path):
     from pathlib import Path
 
     # Write a config.yaml the loader will find
-    qwerty_dir = tmp_path / ".hermes"
+    qwerty_dir = tmp_path / ".qwerty"
     qwerty_dir.mkdir()
     config_path = qwerty_dir / "config.yaml"
     config_path.write_text(yaml.dump({

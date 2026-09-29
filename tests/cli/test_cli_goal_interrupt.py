@@ -27,7 +27,7 @@ import pytest
 @pytest.fixture
 def qwerty_home(tmp_path, monkeypatch):
     """Isolated QWERTY_HOME so SessionDB.state_meta writes stay hermetic."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("QWERTY_HOME", str(home))

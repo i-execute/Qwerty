@@ -261,7 +261,7 @@ def test_display_config_path_never_leaks_absolute_path():
     from pathlib import Path
 
     # Under home → collapsed to ~/…; outside home → bare filename only.
-    under_home = Path.home() / ".hermes" / "profiles" / "work" / "honcho.json"
+    under_home = Path.home() / ".qwerty" / "profiles" / "work" / "honcho.json"
     assert oauth_flow._display_config_path(under_home) == "~/.hermes/profiles/work/honcho.json"
     assert oauth_flow._display_config_path("/var/folders/tmp/honcho.json") == "honcho.json"
 

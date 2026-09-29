@@ -9,10 +9,10 @@ import { connectWindowsRemote } from './windows-remote-lifecycle'
 // your test rig; skipped everywhere else (CI, other machines).
 //   QWERTY_WIN_SSH_HOST   ssh alias/host of the Windows box
 //   QWERTY_WIN_SSH_USER   remote user
-//   QWERTY_WIN_SSH_HERMES absolute path to the remote qwerty.exe under test
+//   QWERTY_WIN_SSH_QWERTY absolute path to the remote qwerty.exe under test
 const liveHost = process.env.QWERTY_WIN_SSH_HOST || ''
 const liveUser = process.env.QWERTY_WIN_SSH_USER || ''
-const configuredQwerty = process.env.QWERTY_WIN_SSH_HERMES || ''
+const configuredQwerty = process.env.QWERTY_WIN_SSH_QWERTY || ''
 const ownershipId = '89abcdef0123456789abcdef01234567'
 
 function fetchJson(url, token, path) {

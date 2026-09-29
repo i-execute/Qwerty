@@ -9,8 +9,8 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _isolate_qwerty(tmp_path, monkeypatch):
-    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
-    (tmp_path / ".hermes").mkdir(exist_ok=True)
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
+    (tmp_path / ".qwerty").mkdir(exist_ok=True)
 
 
 def _make_agent(monkeypatch):

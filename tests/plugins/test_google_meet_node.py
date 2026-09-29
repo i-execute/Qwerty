@@ -18,7 +18,7 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _isolate_home(tmp_path, monkeypatch):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
     yield qwerty_home
@@ -218,7 +218,7 @@ def test_registry_defaults_to_qwerty_home(tmp_path, monkeypatch):
     # registry default path must live inside that tree.
     r = NodeRegistry()
     r.add("x", "ws://x", "t")
-    expected = Path(tmp_path) / ".hermes" / "workspace" / "meetings" / "nodes.json"
+    expected = Path(tmp_path) / ".qwerty" / "workspace" / "meetings" / "nodes.json"
     assert expected.is_file()
 
 

@@ -407,13 +407,13 @@ def test_junk_root_never_becomes_an_auto_project():
     # alongside it still groups normally.
     resolve = _resolver(
         {
-            "/home/me/.hermes": ("/home/me/.hermes", "/home/me/.hermes"),
+            "/home/me/.qwerty": ("/home/me/.qwerty", "/home/me/.qwerty"),
             "/www/app": ("/www/app", "/www/app"),
         }
     )
-    junk = _session("/home/me/.hermes", branch="main")
+    junk = _session("/home/me/.qwerty", branch="main")
     real = _session("/www/app", branch="main")
-    is_junk = lambda root: root == "/home/me/.hermes"
+    is_junk = lambda root: root == "/home/me/.qwerty"
 
     tree = pt.build_tree([], [junk, real], [], resolve, hydrate=True, is_junk_root=is_junk)
 
@@ -424,9 +424,9 @@ def test_junk_root_never_becomes_an_auto_project():
 
 
 def test_junk_root_is_dropped_from_the_discovered_tier():
-    discovered = [{"root": "/home/me/.hermes", "label": ".hermes", "sessions": 0, "last_active": 9}]
+    discovered = [{"root": "/home/me/.qwerty", "label": ".qwerty", "sessions": 0, "last_active": 9}]
 
-    tree = pt.build_tree([], [], discovered, resolve=None, is_junk_root=lambda r: r == "/home/me/.hermes")
+    tree = pt.build_tree([], [], discovered, resolve=None, is_junk_root=lambda r: r == "/home/me/.qwerty")
 
     assert tree["projects"] == []
 
@@ -442,8 +442,8 @@ def test_non_git_cwd_can_group_inside_a_junk_repo_subtree():
         [],
         resolve=lambda _cwd: None,
         hydrate=True,
-        is_junk_root=lambda path: path.startswith("/home/test/.hermes"),
-        is_junk_cwd=lambda path: path in {"/home/test", "/home/test/.hermes"},
+        is_junk_root=lambda path: path.startswith("/home/test/.qwerty"),
+        is_junk_cwd=lambda path: path in {"/home/test", "/home/test/.qwerty"},
     )
 
     assert [p["id"] for p in tree["projects"]] == ["/home/test/.hermes/workspaces/notes"]
@@ -451,7 +451,7 @@ def test_non_git_cwd_can_group_inside_a_junk_repo_subtree():
 
 
 def test_broad_default_non_git_cwd_stays_unscoped():
-    detached = _session("/home/test/.hermes")
+    detached = _session("/home/test/.qwerty")
 
     tree = pt.build_tree(
         [],
@@ -459,7 +459,7 @@ def test_broad_default_non_git_cwd_stays_unscoped():
         [],
         resolve=lambda _cwd: None,
         hydrate=True,
-        is_junk_cwd=lambda path: path in {"/home/test", "/home/test/.hermes"},
+        is_junk_cwd=lambda path: path in {"/home/test", "/home/test/.qwerty"},
     )
 
     assert tree["projects"] == []

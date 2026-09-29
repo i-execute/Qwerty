@@ -43,7 +43,7 @@ def test_venv_health_missing_venv_unhealthy_on_managed_install(tmp_path):
     """On a managed install (bootstrap marker) the venv IS the install —
     its absence must be reported unhealthy so the repair lane runs instead
     of 'Already up to date!'."""
-    (tmp_path / ".hermes-bootstrap-complete").write_text("done")
+    (tmp_path / ".qwerty-bootstrap-complete").write_text("done")
     with patch.object(cli_main, "PROJECT_ROOT", tmp_path):
         healthy, detail = cli_main._venv_core_imports_healthy()
     assert healthy is False

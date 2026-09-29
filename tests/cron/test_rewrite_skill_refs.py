@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 @pytest.fixture
 def cron_env(tmp_path, monkeypatch):
     """Isolated cron environment with temp QWERTY_HOME."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "cron").mkdir()
     (qwerty_home / "cron" / "output").mkdir()

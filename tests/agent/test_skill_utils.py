@@ -115,7 +115,7 @@ def test_skill_config_helpers_share_raw_config_parse_cache(tmp_path, monkeypatch
     """Repeated skill config helpers should parse config.yaml only once."""
     from agent import skill_utils
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     external = tmp_path / "external-skills"
     external.mkdir()
@@ -158,7 +158,7 @@ def test_skill_config_raw_cache_invalidates_on_config_edit(tmp_path, monkeypatch
     """Editing config.yaml should invalidate the shared raw config cache."""
     from agent import skill_utils
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     config_path = qwerty_home / "config.yaml"
     config_path.write_text("skills:\n  disabled: [old-skill]\n", encoding="utf-8")
@@ -177,7 +177,7 @@ def test_skill_config_raw_cache_invalidates_on_config_edit(tmp_path, monkeypatch
 def test_is_external_skill_path_matches_configured_external_dir(tmp_path, monkeypatch):
     from agent import skill_utils
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     local_skills = qwerty_home / "skills"
     external = tmp_path / "external-skills"
     local_skills.mkdir(parents=True)

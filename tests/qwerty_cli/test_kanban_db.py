@@ -20,7 +20,7 @@ from qwerty_cli import kanban_db as kb
 @pytest.fixture
 def kanban_home(tmp_path, monkeypatch):
     """Isolated QWERTY_HOME with an empty kanban DB."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -108,7 +108,7 @@ def test_cross_process_init_lock_uses_windows_byte_range_lock(tmp_path, monkeypa
 
 def test_connect_rejects_tls_record_in_sqlite_header(tmp_path, monkeypatch):
     """Kanban should classify TLS-looking page-0 clobbers before WAL setup."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.delenv("QWERTY_KANBAN_DB", raising=False)
@@ -2570,7 +2570,7 @@ def test_cleanup_workspace_honors_workspaces_root_env_override(tmp_path, monkeyp
     cleanup containment check must treat paths under it as managed even when
     they sit outside the active kanban home.
     """
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -2891,7 +2891,7 @@ class TestSharedBoardPaths:
         self, tmp_path, monkeypatch
     ):
         # Standard install: QWERTY_HOME == ~/.qwerty, no profile active.
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".qwerty"
         default_home.mkdir()
         self._set_home(monkeypatch, tmp_path, default_home)
 
@@ -2910,7 +2910,7 @@ class TestSharedBoardPaths:
         # worker spawned with -p <profile> previously resolved to
         # ~/.qwerty/profiles/<profile>/kanban.db. After the fix both
         # converge on ~/.qwerty/kanban.db.
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".qwerty"
         default_home.mkdir()
         profile_home = default_home / "profiles" / "nehemiahkanban"
         profile_home.mkdir(parents=True)
@@ -2936,7 +2936,7 @@ class TestSharedBoardPaths:
         # End-to-end convergence: resolve the path under each side's
         # QWERTY_HOME and confirm equality. This is the property the
         # dispatcher/worker handoff actually depends on.
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".qwerty"
         default_home.mkdir()
         profile_home = default_home / "profiles" / "coder"
         profile_home.mkdir(parents=True)
@@ -2963,7 +2963,7 @@ class TestSharedBoardPaths:
         # Docker / custom deployment: QWERTY_HOME points outside ~/.qwerty.
         # `get_default_qwerty_root()` returns env_home directly when it
         # is not a `<root>/profiles/<name>` shape and not under
-        # `Path.home() / ".hermes"`.
+        # `Path.home() / ".qwerty"`.
         custom_root = tmp_path / "opt" / "qwerty"
         custom_root.mkdir(parents=True)
         self._set_home(monkeypatch, tmp_path, custom_root)
@@ -2990,7 +2990,7 @@ class TestSharedBoardPaths:
     ):
         # Explicit override: QWERTY_KANBAN_HOME beats every other
         # resolution rule.
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".qwerty"
         profile_home = default_home / "profiles" / "any"
         profile_home.mkdir(parents=True)
         override = tmp_path / "shared-board"
@@ -3006,7 +3006,7 @@ class TestSharedBoardPaths:
 
     def test_empty_override_falls_through(self, tmp_path, monkeypatch):
         # Empty/whitespace override is treated as unset.
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".qwerty"
         default_home.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("QWERTY_HOME", str(default_home))
@@ -3020,7 +3020,7 @@ class TestSharedBoardPaths:
         # Belt-and-suspenders: round-trip a task across the two
         # QWERTY_HOME perspectives via a real SQLite file. Without the
         # fix the worker would open a different file and see no rows.
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".qwerty"
         default_home.mkdir()
         profile_home = default_home / "profiles" / "nehemiahkanban"
         profile_home.mkdir(parents=True)
@@ -3044,7 +3044,7 @@ class TestSharedBoardPaths:
         # QWERTY_KANBAN_DB pins the file path directly and beats both
         # QWERTY_KANBAN_HOME and the `get_default_qwerty_root()` path.
         # This is the env the dispatcher injects into workers.
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".qwerty"
         default_home.mkdir()
         umbrella = tmp_path / "umbrella"
         umbrella.mkdir()
@@ -3065,7 +3065,7 @@ class TestSharedBoardPaths:
         self, tmp_path, monkeypatch
     ):
         # QWERTY_KANBAN_WORKSPACES_ROOT pins the workspaces root directly.
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".qwerty"
         default_home.mkdir()
         umbrella = tmp_path / "umbrella"
         umbrella.mkdir()
@@ -3086,7 +3086,7 @@ class TestSharedBoardPaths:
     ):
         # Empty/whitespace pins are treated as unset, same as
         # QWERTY_KANBAN_HOME.
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".qwerty"
         default_home.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("QWERTY_HOME", str(default_home))
@@ -3101,7 +3101,7 @@ class TestSharedBoardPaths:
     ):
         # The dispatcher must pin board paths while stripping any unrelated
         # QWERTY_SESSION_* identity inherited from the long-lived gateway.
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".qwerty"
         default_home.mkdir()
         self._set_home(monkeypatch, tmp_path, default_home)
 
@@ -3267,7 +3267,7 @@ def test_connect_falls_back_to_delete_on_locking_protocol(tmp_path, monkeypatch,
     _hs._wal_fallback_warned_paths.clear()
     _hs._wal_reset_bug_warned_paths.clear()
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -3727,7 +3727,7 @@ def test_task_dict_survives_corrupt_created_at(tmp_path, monkeypatch):
     corrupt row doesn't turn the whole board response into an error.
     """
     # Set up an isolated kanban home so we can write a corrupt created_at.
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)

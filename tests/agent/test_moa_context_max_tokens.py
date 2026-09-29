@@ -30,7 +30,7 @@ def _response(content: str = "ok"):
 
 @pytest.fixture
 def qwerty_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     return home

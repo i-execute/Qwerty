@@ -108,7 +108,7 @@ def test_load_heals_legacy_row_and_exposes_it_to_resolver(tmp_path, monkeypatch)
 
 def test_profile_global_fallback_normalizes_in_memory_without_writing(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    global_root = tmp_path / ".hermes"
+    global_root = tmp_path / ".qwerty"
     global_root.mkdir()
     profile_home = global_root / "profiles" / "coder"
     profile_home.mkdir(parents=True)

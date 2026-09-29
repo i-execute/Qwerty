@@ -327,7 +327,7 @@ class TestPluginDiscovery:
         project_dir.mkdir()
         monkeypatch.chdir(project_dir)
         monkeypatch.setenv("QWERTY_ENABLE_PROJECT_PLUGINS", "true")
-        plugins_dir = project_dir / ".hermes" / "plugins"
+        plugins_dir = project_dir / ".qwerty" / "plugins"
         _make_plugin_dir(plugins_dir, "proj_plugin")
 
         mgr = PluginManager()
@@ -341,7 +341,7 @@ class TestPluginDiscovery:
         project_dir = tmp_path / "project"
         project_dir.mkdir()
         monkeypatch.chdir(project_dir)
-        plugins_dir = project_dir / ".hermes" / "plugins"
+        plugins_dir = project_dir / ".qwerty" / "plugins"
         _make_plugin_dir(plugins_dir, "proj_plugin")
 
         mgr = PluginManager()
@@ -2323,7 +2323,7 @@ class TestPluginContextProfileName:
 
     def test_default_profile(self, tmp_path, monkeypatch):
         """QWERTY_HOME at the root resolves to 'default'."""
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".qwerty"
         home.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("QWERTY_HOME", str(home))
@@ -2331,7 +2331,7 @@ class TestPluginContextProfileName:
 
     def test_named_profile(self, tmp_path, monkeypatch):
         """QWERTY_HOME under profiles/<name> resolves to that name."""
-        prof = tmp_path / ".hermes" / "profiles" / "coder"
+        prof = tmp_path / ".qwerty" / "profiles" / "coder"
         prof.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("QWERTY_HOME", str(prof))
@@ -2339,7 +2339,7 @@ class TestPluginContextProfileName:
 
     def test_works_without_cli_ref(self, tmp_path, monkeypatch):
         """profile_name does not depend on _cli_ref (None in worker sessions)."""
-        prof = tmp_path / ".hermes" / "profiles" / "worker1"
+        prof = tmp_path / ".qwerty" / "profiles" / "worker1"
         prof.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("QWERTY_HOME", str(prof))

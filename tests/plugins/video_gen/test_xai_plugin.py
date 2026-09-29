@@ -191,7 +191,7 @@ def test_video_input_from_public_url_rejects_bare_file_id():
 def test_xai_video_image_input_blocks_credential_store_symlink(tmp_path, monkeypatch):
     from plugins.video_gen.xai import _image_ref_to_xai_input
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     auth_json = qwerty_home / "auth.json"
     auth_json.write_text('{"api_key":"sk-secret"}', encoding="utf-8")
@@ -210,7 +210,7 @@ def test_xai_video_image_input_blocks_credential_store_symlink(tmp_path, monkeyp
 def test_xai_video_file_input_blocks_credential_store_symlink(tmp_path, monkeypatch):
     from plugins.video_gen.xai import _video_ref_to_xai_url
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     auth_json = qwerty_home / "auth.json"
     auth_json.write_text('{"api_key":"sk-secret"}', encoding="utf-8")

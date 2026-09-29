@@ -12,7 +12,7 @@ class TestSaveConfigValueAtomic:
     @pytest.fixture
     def config_env(self, tmp_path, monkeypatch):
         """Isolated config environment with a writable config.yaml."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(yaml.dump({

@@ -435,7 +435,7 @@ class TestApplyYamlConfigFnDispatch:
     """
 
     def _write_config(self, tmp_path, content: str):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(content, encoding="utf-8")
         return qwerty_home
@@ -667,7 +667,7 @@ class TestPluginPlatformSharedKeyBridge:
     """
 
     def _write_config(self, tmp_path, content: str):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(content, encoding="utf-8")
         return qwerty_home
@@ -722,7 +722,7 @@ class TestPluginEnablementGate:
     """
 
     def _write_config(self, tmp_path, content: str = ""):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(content, encoding="utf-8")
         return qwerty_home

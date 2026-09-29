@@ -1593,7 +1593,7 @@ class TestBuildSkillsSystemPromptConditional:
         assert "safe-skill" in result
 
     def test_null_qwerty_under_metadata_does_not_crash(self, monkeypatch, tmp_path):
-        """Regression: metadata.hermes present but null should not crash."""
+        """Regression: metadata.qwerty present but null should not crash."""
         monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         skill_dir = tmp_path / "skills" / "general" / "nested-null"
         skill_dir.mkdir(parents=True)

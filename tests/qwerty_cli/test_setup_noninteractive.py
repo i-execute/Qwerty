@@ -74,7 +74,7 @@ class TestNonInteractiveSetup:
         with (
             patch("qwerty_cli.setup.ensure_qwerty_home"),
             patch("qwerty_cli.setup.load_config", return_value={}),
-            patch("qwerty_cli.setup.get_qwerty_home", return_value="/tmp/.hermes"),
+            patch("qwerty_cli.setup.get_qwerty_home", return_value="/tmp/.qwerty"),
             patch("qwerty_cli.auth.get_active_provider", side_effect=AssertionError("wizard continued")),
             patch("builtins.input", side_effect=AssertionError("input should not be called")),
         ):
@@ -92,7 +92,7 @@ class TestNonInteractiveSetup:
         with (
             patch("qwerty_cli.setup.ensure_qwerty_home"),
             patch("qwerty_cli.setup.load_config", return_value={}),
-            patch("qwerty_cli.setup.get_qwerty_home", return_value="/tmp/.hermes"),
+            patch("qwerty_cli.setup.get_qwerty_home", return_value="/tmp/.qwerty"),
             patch("qwerty_cli.auth.get_active_provider", side_effect=AssertionError("wizard continued")),
             patch("sys.stdin") as mock_stdin,
             patch("builtins.input", side_effect=AssertionError("input should not be called")),

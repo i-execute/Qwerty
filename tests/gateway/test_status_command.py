@@ -677,7 +677,7 @@ async def test_profile_command_reports_source_stamped_profile(monkeypatch, tmp_p
     source (source.profile — URL prefix / per-credential adapter / room map),
     not the multiplexer's active profile, which is always the default and
     made /profile answer "default" in every persona chat."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     profile_home = qwerty_home / "profiles" / "milo"
     profile_home.mkdir(parents=True)
 
@@ -708,7 +708,7 @@ async def test_profile_command_ignores_stamp_when_multiplexing_off(monkeypatch, 
     /profile keeps reporting the active profile and the default home,
     mirroring the multiplex gating in ``_run_agent`` and
     ``_reset_notice_session_info``."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     profile_home = qwerty_home / "profiles" / "milo"
     profile_home.mkdir(parents=True)
 
@@ -737,7 +737,7 @@ async def test_profile_command_ignores_stamp_when_multiplexing_off(monkeypatch, 
 async def test_profile_command_unstamped_source_unchanged(monkeypatch, tmp_path):
     """Single-profile behavior is untouched: an unstamped source reports the
     active profile and the default home."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
 
     session_entry = SessionEntry(

@@ -14,7 +14,7 @@ def isolated_profiles(tmp_path, monkeypatch):
     """Give profile discovery an isolated default home with one named profile."""
     from qwerty_cli import profiles
 
-    default_home = tmp_path / ".hermes"
+    default_home = tmp_path / ".qwerty"
     profiles_root = default_home / "profiles"
     worker_home = profiles_root / "worker_alpha"
 

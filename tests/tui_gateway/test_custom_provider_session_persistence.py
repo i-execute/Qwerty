@@ -116,7 +116,7 @@ def _make_agent_with_override(override, monkeypatch, config, model_cfg=None):
     patched config, returning the kwargs AIAgent was constructed with."""
     monkeypatch.setattr(rp, "load_config", lambda: config)
     monkeypatch.setattr(rp, "_get_model_config", lambda: model_cfg or {})
-    # Keep credential-pool resolution off the developer's real HERMES home.
+    # Keep credential-pool resolution off the developer's real QWERTY home.
     monkeypatch.setattr(rp, "_try_resolve_from_custom_pool", lambda *a, **k: None)
 
     fake_cfg = {"agent": {"system_prompt": ""}, "model": {"default": "unused"}}

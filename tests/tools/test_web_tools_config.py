@@ -140,7 +140,7 @@ class TestFirecrawlClientConfig:
     def test_nous_auth_token_respects_qwerty_home_override(self, tmp_path):
         """Auth lookup should read from QWERTY_HOME/auth.json, not ~/.hermes/auth.json."""
         real_home = tmp_path / "real-home"
-        (real_home / ".hermes").mkdir(parents=True)
+        (real_home / ".qwerty").mkdir(parents=True)
 
         qwerty_home = tmp_path / "qwerty-home"
         qwerty_home.mkdir()

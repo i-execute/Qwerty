@@ -3818,7 +3818,7 @@ class ChatConsole:
         """
         yield self
 
-# ASCII Art - HERMES-AGENT logo (full width, single line - requires ~95 char terminal)
+# ASCII Art - QWERTY-AGENT logo (full width, single line - requires ~95 char terminal)
 QWERTY_AGENT_LOGO = """[bold #FFD700]██╗  ██╗███████╗██████╗ ███╗   ███╗███████╗███████╗       █████╗  ██████╗ ███████╗███╗   ██╗████████╗[/]
 [bold #FFD700]██║  ██║██╔════╝██╔══██╗████╗ ████║██╔════╝██╔════╝      ██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝[/]
 [#FFBF00]███████║█████╗  ██████╔╝██╔████╔██║█████╗  ███████╗█████╗███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║[/]
@@ -3859,8 +3859,8 @@ def _build_compact_banner() -> str:
     dim_color = _skin.get_color("banner_dim", "#B8860B") if _skin else "#B8860B"
 
     if skin_name == "default":
-        line1 = "⚕ NOUS HERMES - AI Agent Framework"
-        tiny_line = "⚕ NOUS HERMES"
+        line1 = "⚕ NOUS QWERTY - AI Agent Framework"
+        tiny_line = "⚕ NOUS QWERTY"
     else:
         agent_name = _skin.get_branding("agent_name", "Qwerty Agent") if _skin else "Qwerty Agent"
         line1 = f"{agent_name} - AI Agent Framework"
@@ -4465,7 +4465,7 @@ class QwertyCLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
             self.session_id = f"{timestamp_str}_{short_uuid}"
         
         # History file for persistent input recall across sessions
-        self._history_file = _qwerty_home / ".hermes_history"
+        self._history_file = _qwerty_home / ".qwerty_history"
         self._last_invalidate: float = 0.0  # throttle UI repaints
         self._app = None
 

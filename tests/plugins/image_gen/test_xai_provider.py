@@ -500,7 +500,7 @@ class TestXAIImageFieldReadGuard:
     def test_xai_image_field_blocks_credential_store(self, tmp_path, monkeypatch):
         from plugins.image_gen.xai import _xai_image_field
 
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         auth_json = qwerty_home / "auth.json"
         auth_json.write_text('{"api_key":"sk-secret"}', encoding="utf-8")
@@ -515,7 +515,7 @@ class TestXAIImageFieldReadGuard:
 
         from plugins.image_gen.xai import _xai_image_field
 
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         auth_json = qwerty_home / "auth.json"
         auth_json.write_text('{"api_key":"sk-secret"}', encoding="utf-8")

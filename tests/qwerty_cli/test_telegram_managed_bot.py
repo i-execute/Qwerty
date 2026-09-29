@@ -327,7 +327,7 @@ class TestSetupTelegramAuto:
         from qwerty_cli import setup
 
         seen = {}
-        profile_home = tmp_path / ".hermes" / "profiles" / "oracle"
+        profile_home = tmp_path / ".qwerty" / "profiles" / "oracle"
         profile_home.mkdir(parents=True)
 
         monkeypatch.setattr(setup, "get_qwerty_home", lambda: profile_home)

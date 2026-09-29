@@ -317,7 +317,7 @@ class TestPosixEquivalence:
         "CONDA_PREFIX": "/opt/conda",
         # QWERTY_* handling (#27303): only the operational allowlist passes;
         # every other QWERTY_* is dropped (the broad prefix was removed).
-        "QWERTY_HOME": "/home/alice/.hermes",        # allowlisted → kept
+        "QWERTY_HOME": "/home/alice/.qwerty",        # allowlisted → kept
         "QWERTY_PROFILE": "default",                 # allowlisted → kept
         "QWERTY_INTERACTIVE": "1",                   # not allowlisted → dropped
         "QWERTY_BASE_URL": "https://api.internal",   # not allowlisted → dropped

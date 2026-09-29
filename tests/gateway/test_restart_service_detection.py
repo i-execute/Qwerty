@@ -49,7 +49,7 @@ def _make_runner_with_mock_restart(tmp_path, monkeypatch):
 async def test_restart_under_launchd_uses_service_path(tmp_path, monkeypatch):
     """launchd job label in XPC_SERVICE_NAME routes /restart via the service path."""
     runner = _make_runner_with_mock_restart(tmp_path, monkeypatch)
-    monkeypatch.setenv("XPC_SERVICE_NAME", "ai.hermes.gateway")
+    monkeypatch.setenv("XPC_SERVICE_NAME", "ai.qwerty.gateway")
 
     await runner._handle_restart_command(_make_restart_event())
 

@@ -32,7 +32,7 @@ def _clean_state():
 
 class TestRegisterCredentialFiles:
     def test_dict_with_path_key(self, tmp_path):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "token.json").write_text("{}")
 
@@ -47,7 +47,7 @@ class TestRegisterCredentialFiles:
 
     def test_dict_with_name_key_fallback(self, tmp_path):
         """Skills use 'name' instead of 'path' — both should work."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "google_token.json").write_text("{}")
 
@@ -62,7 +62,7 @@ class TestRegisterCredentialFiles:
         assert "google_token.json" in mounts[0]["container_path"]
 
     def test_string_entry(self, tmp_path):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "secret.key").write_text("key")
 
@@ -74,7 +74,7 @@ class TestRegisterCredentialFiles:
         assert len(mounts) == 1
 
     def test_missing_file_reported(self, tmp_path):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
 
         with patch.dict(os.environ, {"QWERTY_HOME": str(qwerty_home)}):
@@ -87,7 +87,7 @@ class TestRegisterCredentialFiles:
 
     def test_path_takes_precedence_over_name(self, tmp_path):
         """When both path and name are present, path wins."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "real.json").write_text("{}")
 
@@ -103,7 +103,7 @@ class TestRegisterCredentialFiles:
 
 class TestSkillsDirectoryMount:
     def test_returns_mount_when_skills_dir_exists(self, tmp_path):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         skills_dir = qwerty_home / "skills"
         skills_dir.mkdir(parents=True)
         (skills_dir / "test-skill").mkdir()
@@ -117,7 +117,7 @@ class TestSkillsDirectoryMount:
         assert mounts[0]["container_path"] == "/root/.hermes/skills"
 
     def test_returns_none_when_no_skills_dir(self, tmp_path):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
 
         with patch.dict(os.environ, {"QWERTY_HOME": str(qwerty_home)}):
@@ -128,17 +128,17 @@ class TestSkillsDirectoryMount:
         assert local_mounts == []
 
     def test_custom_container_base(self, tmp_path):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         (qwerty_home / "skills").mkdir(parents=True)
 
         with patch.dict(os.environ, {"QWERTY_HOME": str(qwerty_home)}):
-            mounts = get_skills_directory_mount(container_base="/home/user/.hermes")
+            mounts = get_skills_directory_mount(container_base="/home/user/.qwerty")
 
         assert mounts[0]["container_path"] == "/home/user/.hermes/skills"
 
     def test_symlinks_are_sanitized(self, tmp_path):
         """Symlinks in skills dir should be excluded from the mount."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         skills_dir = qwerty_home / "skills"
         skills_dir.mkdir(parents=True)
         (skills_dir / "legit.md").write_text("# real skill")
@@ -163,7 +163,7 @@ class TestSkillsDirectoryMount:
 
     def test_no_symlinks_returns_original_dir(self, tmp_path):
         """When no symlinks exist, the original dir is returned (no copy)."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         skills_dir = qwerty_home / "skills"
         skills_dir.mkdir(parents=True)
         (skills_dir / "skill.md").write_text("ok")
@@ -176,7 +176,7 @@ class TestSkillsDirectoryMount:
 
 class TestIterSkillsFiles:
     def test_returns_files_skipping_symlinks(self, tmp_path):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         skills_dir = qwerty_home / "skills"
         (skills_dir / "cat" / "myskill").mkdir(parents=True)
         (skills_dir / "cat" / "myskill" / "SKILL.md").write_text("# skill")
@@ -197,7 +197,7 @@ class TestIterSkillsFiles:
         assert not any("evil" in f["container_path"] for f in files)
 
     def test_empty_when_no_skills_dir(self, tmp_path):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
 
         with patch.dict(os.environ, {"QWERTY_HOME": str(qwerty_home)}):
@@ -217,8 +217,8 @@ class TestPathTraversalSecurity:
 
     def test_dotdot_traversal_rejected(self, tmp_path, monkeypatch):
         """'../sensitive' must not escape QWERTY_HOME."""
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
-        (tmp_path / ".hermes").mkdir()
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
+        (tmp_path / ".qwerty").mkdir()
 
         # Create a sensitive file one level above qwerty_home
         sensitive = tmp_path / "sensitive.json"
@@ -231,7 +231,7 @@ class TestPathTraversalSecurity:
 
     def test_deep_traversal_rejected(self, tmp_path, monkeypatch):
         """'../../etc/passwd' style traversal must be rejected."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -247,7 +247,7 @@ class TestPathTraversalSecurity:
 
     def test_absolute_path_rejected(self, tmp_path, monkeypatch):
         """Absolute paths must be rejected regardless of whether they exist."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -262,7 +262,7 @@ class TestPathTraversalSecurity:
 
     def test_legitimate_file_still_works(self, tmp_path, monkeypatch):
         """Normal files inside QWERTY_HOME must still be registered."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         (qwerty_home / "token.json").write_text('{"token": "abc"}')
@@ -276,7 +276,7 @@ class TestPathTraversalSecurity:
 
     def test_nested_subdir_inside_qwerty_home_allowed(self, tmp_path, monkeypatch):
         """Files in subdirectories of QWERTY_HOME must be allowed."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         subdir = qwerty_home / "creds"
         subdir.mkdir()
@@ -289,7 +289,7 @@ class TestPathTraversalSecurity:
 
     def test_symlink_traversal_rejected(self, tmp_path, monkeypatch):
         """A symlink inside QWERTY_HOME pointing outside must be rejected."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -325,7 +325,7 @@ class TestConfigPathTraversal:
 
     def test_config_traversal_rejected(self, tmp_path, monkeypatch):
         """'../secret' in config.yaml must not escape QWERTY_HOME."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -340,7 +340,7 @@ class TestConfigPathTraversal:
 
     def test_config_absolute_path_rejected(self, tmp_path, monkeypatch):
         """Absolute paths in config.yaml must be rejected."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -353,7 +353,7 @@ class TestConfigPathTraversal:
 
     def test_config_legitimate_file_works(self, tmp_path, monkeypatch):
         """Normal files inside QWERTY_HOME via config must still mount."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -374,7 +374,7 @@ class TestCacheDirectoryMounts:
 
     def test_returns_existing_cache_dirs(self, tmp_path, monkeypatch):
         """Existing cache dirs are returned with correct container paths."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "cache" / "documents").mkdir(parents=True)
         (qwerty_home / "cache" / "audio").mkdir(parents=True)
@@ -389,7 +389,7 @@ class TestCacheDirectoryMounts:
 
     def test_skips_nonexistent_dirs(self, tmp_path, monkeypatch):
         """Dirs that don't exist on disk are not returned."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         # Create only one cache dir
         (qwerty_home / "cache" / "documents").mkdir(parents=True)
@@ -406,7 +406,7 @@ class TestCacheDirectoryMounts:
         ``has content`` for ``get_qwerty_dir``'s populated-legacy check
         (see #27602 — empty legacy stubs are no longer honoured).
         """
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         # Use legacy dir name with content — get_qwerty_dir prefers
         # populated old over new.
@@ -429,7 +429,7 @@ class TestCacheDirectoryMounts:
 
     def test_empty_qwerty_home(self, tmp_path, monkeypatch):
         """No cache dirs → empty list."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -440,7 +440,7 @@ class TestMapCachePathToContainer:
     """Tests for map_cache_path_to_container() — the backend-agnostic mapper."""
 
     def test_maps_path_under_cache_dir(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         img_dir = qwerty_home / "cache" / "images"
         img_dir.mkdir(parents=True)
         host_path = str(img_dir / "generated.png")
@@ -452,26 +452,26 @@ class TestMapCachePathToContainer:
         )
 
     def test_custom_container_base_for_remote_home(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         img_dir = qwerty_home / "cache" / "images"
         img_dir.mkdir(parents=True)
         host_path = str(img_dir / "remote.png")
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
         assert (
-            map_cache_path_to_container(host_path, container_base="/home/agent/.hermes")
+            map_cache_path_to_container(host_path, container_base="/home/agent/.qwerty")
             == "/home/agent/.hermes/cache/images/remote.png"
         )
 
     def test_returns_none_when_outside_cache_dirs(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         (qwerty_home / "cache" / "images").mkdir(parents=True)
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
         assert map_cache_path_to_container(str(tmp_path / "elsewhere.png")) is None
 
     def test_returns_none_when_no_cache_dirs_exist(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -483,7 +483,7 @@ class TestIterCacheFiles:
 
     def test_enumerates_files(self, tmp_path, monkeypatch):
         """Regular files in cache dirs are returned."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         doc_dir = qwerty_home / "cache" / "documents"
         doc_dir.mkdir(parents=True)
         (doc_dir / "upload.zip").write_bytes(b"PK\x03\x04")
@@ -497,7 +497,7 @@ class TestIterCacheFiles:
 
     def test_skips_symlinks(self, tmp_path, monkeypatch):
         """Symlinks inside cache dirs are skipped."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         doc_dir = qwerty_home / "cache" / "documents"
         doc_dir.mkdir(parents=True)
         real_file = doc_dir / "real.txt"
@@ -512,7 +512,7 @@ class TestIterCacheFiles:
 
     def test_nested_files(self, tmp_path, monkeypatch):
         """Files in subdirectories are included with correct relative paths."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         ss_dir = qwerty_home / "cache" / "screenshots"
         sub = ss_dir / "session_abc"
         sub.mkdir(parents=True)
@@ -525,7 +525,7 @@ class TestIterCacheFiles:
 
     def test_empty_cache(self, tmp_path, monkeypatch):
         """No cache dirs → empty list."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -550,7 +550,7 @@ class TestMasterCredentialStoresAreNeverMountable:
 
     @staticmethod
     def _home(tmp_path):
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".qwerty"
         home.mkdir()
         (home / ".env").write_text("OPENAI_API_KEY=sk-proj-REAL\n")
         (home / "auth.json").write_text('{"providers":{}}')

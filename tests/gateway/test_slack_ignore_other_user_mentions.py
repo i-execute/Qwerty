@@ -334,7 +334,7 @@ def test_config_bridges_slack_ignore_other_user_mentions(monkeypatch, tmp_path):
     apply_yaml_config_fn bridge, not the generic shared-key allowlist)."""
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "slack:\n  ignore_other_user_mentions: true\n",
@@ -352,7 +352,7 @@ def test_config_bridges_slack_ignore_other_user_mentions(monkeypatch, tmp_path):
 def test_ignore_other_user_mentions_env_wins_over_yaml(monkeypatch, tmp_path):
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "slack:\n  ignore_other_user_mentions: true\n",

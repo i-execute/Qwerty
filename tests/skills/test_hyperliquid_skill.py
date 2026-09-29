@@ -208,7 +208,7 @@ def test_resolve_user_uses_env_fallback(monkeypatch):
 def test_resolve_user_errors_when_missing(monkeypatch, tmp_path):
     mod = load_module()
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
     monkeypatch.delenv("HYPERLIQUID_USER_ADDRESS", raising=False)
 
     try:
@@ -242,7 +242,7 @@ def test_main_state_json_uses_env_fallback(monkeypatch, capsys):
 
 def test_env_lookup_reads_qwerty_dotenv(tmp_path, monkeypatch):
     mod = load_module()
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir(parents=True)
     (qwerty_home / ".env").write_text(
         "HYPERLIQUID_USER_ADDRESS=0xdotenv123\nHYPERLIQUID_API_URL=https://api.hyperliquid-testnet.xyz\n",
@@ -263,7 +263,7 @@ def test_user_dotenv_overrides_project_dotenv(tmp_path, monkeypatch):
     project_dir.mkdir()
     (project_dir / ".env").write_text("HYPERLIQUID_USER_ADDRESS=0xproject\n", encoding="utf-8")
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / ".env").write_text("HYPERLIQUID_USER_ADDRESS=0xuserhome\n", encoding="utf-8")
 

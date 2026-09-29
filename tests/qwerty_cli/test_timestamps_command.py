@@ -23,7 +23,7 @@ class _Stub(CLICommandsMixin):
 
 
 def _seed(tmp_path, monkeypatch, value=False):
-    hh = tmp_path / ".hermes"
+    hh = tmp_path / ".qwerty"
     hh.mkdir()
     (hh / "config.yaml").write_text(f"display:\n  timestamps: {str(value).lower()}\n")
     monkeypatch.setenv("QWERTY_HOME", str(hh))

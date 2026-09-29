@@ -24,7 +24,7 @@ from agent.moa_loop import MoAChatCompletions
 
 def _enable_traces(tmp_path, monkeypatch):
     """Point QWERTY_HOME at a temp dir and turn moa.save_traces on."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 

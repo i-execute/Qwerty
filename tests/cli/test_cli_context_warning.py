@@ -12,7 +12,7 @@ from agent.model_metadata import MINIMUM_CONTEXT_LENGTH
 @pytest.fixture
 def _isolate(tmp_path, monkeypatch):
     """Isolate QWERTY_HOME so tests don't touch real config."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
 

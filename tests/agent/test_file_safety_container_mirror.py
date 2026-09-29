@@ -25,10 +25,10 @@ class TestClassifyContainerMirrorTarget:
 
         result = classify_container_mirror_target(
             "/root/.hermes/profiles/group1/SOUL.md",
-            mirror_prefix="/root/.hermes",
+            mirror_prefix="/root/.qwerty",
         )
         assert result is not None
-        assert result["mirror_root"].replace("\\", "/").endswith("root/.hermes")
+        assert result["mirror_root"].replace("\\", "/").endswith("root/.qwerty")
         assert result["inner_path"] == "profiles/group1/SOUL.md"
 
     @pytest.mark.parametrize("inner", [
@@ -40,19 +40,19 @@ class TestClassifyContainerMirrorTarget:
 
         result = classify_container_mirror_target(
             f"/root/.hermes/{inner}",
-            mirror_prefix="/root/.hermes",
+            mirror_prefix="/root/.qwerty",
         )
         assert result is not None
         assert result["inner_path"] == inner
 
     def test_non_qwerty_path_not_flagged(self):
-        """/root/workspace/… is not .hermes state and must not be blocked."""
+        """/root/workspace/… is not .qwerty state and must not be blocked."""
         from agent.file_safety import classify_container_mirror_target
 
         assert (
             classify_container_mirror_target(
                 "/root/workspace/main.py",
-                mirror_prefix="/root/.hermes",
+                mirror_prefix="/root/.qwerty",
             )
             is None
         )
@@ -64,7 +64,7 @@ class TestGetContainerMirrorWarning:
 
         warn = get_container_mirror_warning(
             "/root/.hermes/profiles/group1/SOUL.md",
-            mirror_prefix="/root/.hermes",
+            mirror_prefix="/root/.qwerty",
         )
         assert warn is not None
         assert "profiles/group1/SOUL.md" in warn
@@ -81,7 +81,7 @@ class TestOrthogonality:
         path = "/root/.hermes/profiles/group1/SOUL.md"
 
         assert classify_container_mirror_target(path) is None  # no context
-        assert classify_container_mirror_target(path, mirror_prefix="/root/.hermes") is not None
+        assert classify_container_mirror_target(path, mirror_prefix="/root/.qwerty") is not None
 
 
 class TestFileToolIntegration:
@@ -93,7 +93,7 @@ class TestFileToolIntegration:
         monkeypatch.setattr(
             file_tools,
             "_get_container_mirror_prefix_for_task",
-            lambda task_id: "/root/.hermes",
+            lambda task_id: "/root/.qwerty",
         )
 
         warning = file_tools._check_cross_profile_path(

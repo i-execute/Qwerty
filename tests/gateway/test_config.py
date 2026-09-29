@@ -564,7 +564,7 @@ class TestLoadGatewayConfig:
         template = (
             Path(__file__).resolve().parents[2] / "cli-config.yaml.example"
         )
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             template.read_text(encoding="utf-8"), encoding="utf-8"
@@ -577,7 +577,7 @@ class TestLoadGatewayConfig:
 
     def test_no_config_yaml_means_no_auto_reset(self, tmp_path, monkeypatch):
         """With no config.yaml at all, sessions must never auto-reset."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -587,7 +587,7 @@ class TestLoadGatewayConfig:
 
     def test_session_reset_without_mode_means_no_auto_reset(self, tmp_path, monkeypatch):
         """A session_reset block that tunes knobs but omits mode stays off."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "session_reset:\n  idle_minutes: 60\n", encoding="utf-8"
@@ -601,7 +601,7 @@ class TestLoadGatewayConfig:
 
     def test_explicit_session_reset_opt_in_is_honored(self, tmp_path, monkeypatch):
         """Users who explicitly opt in to auto-reset keep their policy."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "session_reset:\n  mode: idle\n  idle_minutes: 30\n",
@@ -615,7 +615,7 @@ class TestLoadGatewayConfig:
         assert config.default_reset_policy.idle_minutes == 30
 
     def test_bridges_quick_commands_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -633,7 +633,7 @@ class TestLoadGatewayConfig:
         assert config.quick_commands == {"limits": {"type": "exec", "command": "echo ok"}}
 
     def test_slack_disable_dms_config_sets_env_bridge(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -650,7 +650,7 @@ class TestLoadGatewayConfig:
         assert os.getenv("SLACK_DISABLE_DMS") == "true"
 
     def test_slack_ignored_channels_config_sets_env_bridge(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "slack:\n"
@@ -670,7 +670,7 @@ class TestLoadGatewayConfig:
     def test_slack_ignored_channels_env_takes_precedence(self, tmp_path, monkeypatch):
         """An explicit SLACK_IGNORED_CHANNELS env var must not be overwritten
         by the config.yaml bridge."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "slack:\n"
@@ -689,7 +689,7 @@ class TestLoadGatewayConfig:
         """A top-level ``slack:`` block reaches PlatformConfig via the
         shared-key bridge (bridged into extra, then the from_dict extra
         fallback) — the route a bare ``qwerty config set``-style YAML uses."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             'slack:\n  typing_status_text: "is pouncing… 🐾"\n',
@@ -707,7 +707,7 @@ class TestLoadGatewayConfig:
     def test_typing_status_text_from_nested_platforms_block(self, tmp_path, monkeypatch):
         """``platforms.slack.typing_status_text`` reaches PlatformConfig via
         _merge_platform_map + the from_dict top-level read."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "platforms:\n"
@@ -736,7 +736,7 @@ class TestLoadGatewayConfig:
         load_gateway_config builds gw_data from the top-level keys before
         calling from_dict, so the nested value never reached it.)
         """
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -751,7 +751,7 @@ class TestLoadGatewayConfig:
         assert config.multiplex_profiles is True
 
     def test_discord_websocket_health_settings_seed_platform_extra(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "discord:\n"
@@ -779,7 +779,7 @@ class TestLoadGatewayConfig:
     def test_session_reset_from_nested_gateway_section(self, tmp_path, monkeypatch):
         """``gateway.session_reset`` (nested form) must reach default_reset_policy,
         mirroring the gateway.multiplex_profiles precedent."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -794,7 +794,7 @@ class TestLoadGatewayConfig:
         assert config.default_reset_policy.idle_minutes == 30
 
     def test_quick_commands_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -811,7 +811,7 @@ class TestLoadGatewayConfig:
         """Asserts False (not the True default) so the test fails if the
         nested gateway.stt value never reaches from_dict() and silently
         falls back to the class default instead."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -825,7 +825,7 @@ class TestLoadGatewayConfig:
         assert config.stt_enabled is False
 
     def test_stt_echo_transcripts_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -861,7 +861,7 @@ class TestLoadGatewayConfig:
         server unless API_SERVER_* env vars were also set.
         """
         self._clear_api_server_env(monkeypatch)
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "gateway:\n  api_server:\n    enabled: true\n",
@@ -880,7 +880,7 @@ class TestLoadGatewayConfig:
         (gateway/platforms/api_server.py), and from_dict discards unknown
         top-level keys, so without the bridge the port is silently lost."""
         self._clear_api_server_env(monkeypatch)
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "gateway:\n"
@@ -907,7 +907,7 @@ class TestLoadGatewayConfig:
         ``port:`` — the bridge's ``not in _api_extra`` guard must never
         clobber a value the user placed in extra deliberately."""
         self._clear_api_server_env(monkeypatch)
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "gateway:\n"
@@ -929,7 +929,7 @@ class TestLoadGatewayConfig:
         Platform enum: ``gateway.streaming`` / ``gateway.timeout`` must not
         be turned into phantom platform entries or break loading."""
         self._clear_api_server_env(monkeypatch)
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "gateway:\n"
@@ -955,7 +955,7 @@ class TestLoadGatewayConfig:
         path must keep working alongside the new nested discovery, and its
         api_server keys get the same extra bridge."""
         self._clear_api_server_env(monkeypatch)
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "gateway:\n"
@@ -973,7 +973,7 @@ class TestLoadGatewayConfig:
         assert config.platforms[Platform.API_SERVER].extra["port"] == 8643
 
     def test_group_sessions_per_user_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -987,7 +987,7 @@ class TestLoadGatewayConfig:
         assert config.group_sessions_per_user is False
 
     def test_thread_sessions_per_user_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1001,7 +1001,7 @@ class TestLoadGatewayConfig:
         assert config.thread_sessions_per_user is True
 
     def test_reset_triggers_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1015,7 +1015,7 @@ class TestLoadGatewayConfig:
         assert config.reset_triggers == ["/new", "/clear"]
 
     def test_always_log_local_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1029,7 +1029,7 @@ class TestLoadGatewayConfig:
         assert config.always_log_local is False
 
     def test_filter_silence_narration_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1043,7 +1043,7 @@ class TestLoadGatewayConfig:
         assert config.filter_silence_narration is False
 
     def test_unauthorized_dm_behavior_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1060,7 +1060,7 @@ class TestLoadGatewayConfig:
         """Top-level keys keep precedence over the nested gateway.* fallback
         for every key this fix touches (matches the existing
         gateway.streaming/write_sessions_json precedence contract)."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1079,7 +1079,7 @@ class TestLoadGatewayConfig:
         """Key-presence precedence: a present (even empty) top-level
         session_reset must NOT be replaced by gateway.session_reset —
         the fallback fires only when the top-level key is absent."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1100,7 +1100,7 @@ class TestLoadGatewayConfig:
     def test_present_top_level_stt_blocks_nested_fallback(self, tmp_path, monkeypatch):
         """Key-presence precedence for stt: a present top-level stt (even
         mistyped/non-dict) must not be replaced by gateway.stt."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1123,7 +1123,7 @@ class TestLoadGatewayConfig:
         the adapter in the platform_registry is NOT enough — the connect loop
         iterates config.platforms, so an un-enabled RELAY never connects (the
         'relay registered but no inbound' bug)."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setenv("GATEWAY_RELAY_URL", "https://connector.example/relay/")
@@ -1140,7 +1140,7 @@ class TestLoadGatewayConfig:
     def test_relay_platform_absent_when_url_unset(self, tmp_path, monkeypatch):
         """No relay URL -> no RELAY platform, so direct/single-tenant gateways
         are unaffected."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.delenv("GATEWAY_RELAY_URL", raising=False)
@@ -1151,7 +1151,7 @@ class TestLoadGatewayConfig:
 
     def test_relay_platform_enabled_from_config_yaml(self, tmp_path, monkeypatch):
         """gateway.relay_url in config.yaml also enables RELAY (env-less path)."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1167,7 +1167,7 @@ class TestLoadGatewayConfig:
         assert config.platforms[Platform.RELAY].enabled is True
 
     def test_bridges_group_sessions_per_user_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text("group_sessions_per_user: false\n", encoding="utf-8")
@@ -1179,7 +1179,7 @@ class TestLoadGatewayConfig:
         assert config.group_sessions_per_user is False
 
     def test_bridges_thread_sessions_per_user_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text("thread_sessions_per_user: true\n", encoding="utf-8")
@@ -1191,7 +1191,7 @@ class TestLoadGatewayConfig:
         assert config.thread_sessions_per_user is True
 
     def test_thread_sessions_per_user_defaults_to_false(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text("{}\n", encoding="utf-8")
@@ -1203,7 +1203,7 @@ class TestLoadGatewayConfig:
         assert config.thread_sessions_per_user is False
 
     def test_bridges_top_level_max_concurrent_sessions_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text("max_concurrent_sessions: 2\n", encoding="utf-8")
@@ -1215,7 +1215,7 @@ class TestLoadGatewayConfig:
         assert config.max_concurrent_sessions == 2
 
     def test_bridges_nested_max_concurrent_sessions_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1231,7 +1231,7 @@ class TestLoadGatewayConfig:
         assert config.max_concurrent_sessions == 3
 
     def test_top_level_max_concurrent_sessions_overrides_nested_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1248,7 +1248,7 @@ class TestLoadGatewayConfig:
         assert config.max_concurrent_sessions == 2
 
     def test_scalar_gateway_section_does_not_crash_streaming_fallback(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text("gateway: disabled\n", encoding="utf-8")
@@ -1261,7 +1261,7 @@ class TestLoadGatewayConfig:
 
     def test_bridges_discord_thread_require_mention_from_config_yaml(self, tmp_path, monkeypatch):
         """discord.thread_require_mention in config.yaml should reach the runtime env var."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1279,7 +1279,7 @@ class TestLoadGatewayConfig:
 
     def test_thread_require_mention_yaml_does_not_overwrite_env(self, tmp_path, monkeypatch):
         """Explicit env var should win over config.yaml (env > yaml precedence)."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1298,7 +1298,7 @@ class TestLoadGatewayConfig:
 
     def test_bridges_discord_bots_require_inline_mention_from_config_yaml(self, tmp_path, monkeypatch):
         """discord.bots_require_inline_mention should reach the runtime env var."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1316,7 +1316,7 @@ class TestLoadGatewayConfig:
 
     def test_bots_require_inline_mention_yaml_does_not_overwrite_env(self, tmp_path, monkeypatch):
         """Explicit env var should win over config.yaml for inline bot mention gating."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1334,7 +1334,7 @@ class TestLoadGatewayConfig:
 
     def test_bridges_discord_allow_from_from_config_yaml(self, tmp_path, monkeypatch):
         """discord.allow_from should populate DISCORD_ALLOWED_USERS for auth."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1360,7 +1360,7 @@ class TestLoadGatewayConfig:
 
     def test_bridges_discord_platform_extra_allow_from_to_env(self, tmp_path, monkeypatch):
         """platforms.discord.extra.allow_from should reach DISCORD_ALLOWED_USERS too."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1389,7 +1389,7 @@ class TestLoadGatewayConfig:
         adapter reads it from PlatformConfig.extra, but gateway auth
         (_is_user_authorized) only consults the env var.
         """
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1417,7 +1417,7 @@ class TestLoadGatewayConfig:
 
     def test_bridges_platforms_dingtalk_extra_allowed_users_to_env(self, tmp_path, monkeypatch):
         """platforms.dingtalk.extra.allowed_users should reach DINGTALK_ALLOWED_USERS too."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1440,7 +1440,7 @@ class TestLoadGatewayConfig:
         assert os.environ.get("DINGTALK_ALLOWED_USERS") == "manager1234"
 
     def test_dingtalk_allowed_users_env_takes_precedence_over_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1463,7 +1463,7 @@ class TestLoadGatewayConfig:
     def test_top_level_dingtalk_allowed_users_wins_over_nested_extra(self, tmp_path, monkeypatch):
         """The legacy top-level dingtalk: block keeps precedence over the
         nested platform extra when both define an allowlist."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1499,7 +1499,7 @@ class TestLoadGatewayConfig:
         from gateway.run import GatewayRunner
         from gateway.session import SessionSource
 
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1541,7 +1541,7 @@ class TestLoadGatewayConfig:
         assert runner._is_user_authorized(_dm_source("intruder")) is False
 
     def test_bridges_quoted_false_platform_enabled_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1559,7 +1559,7 @@ class TestLoadGatewayConfig:
         assert Platform.API_SERVER not in config.get_connected_platforms()
 
     def test_bridges_nested_gateway_platforms_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1592,7 +1592,7 @@ class TestLoadGatewayConfig:
         assert telegram.extra["reply_prefix"] == "nested"
 
     def test_top_level_platforms_override_nested_gateway_platforms(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1631,7 +1631,7 @@ class TestLoadGatewayConfig:
         and allow_from was silently ignored.  The apply_yaml_config_fn dispatch
         received the same fix in #44f3e51; the shared-key loop now mirrors it.
         """
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1660,7 +1660,7 @@ class TestLoadGatewayConfig:
 
     def test_shared_key_loop_bridges_allow_from_from_nested_gateway_platforms(self, tmp_path, monkeypatch):
         """Same regression check for ``gateway.platforms:`` path."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1685,7 +1685,7 @@ class TestLoadGatewayConfig:
         assert telegram.extra.get("require_mention") is False
 
     def test_bridges_quoted_false_session_notify_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1701,7 +1701,7 @@ class TestLoadGatewayConfig:
         assert config.default_reset_policy.notify is False
 
     def test_bridges_quoted_false_always_log_local_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1716,7 +1716,7 @@ class TestLoadGatewayConfig:
         assert config.always_log_local is False
 
     def test_bridges_discord_channel_overrides_from_top_level_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1741,7 +1741,7 @@ class TestLoadGatewayConfig:
         assert ov.system_prompt == "Daily news summarizer"
 
     def test_bridges_discord_channel_prompts_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1762,7 +1762,7 @@ class TestLoadGatewayConfig:
         }
 
     def test_bridges_discord_history_backfill_settings_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1782,7 +1782,7 @@ class TestLoadGatewayConfig:
         assert os.getenv("DISCORD_HISTORY_BACKFILL_LIMIT") == "17"
 
     def test_bridges_telegram_channel_prompts_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1803,7 +1803,7 @@ class TestLoadGatewayConfig:
         }
 
     def test_bridges_slack_channel_prompts_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1822,7 +1822,7 @@ class TestLoadGatewayConfig:
         }
 
     def test_bridges_feishu_allow_bots_from_config_yaml_to_env(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1838,7 +1838,7 @@ class TestLoadGatewayConfig:
         assert os.environ.get("FEISHU_ALLOW_BOTS") == "mentions"
 
     def test_feishu_allow_bots_env_takes_precedence_over_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1854,7 +1854,7 @@ class TestLoadGatewayConfig:
         assert os.environ.get("FEISHU_ALLOW_BOTS") == "none"
 
     def test_bridges_telegram_allow_bots_from_config_yaml_to_env(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1870,7 +1870,7 @@ class TestLoadGatewayConfig:
         assert os.environ.get("TELEGRAM_ALLOW_BOTS") == "mentions"
 
     def test_telegram_allow_bots_env_takes_precedence_over_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1886,7 +1886,7 @@ class TestLoadGatewayConfig:
         assert os.environ.get("TELEGRAM_ALLOW_BOTS") == "none"
 
     def test_invalid_quick_commands_in_config_yaml_are_ignored(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text("quick_commands: not-a-mapping\n", encoding="utf-8")
@@ -1898,7 +1898,7 @@ class TestLoadGatewayConfig:
         assert config.quick_commands == {}
 
     def test_bridges_unauthorized_dm_behavior_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1916,7 +1916,7 @@ class TestLoadGatewayConfig:
         assert config.platforms[Platform.WHATSAPP].extra["unauthorized_dm_behavior"] == "pair"
 
     def test_bridges_telegram_disable_link_previews_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1932,7 +1932,7 @@ class TestLoadGatewayConfig:
         assert config.platforms[Platform.TELEGRAM].extra["disable_link_previews"] is True
 
     def test_loads_telegram_rich_messages_from_gateway_platform_extra(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1951,7 +1951,7 @@ class TestLoadGatewayConfig:
         assert config.platforms[Platform.TELEGRAM].extra["rich_messages"] is False
 
     def test_loads_telegram_rich_drafts_from_gateway_platform_extra(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -1970,7 +1970,7 @@ class TestLoadGatewayConfig:
         assert config.platforms[Platform.TELEGRAM].extra["rich_drafts"] is True
 
     def test_load_config_default_keeps_telegram_rich_messages_enabled(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
 
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
@@ -1983,7 +1983,7 @@ class TestLoadGatewayConfig:
         assert config["telegram"]["extra"]["rich_drafts"] is False
 
     def test_bridges_telegram_extra_base_url_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -2003,7 +2003,7 @@ class TestLoadGatewayConfig:
         )
 
     def test_bridges_notice_delivery_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -2019,7 +2019,7 @@ class TestLoadGatewayConfig:
         assert config.get_notice_delivery(Platform.SLACK) == "private"
 
     def test_bridges_telegram_proxy_url_from_config_yaml(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -2037,7 +2037,7 @@ class TestLoadGatewayConfig:
         assert os.environ.get("TELEGRAM_PROXY") == "socks5://127.0.0.1:1080"
 
     def test_telegram_proxy_env_takes_precedence_over_config(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -2117,7 +2117,7 @@ class TestWebhookPortBridging:
     causing port conflicts between profiles that configure different ports."""
 
     def test_webhook_port_bridged_from_toplevel(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -2142,7 +2142,7 @@ class TestWebhookPortBridging:
 
     def test_webhook_port_in_extra_not_overwritten_by_toplevel(self, tmp_path, monkeypatch):
         """If port is already under extra, the top-level value must not clobber it."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -2164,7 +2164,7 @@ class TestWebhookPortBridging:
         assert wh.extra.get("port") == 8650
 
     def test_api_server_port_bridged_from_toplevel(self, tmp_path, monkeypatch):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -2188,7 +2188,7 @@ class TestWebhookPortBridging:
 
     def test_webhook_port_defaults_when_not_configured(self, tmp_path, monkeypatch):
         """No port anywhere -> adapter uses its hardcoded DEFAULT_PORT."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -2209,7 +2209,7 @@ class TestWebhookPortBridging:
     def test_msgraph_webhook_port_host_secret_bridged_from_toplevel(self, tmp_path, monkeypatch):
         """msgraph_webhook top-level port/host/secret must be bridged into extra,
         with an explicit extra: value still winning over the top-level one."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_path = qwerty_home / "config.yaml"
         config_path.write_text(
@@ -2332,7 +2332,7 @@ class TestMultiplexProfilesEnvOverride:
     """
 
     def _load(self, tmp_path, monkeypatch, config_text=None):
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir(exist_ok=True)
         if config_text is not None:
             (qwerty_home / "config.yaml").write_text(config_text, encoding="utf-8")
@@ -2420,7 +2420,7 @@ class TestMultiplexProfilesConfig:
 
     def test_multiplex_profiles_top_level(self, tmp_path, monkeypatch):
         """Top-level multiplex_profiles is honored."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "multiplex_profiles: true\n",
@@ -2438,7 +2438,7 @@ class TestMultiplexProfilesConfig:
         the silent-fallback bug where the loader only forwarded the top-level
         key, so users who wrote it under gateway: got multiplex_profiles=False
         with no warning."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "gateway:\n  multiplex_profiles: true\n",
@@ -2455,7 +2455,7 @@ class TestMultiplexProfilesConfig:
 
     def test_multiplex_profiles_default_false(self, tmp_path, monkeypatch):
         """Default is False when neither form is present."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text("", encoding="utf-8")
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
@@ -2467,7 +2467,7 @@ class TestMultiplexProfilesConfig:
     def test_multiplex_profiles_top_level_overrides_nested(self, tmp_path, monkeypatch):
         """When both forms are present, top-level wins (matches profile_routes
         and other parity bridges in load_gateway_config)."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "multiplex_profiles: true\n"
@@ -2488,7 +2488,7 @@ class TestMultiplexProfilesConfig:
         nested form (so a stale `gateway.multiplex_profiles: true` cannot
         silently re-enable multiplexing). Guards against a future regression
         that flips the check to `not _mp`."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             "multiplex_profiles: false\n"

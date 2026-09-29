@@ -76,8 +76,8 @@ class _TinyImageHandler(http.server.BaseHTTPRequestHandler):
 @pytest.fixture
 def http_server(tmp_path, monkeypatch):
     """Spin up a localhost HTTP server and isolate QWERTY_HOME under tmp_path."""
-    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
-    (tmp_path / ".hermes").mkdir()
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
+    (tmp_path / ".qwerty").mkdir()
 
     # Force the constants/image cache helpers to re-read QWERTY_HOME.
     import sys

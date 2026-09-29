@@ -195,7 +195,7 @@ class TestShouldExclude:
 class TestBackup:
     def test_creates_zip(self, tmp_path, monkeypatch):
         """Backup creates a valid zip containing expected files."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         _make_qwerty_tree(qwerty_home)
 
@@ -233,7 +233,7 @@ class TestBackup:
         Keep a real, uncheckpointed WAL transaction live so a raw copy of only
         ``state.db`` would be a valid-looking but torn snapshot.
         """
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text("model: test\n")
         db_path = qwerty_home / "state.db"
@@ -290,7 +290,7 @@ class TestBackup:
         """SQLite staging temp files must be created on the output zip's
         filesystem (dir=out_path.parent), NOT the system /tmp default — a
         small tmpfs there silently drops large DBs from the backup (#35376)."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         _make_qwerty_tree(qwerty_home)
 
@@ -321,7 +321,7 @@ class TestBackup:
     def test_pre_update_db_snapshots_staged_beside_output_zip(self, tmp_path, monkeypatch):
         """The pre-update/pre-migration zip path (_write_full_zip_backup) must
         also stage SQLite snapshots beside its output zip, not in /tmp."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         _make_qwerty_tree(qwerty_home)
 
@@ -348,7 +348,7 @@ class TestBackup:
 
     def test_excludes_qwerty_agent(self, tmp_path, monkeypatch):
         """Backup does NOT include qwerty-agent/ directory."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         _make_qwerty_tree(qwerty_home)
 
@@ -370,7 +370,7 @@ class TestBackup:
         """A plugin venv / site-packages / pip cache under QWERTY_HOME must be
         pruned by the walk, while real data (skills, config) is preserved.
         This is the regression guard for the ballooning-backup bug."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         _make_qwerty_tree(qwerty_home)
 
@@ -399,7 +399,7 @@ class TestBackup:
 
     def test_includes_nested_qwerty_agent_in_skills(self, tmp_path, monkeypatch):
         """Backup includes skills/.../qwerty-agent/ but NOT root qwerty-agent/."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         _make_qwerty_tree(qwerty_home)
 
@@ -430,7 +430,7 @@ class TestBackup:
 
     def test_excludes_pycache(self, tmp_path, monkeypatch):
         """Backup does NOT include __pycache__ dirs."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         _make_qwerty_tree(qwerty_home)
 
@@ -450,7 +450,7 @@ class TestBackup:
 
     def test_excludes_pid_files(self, tmp_path, monkeypatch):
         """Backup does NOT include PID files."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         _make_qwerty_tree(qwerty_home)
 
@@ -470,7 +470,7 @@ class TestBackup:
 
     def test_default_output_path(self, tmp_path, monkeypatch):
         """When no output path given, zip goes to ~/qwerty-backup-*.zip."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text("model: test\n")
 
@@ -488,7 +488,7 @@ class TestBackup:
 
     def test_skips_symlinked_files(self, tmp_path, monkeypatch):
         """Backup must not dereference symlinks and leak files outside QWERTY_HOME."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         _make_qwerty_tree(qwerty_home)
         outside = tmp_path / "outside-secret.txt"
@@ -564,7 +564,7 @@ class TestImport:
 
     def test_restores_files(self, tmp_path, monkeypatch):
         """Import extracts files into qwerty home."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -588,16 +588,16 @@ class TestImport:
         assert (qwerty_home / "profiles" / "coder" / "config.yaml").exists()
 
     def test_strips_qwerty_prefix(self, tmp_path, monkeypatch):
-        """Import strips .hermes/ prefix if all entries share it."""
-        qwerty_home = tmp_path / ".hermes"
+        """Import strips .qwerty/ prefix if all entries share it."""
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         zip_path = tmp_path / "backup.zip"
         self._make_backup_zip(zip_path, {
-            ".hermes/config.yaml": "model: test\n",
-            ".hermes/skills/a/SKILL.md": "# A\n",
+            ".qwerty/config.yaml": "model: test\n",
+            ".qwerty/skills/a/SKILL.md": "# A\n",
         })
 
         args = Namespace(zipfile=str(zip_path), force=True)
@@ -610,7 +610,7 @@ class TestImport:
 
     def test_rejects_empty_zip(self, tmp_path, monkeypatch):
         """Import rejects an empty zip."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -627,7 +627,7 @@ class TestImport:
 
     def test_rejects_non_qwerty_zip(self, tmp_path, monkeypatch):
         """Import rejects a zip that doesn't look like a qwerty backup."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -646,7 +646,7 @@ class TestImport:
 
     def test_blocks_path_traversal(self, tmp_path, monkeypatch):
         """Import blocks zip entries with path traversal."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -676,7 +676,7 @@ class TestImport:
         stale/foreign state and leaves the gateway stuck "starting",
         disconnecting it from the Nous portal (NS-508). The live file wins.
         """
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -705,7 +705,7 @@ class TestImport:
     def test_does_not_seed_gateway_state_when_absent(self, tmp_path, monkeypatch):
         """A backup's gateway_state.json is dropped, not written, when the
         target has none — a foreign state must never seed the reconciler."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -728,7 +728,7 @@ class TestImport:
         """The skip is matched by basename, so a named profile's
         gateway_state.json (profiles/<name>/gateway_state.json) is preserved
         the same way the root profile's is."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         (qwerty_home / "profiles" / "coder").mkdir(parents=True)
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -758,7 +758,7 @@ class TestImport:
         """gateway.pid / cron.pid / gateway.lock / processes.json from a backup
         reference the source machine's process namespace and must never be
         written over the target's."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -790,7 +790,7 @@ class TestImport:
 
     def test_confirmation_prompt_abort(self, tmp_path, monkeypatch):
         """Import aborts when user says no to confirmation."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         # Pre-existing config triggers the confirmation
         (qwerty_home / "config.yaml").write_text("existing: true\n")
@@ -813,7 +813,7 @@ class TestImport:
 
     def test_force_skips_confirmation(self, tmp_path, monkeypatch):
         """Import with --force skips confirmation and overwrites."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text("existing: true\n")
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
@@ -833,7 +833,7 @@ class TestImport:
 
     def test_missing_file_exits(self, tmp_path, monkeypatch):
         """Import exits with error for nonexistent file."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -846,7 +846,7 @@ class TestImport:
     @pytest.mark.skipif(os.name != "posix", reason="POSIX file permissions only")
     def test_restores_secret_files_with_0600_perms(self, tmp_path, monkeypatch):
         """Secret files must end up at 0600 after restore (zipfile drops mode bits)."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -878,7 +878,7 @@ class TestRoundTrip:
     def test_backup_then_import(self, tmp_path, monkeypatch):
         """Full round-trip: backup -> import to a new location -> verify."""
         # Source
-        src_home = tmp_path / "source" / ".hermes"
+        src_home = tmp_path / "source" / ".qwerty"
         src_home.mkdir(parents=True)
         _make_qwerty_tree(src_home)
 
@@ -893,7 +893,7 @@ class TestRoundTrip:
         assert out_zip.exists()
 
         # Import into a different location
-        dst_home = tmp_path / "dest" / ".hermes"
+        dst_home = tmp_path / "dest" / ".qwerty"
         dst_home.mkdir(parents=True)
         monkeypatch.setenv("QWERTY_HOME", str(dst_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path / "dest")
@@ -983,17 +983,17 @@ class TestValidation:
         assert not ok
 
     def test_detect_prefix_qwerty(self):
-        """Detects .hermes/ prefix wrapping all entries."""
+        """Detects .qwerty/ prefix wrapping all entries."""
         import io
         from qwerty_cli.backup import _detect_prefix
 
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf:
-            zf.writestr(".hermes/config.yaml", "test")
-            zf.writestr(".hermes/skills/a/SKILL.md", "skill")
+            zf.writestr(".qwerty/config.yaml", "test")
+            zf.writestr(".qwerty/skills/a/SKILL.md", "skill")
         buf.seek(0)
         with zipfile.ZipFile(buf, "r") as zf:
-            assert _detect_prefix(zf) == ".hermes/"
+            assert _detect_prefix(zf) == ".qwerty/"
 
     def test_detect_prefix_none(self):
         """No prefix when entries are at root."""
@@ -1016,8 +1016,8 @@ class TestValidation:
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf:
             # Only directory entries (trailing slash)
-            zf.writestr(".hermes/", "")
-            zf.writestr(".hermes/skills/", "")
+            zf.writestr(".qwerty/", "")
+            zf.writestr(".qwerty/skills/", "")
         buf.seek(0)
         with zipfile.ZipFile(buf, "r") as zf:
             assert _detect_prefix(zf) == ""
@@ -1030,7 +1030,7 @@ class TestValidation:
 class TestBackupEdgeCases:
     def test_nonexistent_qwerty_home(self, tmp_path, monkeypatch):
         """Backup exits when qwerty home doesn't exist."""
-        fake_home = tmp_path / "nonexistent" / ".hermes"
+        fake_home = tmp_path / "nonexistent" / ".qwerty"
         monkeypatch.setenv("QWERTY_HOME", str(fake_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path / "nonexistent")
 
@@ -1042,7 +1042,7 @@ class TestBackupEdgeCases:
 
     def test_output_is_directory(self, tmp_path, monkeypatch):
         """When output path is a directory, zip is created inside it."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text("model: test\n")
 
@@ -1062,7 +1062,7 @@ class TestBackupEdgeCases:
 
     def test_output_without_zip_suffix(self, tmp_path, monkeypatch):
         """Output path without .zip gets suffix appended."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text("model: test\n")
 
@@ -1080,7 +1080,7 @@ class TestBackupEdgeCases:
 
     def test_empty_qwerty_home(self, tmp_path, monkeypatch):
         """Backup handles empty qwerty home (no files to back up)."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         # Only excluded dirs, no actual files
         (qwerty_home / "__pycache__").mkdir()
@@ -1099,7 +1099,7 @@ class TestBackupEdgeCases:
 
     def test_permission_error_during_backup(self, tmp_path, monkeypatch):
         """Backup handles permission errors gracefully."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text("model: test\n")
 
@@ -1126,7 +1126,7 @@ class TestBackupEdgeCases:
 
     def test_pre1980_timestamp_skipped(self, tmp_path, monkeypatch):
         """Backup skips files with pre-1980 timestamps (ZIP limitation)."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text("model: test\n")
 
@@ -1154,7 +1154,7 @@ class TestBackupEdgeCases:
 
     def test_skips_output_zip_inside_qwerty(self, tmp_path, monkeypatch):
         """Backup skips its own output zip if it's inside qwerty root."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text("model: test\n")
 
@@ -1182,7 +1182,7 @@ class TestImportEdgeCases:
 
     def test_not_a_zip(self, tmp_path, monkeypatch):
         """Import rejects a non-zip file."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -1197,7 +1197,7 @@ class TestImportEdgeCases:
 
     def test_eof_during_confirmation(self, tmp_path, monkeypatch):
         """Import handles EOFError during confirmation prompt."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text("existing\n")
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
@@ -1215,7 +1215,7 @@ class TestImportEdgeCases:
 
     def test_keyboard_interrupt_during_confirmation(self, tmp_path, monkeypatch):
         """Import handles KeyboardInterrupt during confirmation prompt."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / ".env").write_text("KEY=val\n")
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
@@ -1233,7 +1233,7 @@ class TestImportEdgeCases:
 
     def test_permission_error_during_import(self, tmp_path, monkeypatch):
         """Import handles permission errors during extraction."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -1262,7 +1262,7 @@ class TestImportEdgeCases:
 
     def test_progress_with_many_files(self, tmp_path, monkeypatch):
         """Import shows progress with 500+ files."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -1295,7 +1295,7 @@ class TestProfileRestoration:
 
     def test_import_creates_profile_wrappers(self, tmp_path, monkeypatch):
         """Import auto-creates wrapper scripts for restored profiles."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -1331,7 +1331,7 @@ class TestProfileRestoration:
 
     def test_import_skips_profile_dirs_without_config(self, tmp_path, monkeypatch):
         """Import doesn't create wrappers for profile dirs without config."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -1357,7 +1357,7 @@ class TestProfileRestoration:
 
     def test_import_without_profiles_module(self, tmp_path, monkeypatch):
         """Import gracefully handles missing profiles module (fresh install)."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -1462,7 +1462,7 @@ class TestQuickSnapshot:
     @pytest.fixture
     def qwerty_home(self, tmp_path):
         """Create a fake QWERTY_HOME with critical state files."""
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".qwerty"
         home.mkdir()
         (home / "config.yaml").write_text("model:\n  provider: openrouter\n")
         (home / ".env").write_text("OPENROUTER_API_KEY=test-key-123\n")
@@ -1884,7 +1884,7 @@ class TestQuickSnapshotProjectsKanban:
 
     @pytest.fixture
     def qwerty_home(self, tmp_path):
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".qwerty"
         home.mkdir()
         # Minimal critical file so the snapshot is non-empty.
         (home / "config.yaml").write_text("model:\n  provider: openrouter\n")
@@ -2078,7 +2078,7 @@ class TestPreUpdateBackup:
     def test_failed_sqlite_snapshot_removes_incomplete_archive(self, tmp_path, monkeypatch):
         """The non-interactive full-zip helper must fail the entire archive
         rather than return success after omitting a live WAL database."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text("model: test\n")
         db_path = qwerty_home / "state.db"
@@ -2124,7 +2124,7 @@ class TestPreUpdateBackup:
 
     @pytest.fixture
     def qwerty_home(self, tmp_path):
-        root = tmp_path / ".hermes"
+        root = tmp_path / ".qwerty"
         root.mkdir()
         _make_qwerty_tree(root)
         return root
@@ -2289,7 +2289,7 @@ class TestRunPreUpdateBackup:
 
     @pytest.fixture
     def qwerty_home(self, tmp_path, monkeypatch):
-        root = tmp_path / ".hermes"
+        root = tmp_path / ".qwerty"
         root.mkdir()
         _make_qwerty_tree(root)
         # Point QWERTY_HOME at the temp dir so config + backup paths resolve here
@@ -2453,7 +2453,7 @@ class TestPreMigrationBackup:
 
     @pytest.fixture
     def qwerty_home(self, tmp_path):
-        root = tmp_path / ".hermes"
+        root = tmp_path / ".qwerty"
         root.mkdir()
         _make_qwerty_tree(root)
         return root
@@ -2563,7 +2563,7 @@ class TestRestoreCronJobsIfEmptied:
 
     def test_restores_when_emptied_after_migration(self, tmp_path):
         from qwerty_cli.backup import restore_cron_jobs_if_emptied
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         jobs_path = qwerty_home / "cron" / "jobs.json"
         # Pre-update: 3 real jobs.
         self._seed_jobs(jobs_path, [{"id": "a"}, {"id": "b"}, {"id": "c"}])
@@ -2585,7 +2585,7 @@ class TestRestoreCronJobsIfEmptied:
 
     def test_noop_when_live_file_still_has_jobs(self, tmp_path):
         from qwerty_cli.backup import restore_cron_jobs_if_emptied
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         jobs_path = qwerty_home / "cron" / "jobs.json"
         self._seed_jobs(jobs_path, [{"id": "a"}, {"id": "b"}])
         snap_id = self._make_snapshot(qwerty_home)
@@ -2598,7 +2598,7 @@ class TestRestoreCronJobsIfEmptied:
         """Desktop scheduler overwrites jobs.json with its own small set,
         losing tool-created crons while keeping desktop-tracked ones."""
         from qwerty_cli.backup import restore_cron_jobs_if_emptied
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         jobs_path = qwerty_home / "cron" / "jobs.json"
         # Pre-update: 19 jobs (18 tool-created + 1 desktop watchdog).
         self._seed_jobs(
@@ -2622,7 +2622,7 @@ class TestRestoreCronJobsIfEmptied:
 
     def test_noop_when_snapshot_had_no_jobs(self, tmp_path):
         from qwerty_cli.backup import restore_cron_jobs_if_emptied
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         jobs_path = qwerty_home / "cron" / "jobs.json"
         # Pre-update genuinely had zero jobs; current is also empty.
         self._seed_jobs(jobs_path, [])
@@ -2637,7 +2637,7 @@ class TestRestoreCronJobsIfEmptied:
         _count_cron_jobs report None — that would silently disable the
         auto-restore safety net. utf-8-sig matches cron/jobs.load_jobs."""
         from qwerty_cli.backup import _count_cron_jobs, restore_cron_jobs_if_emptied
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         jobs_path = qwerty_home / "cron" / "jobs.json"
         self._seed_jobs(jobs_path, [{"id": "a"}, {"id": "b"}, {"id": "c"}])
         snap_id = self._make_snapshot(qwerty_home)
@@ -2656,7 +2656,7 @@ class TestRestoreCronJobsIfEmptied:
         """An unparseable live file is left alone — that's a different failure
         mode the user should see, not silently overwrite."""
         from qwerty_cli.backup import restore_cron_jobs_if_emptied
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         jobs_path = qwerty_home / "cron" / "jobs.json"
         self._seed_jobs(jobs_path, [{"id": "a"}])
         snap_id = self._make_snapshot(qwerty_home)
@@ -2669,7 +2669,7 @@ class TestRestoreCronJobsIfEmptied:
 
     def test_noop_when_snapshot_id_missing(self, tmp_path):
         from qwerty_cli.backup import restore_cron_jobs_if_emptied
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         jobs_path = qwerty_home / "cron" / "jobs.json"
         self._seed_jobs(jobs_path, [])
         assert restore_cron_jobs_if_emptied(None, qwerty_home=qwerty_home) is None
@@ -2679,7 +2679,7 @@ class TestRestoreCronJobsIfEmptied:
         """A legacy snapshot storing a bare JSON list (not {"jobs": [...]}) is
         still counted and restored."""
         from qwerty_cli.backup import restore_cron_jobs_if_emptied
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         jobs_path = qwerty_home / "cron" / "jobs.json"
         jobs_path.parent.mkdir(parents=True, exist_ok=True)
         jobs_path.write_text(json.dumps([{"id": "a"}, {"id": "b"}]))
@@ -2707,7 +2707,7 @@ class TestMemoryProviderExternalPaths:
     def test_backup_captures_external_paths_under_external_prefix(self, tmp_path, monkeypatch):
         """Provider state under ~/.honcho is archived beneath _external/,
         encoded relative to the home directory."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         self._make_min_tree(qwerty_home)
         # External provider state living OUTSIDE QWERTY_HOME.
         honcho = tmp_path / ".honcho"
@@ -2737,7 +2737,7 @@ class TestMemoryProviderExternalPaths:
     def test_backup_skips_external_paths_outside_home(self, tmp_path, monkeypatch):
         """A declared path outside the home dir is not portable and must be
         skipped, never archived."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         self._make_min_tree(qwerty_home)
         outside = tmp_path.parent / "outside-home-secret"
         outside.mkdir(exist_ok=True)
@@ -2766,7 +2766,7 @@ class TestMemoryProviderExternalPaths:
         and credential-shaped files get 0600."""
         dst_home = tmp_path / "dst"
         dst_home.mkdir()
-        qwerty_home = dst_home / ".hermes"
+        qwerty_home = dst_home / ".qwerty"
         qwerty_home.mkdir()
 
         zip_path = tmp_path / "backup.zip"
@@ -2794,7 +2794,7 @@ class TestMemoryProviderExternalPaths:
         """A malicious _external/ member that escapes the home dir is blocked."""
         dst_home = tmp_path / "dst"
         dst_home.mkdir()
-        qwerty_home = dst_home / ".hermes"
+        qwerty_home = dst_home / ".qwerty"
         qwerty_home.mkdir()
         sentinel = tmp_path / "PWNED"
 

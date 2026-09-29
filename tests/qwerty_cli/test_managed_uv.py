@@ -360,7 +360,7 @@ class TestManagedPythonStore:
         monkeypatch.setenv("QWERTY_HOME", str(tmp_path / "profiles" / "beta"))
         beta = managed_python_install_dir(checkout)
 
-        expected = checkout / ".hermes-runtime" / "python"
+        expected = checkout / ".qwerty-runtime" / "python"
         assert alpha == expected
         assert beta == expected
 
@@ -390,7 +390,7 @@ class TestManagedPythonStore:
         assert env["UV_PYTHON_INSTALL_BIN"] == "0"
         assert env["UV_PYTHON_INSTALL_REGISTRY"] == "0"
         assert env["UV_PYTHON_INSTALL_DIR"] == str(
-            checkout / ".hermes-runtime" / "python"
+            checkout / ".qwerty-runtime" / "python"
         )
         for key in (
             "CONDA_DEFAULT_ENV",
@@ -428,7 +428,7 @@ class TestRuntimeRepair:
         assert result.sqlite_before == "3.53.1"
         assert result.sqlite_after == "3.53.1"
         assert sentinel.read_text(encoding="utf-8") == "live"
-        assert not (root / ".hermes-runtime").exists()
+        assert not (root / ".qwerty-runtime").exists()
         mock_install.assert_not_called()
 
     def test_failed_candidate_preserves_live_venv(self, tmp_path):
@@ -440,7 +440,7 @@ class TestRuntimeRepair:
 
         root, live, sentinel = _make_runtime_install(tmp_path)
         current = _runtime_info(live / "bin" / "python", (3, 50, 4))
-        generation = root / ".hermes-runtime" / "python" / "generation-test"
+        generation = root / ".qwerty-runtime" / "python" / "generation-test"
         candidate_python = generation / "bin" / "python"
         candidate_python.parent.mkdir(parents=True)
         candidate_python.write_text("candidate interpreter", encoding="utf-8")
@@ -468,7 +468,7 @@ class TestRuntimeRepair:
             "live interpreter"
         )
         assert not generation.exists()
-        reacquired = _acquire_repair_lock(root / ".hermes-runtime")
+        reacquired = _acquire_repair_lock(root / ".qwerty-runtime")
         assert reacquired is not None
         _release_repair_lock(reacquired)
 
@@ -497,7 +497,7 @@ class TestRuntimeRepair:
         assert result.status == "skipped"
         assert "PID 1729" in result.detail
         assert sentinel.read_text(encoding="utf-8") == "live"
-        assert not (root / ".hermes-runtime").exists()
+        assert not (root / ".qwerty-runtime").exists()
         mock_install.assert_not_called()
 
 
@@ -505,7 +505,7 @@ class TestRuntimeCutover:
     def test_os_lock_blocks_concurrent_repair_and_releases(self, tmp_path):
         from qwerty_cli.managed_uv import _acquire_repair_lock, _release_repair_lock
 
-        runtime_root = tmp_path / ".hermes-runtime"
+        runtime_root = tmp_path / ".qwerty-runtime"
         first = _acquire_repair_lock(runtime_root)
         assert first is not None
         assert _acquire_repair_lock(runtime_root) is None
@@ -536,7 +536,7 @@ class TestRuntimeCutover:
         from qwerty_cli.managed_uv import _cut_over_candidate
 
         root, _, _ = _make_runtime_install(tmp_path)
-        runtime_root = root / ".hermes-runtime"
+        runtime_root = root / ".qwerty-runtime"
         candidate = runtime_root / "venv-candidate-test"
         candidate.mkdir(parents=True)
         (candidate / "sentinel").write_text("candidate", encoding="utf-8")
@@ -565,7 +565,7 @@ class TestRuntimeCutover:
         from qwerty_cli.managed_uv import _cut_over_candidate
 
         root, live, sentinel = _make_runtime_install(tmp_path)
-        runtime_root = root / ".hermes-runtime"
+        runtime_root = root / ".qwerty-runtime"
         candidate = runtime_root / "venv-candidate-test"
         candidate.mkdir(parents=True)
         (candidate / "sentinel").write_text("candidate", encoding="utf-8")
@@ -595,7 +595,7 @@ class TestRuntimeCutover:
         from qwerty_cli.managed_uv import _cut_over_candidate
 
         root, live, sentinel = _make_runtime_install(tmp_path)
-        candidate = root / ".hermes-runtime" / "venv-candidate-test"
+        candidate = root / ".qwerty-runtime" / "venv-candidate-test"
         candidate.mkdir(parents=True)
         (candidate / "sentinel").write_text("candidate", encoding="utf-8")
 
@@ -621,7 +621,7 @@ class TestRuntimeCutover:
         from qwerty_cli.managed_uv import _cut_over_candidate
 
         root, live, sentinel = _make_runtime_install(tmp_path)
-        candidate = root / ".hermes-runtime" / "venv-candidate-test"
+        candidate = root / ".qwerty-runtime" / "venv-candidate-test"
         candidate.mkdir(parents=True)
         (candidate / "sentinel").write_text("candidate", encoding="utf-8")
         rename_count = 0
@@ -647,7 +647,7 @@ class TestRuntimeCutover:
         from qwerty_cli.managed_uv import _cut_over_candidate
 
         root, live, sentinel = _make_runtime_install(tmp_path)
-        runtime_root = root / ".hermes-runtime"
+        runtime_root = root / ".qwerty-runtime"
         candidate = runtime_root / "venv-candidate-test"
         candidate.mkdir(parents=True)
         (candidate / "sentinel").write_text("candidate", encoding="utf-8")
@@ -1196,7 +1196,7 @@ class TestRepairRetriesAfterUvRefresh:
 
     def test_retry_success_proceeds_to_staging(self, tmp_path):
         def second_attempt(root):
-            generation = root / ".hermes-runtime" / "python" / "generation-retry"
+            generation = root / ".qwerty-runtime" / "python" / "generation-retry"
             candidate_python = generation / "bin" / "python"
             candidate_python.parent.mkdir(parents=True)
             candidate_python.write_text("candidate", encoding="utf-8")

@@ -8,7 +8,7 @@ import pytest
 @pytest.fixture(autouse=True)
 def _isolate(tmp_path, monkeypatch):
     """Redirect QWERTY_HOME and clear module caches."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
     # Write a minimal config so load_config doesn't fail
@@ -18,7 +18,7 @@ def _isolate(tmp_path, monkeypatch):
 def _write_config(tmp_path, config_dict):
     """Write a config.yaml to the test QWERTY_HOME."""
     import yaml
-    config_path = tmp_path / ".hermes" / "config.yaml"
+    config_path = tmp_path / ".qwerty" / "config.yaml"
     config_path.write_text(yaml.dump(config_dict))
 
 

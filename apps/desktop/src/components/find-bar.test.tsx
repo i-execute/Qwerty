@@ -23,7 +23,7 @@ import {
 } from '@/store/find-in-page'
 
 // ── Bridge double ───────────────────────────────────────────────────────────
-// Stands in for the preload `hermesDesktop` surface. `onFoundInPage` records
+// Stands in for the preload `qwertyDesktop` surface. `onFoundInPage` records
 // its subscribers so the tests can assert the listener refcount and drive
 // results back into the store the way the main process would.
 
@@ -43,7 +43,7 @@ function installBridge() {
     return () => subscribers.delete(callback)
   })
 
-  ;(window as unknown as { hermesDesktop: unknown }).hermesDesktop = {
+  ;(window as unknown as { qwertyDesktop: unknown }).qwertyDesktop = {
     findInPage,
     stopFindInPage,
     onFoundInPage
@@ -83,7 +83,7 @@ afterEach(() => {
   resetStore()
   drainListeners()
   vi.restoreAllMocks()
-  delete (window as unknown as { hermesDesktop?: unknown }).hermesDesktop
+  delete (window as unknown as { qwertyDesktop?: unknown }).qwertyDesktop
 })
 
 // ── Pure: match-count formatting ────────────────────────────────────────────

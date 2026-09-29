@@ -17,7 +17,7 @@ from qwerty_cli import profile_describer as describer
 @pytest.fixture
 def profile_env(tmp_path, monkeypatch):
     """Set up an isolated QWERTY_HOME with a default profile dir."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)

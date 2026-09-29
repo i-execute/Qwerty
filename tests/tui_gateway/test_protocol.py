@@ -1037,7 +1037,7 @@ def test_session_resume_reuses_live_agent_after_compression_rotation(server, mon
 def test_sync_session_key_after_compress_reanchors_active_session_lease(
     server, monkeypatch, tmp_path
 ):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     monkeypatch.setenv("QWERTY_HOME", str(home))
 
     from qwerty_cli.active_sessions import (

@@ -33,7 +33,7 @@ def _state_dir() -> Path:
     if override:
         return Path(override)
     # Default: $QWERTY_HOME/watcher-state/, falling back to ~/.qwerty/watcher-state/.
-    qwerty_home = os.environ.get("QWERTY_HOME") or str(Path.home() / ".hermes")
+    qwerty_home = os.environ.get("QWERTY_HOME") or str(Path.home() / ".qwerty")
     return Path(qwerty_home) / "watcher-state"
 
 

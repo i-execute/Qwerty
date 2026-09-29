@@ -176,7 +176,7 @@ class TestSSHBulkUpload:
         assert "ssh" in ssh_str
         assert "tar xf -" in ssh_str
         assert "--no-overwrite-dir" in ssh_str
-        assert "-C /home/testuser/.hermes" in ssh_str
+        assert "-C /home/testuser/.qwerty" in ssh_str
         assert "testuser@example.com" in ssh_str
 
     def test_bulk_upload_never_stages_remote_home_prefix(self, mock_env, tmp_path):

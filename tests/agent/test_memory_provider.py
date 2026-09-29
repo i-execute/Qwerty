@@ -653,7 +653,7 @@ class TestUserInstalledProviderDiscovery:
             "    def handle_tool_call(self, *a, **kw): return '{}'\n"
         )
         (plugin_dir / "__init__.py").write_text(
-            "from .adapters.hermes import MyProvider\n"
+            "from .adapters.qwerty import MyProvider\n"
             "def register(ctx):\n"
             "    ctx.register_memory_provider(MyProvider())\n"
         )

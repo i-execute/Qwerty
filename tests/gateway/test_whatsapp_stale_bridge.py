@@ -97,7 +97,7 @@ def _fresh_node_modules(bridge_dir: Path) -> None:
 
     nm = bridge_dir / "node_modules"
     nm.mkdir()
-    (nm / ".hermes-pkg-hash").write_text(
+    (nm / ".qwerty-pkg-hash").write_text(
         _file_content_hash(bridge_dir / "package.json")
     )
 
@@ -276,7 +276,7 @@ class TestDepRefreshStamp:
         assert "install" in mock_run.call_args[0][0]
         # Stamp updated to the new package.json hash
         from plugins.platforms.whatsapp.adapter import _file_content_hash
-        stamp = (bridge_dir / "node_modules" / ".hermes-pkg-hash").read_text().strip()
+        stamp = (bridge_dir / "node_modules" / ".qwerty-pkg-hash").read_text().strip()
         assert stamp == _file_content_hash(bridge_dir / "package.json")
 
     @pytest.mark.asyncio

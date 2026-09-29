@@ -46,7 +46,7 @@ def _clean_registry():
     registry._reset_registry_for_tests()
 
 
-def _apply(secrets, cfg_extra=None, home=Path("/tmp/x/.hermes"), env=None):
+def _apply(secrets, cfg_extra=None, home=Path("/tmp/x/.qwerty"), env=None):
     registry.register_source(_FakeBulk(secrets), replace=True)
     cfg = {"fakebulk": {"enabled": True}}
     cfg.update(cfg_extra or {})
@@ -152,7 +152,7 @@ def test_alias_disabled_by_config():
 def test_default_profile_never_aliases():
     _, env = _apply(
         {"TELEGRAM_BOT_TOKEN_MILLA": "123:tok"},
-        home=Path("/home/u/.hermes"),
+        home=Path("/home/u/.qwerty"),
     )
     assert "TELEGRAM_BOT_TOKEN" not in env
 

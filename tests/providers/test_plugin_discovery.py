@@ -76,7 +76,7 @@ def test_all_profiles_register():
 def test_user_plugin_overrides_bundled(tmp_path, monkeypatch):
     """A user plugin with the same name must override the bundled profile."""
     # Point QWERTY_HOME at a fresh temp dir
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
     # get_qwerty_home() may be module-cached depending on codebase; ensure the
@@ -124,7 +124,7 @@ def test_general_plugin_manager_skips_model_provider_kind(tmp_path, monkeypatch)
     (providers/__init__.py handles them). It records the manifest only."""
     from qwerty_cli import plugins as plugin_mod
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 

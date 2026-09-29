@@ -14,7 +14,7 @@ from gateway.session import SessionSource, build_session_key
 
 @pytest.fixture(autouse=True)
 def _isolated_active_session_registry(tmp_path, monkeypatch):
-    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
 
 
 class _FakeAdapter:

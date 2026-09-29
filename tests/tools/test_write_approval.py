@@ -18,7 +18,7 @@ import pytest
 @pytest.fixture
 def qwerty_home(monkeypatch):
     d = tempfile.mkdtemp(prefix="qwerty_wa_test_")
-    home = os.path.join(d, ".hermes")
+    home = os.path.join(d, ".qwerty")
     os.makedirs(home)
     monkeypatch.setenv("QWERTY_HOME", home)
     yield home

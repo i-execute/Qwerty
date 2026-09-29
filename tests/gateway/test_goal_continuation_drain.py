@@ -79,7 +79,7 @@ CONTINUATION_TEXT = "[Continuing toward your standing goal]\nGoal: ship it"
 def qwerty_home(tmp_path, monkeypatch):
     from pathlib import Path
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("QWERTY_HOME", str(home))

@@ -52,7 +52,7 @@ class TestDiscovery:
         from qwerty_cli import plugins as plugins_mod
 
         # Isolated QWERTY_HOME so we don't read the developer's config.yaml.
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".qwerty"
         home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(home))
         monkeypatch.setattr(Path, "home", lambda: tmp_path)

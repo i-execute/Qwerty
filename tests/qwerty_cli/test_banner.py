@@ -284,7 +284,7 @@ def test_build_welcome_banner_moa_provider_shows_preset_and_aggregator(tmp_path,
     """With provider='moa', the banner renders the preset + aggregator, not a bare slug."""
     import yaml
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     (home / "config.yaml").write_text(
@@ -330,8 +330,8 @@ def test_build_welcome_banner_moa_provider_shows_preset_and_aggregator(tmp_path,
 
 def test_build_welcome_banner_non_moa_unchanged(tmp_path, monkeypatch):
     """A normal provider still renders the bare model slug, no MoA prefix."""
-    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
-    (tmp_path / ".hermes").mkdir()
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
+    (tmp_path / ".qwerty").mkdir()
 
     with (
         patch.object(model_tools, "check_tool_availability", return_value=([], [])),

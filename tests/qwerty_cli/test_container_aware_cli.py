@@ -24,7 +24,7 @@ from qwerty_cli.config import (
 @pytest.fixture
 def container_env(tmp_path, monkeypatch):
     """Set up a fake QWERTY_HOME with .container-mode file."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
     monkeypatch.delenv("QWERTY_DEV", raising=False)
@@ -62,7 +62,7 @@ def test_get_container_exec_info_none_inside_container(container_env):
 
 def test_get_container_exec_info_none_without_file(tmp_path, monkeypatch):
     """Returns None when .container-mode doesn't exist (native mode)."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
     monkeypatch.delenv("QWERTY_DEV", raising=False)
@@ -98,7 +98,7 @@ def test_get_container_exec_info_defaults():
     import tempfile
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        qwerty_home = Path(tmpdir) / ".hermes"
+        qwerty_home = Path(tmpdir) / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / ".container-mode").write_text(
             "# minimal file with no keys\n"

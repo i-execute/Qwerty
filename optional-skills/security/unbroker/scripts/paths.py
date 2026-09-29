@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 def qwerty_home() -> Path:
-    return Path(os.environ.get("QWERTY_HOME") or (Path.home() / ".hermes"))
+    return Path(os.environ.get("QWERTY_HOME") or (Path.home() / ".qwerty"))
 
 
 def data_dir() -> Path:

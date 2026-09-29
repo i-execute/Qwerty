@@ -60,7 +60,7 @@ def test_status_uses_last_activity_not_only_last_used(monkeypatch, capsys):
 @pytest.fixture
 def curator_status_env(tmp_path, monkeypatch):
     """Isolated QWERTY_HOME with real agent-created skills on disk."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     skills = home / "skills"
     skills.mkdir(parents=True)
     (home / "logs").mkdir()

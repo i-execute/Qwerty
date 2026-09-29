@@ -25,7 +25,7 @@ def test_media_delivery_denies_encrypted_bitwarden_cache(tmp_path, monkeypatch):
     """Encrypted Bitwarden cache is covered by the media credential guard."""
     import gateway.platforms.base as base
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setattr(base, "_QWERTY_HOME", qwerty_home)
     monkeypatch.setattr(base, "_QWERTY_ROOT", qwerty_home)
@@ -1188,7 +1188,7 @@ class TestMediaDeliveryDefaultMode:
         self._patch_roots(monkeypatch)
 
         fake_home = tmp_path / "home"
-        qwerty_dir = fake_home / ".hermes"
+        qwerty_dir = fake_home / ".qwerty"
         qwerty_dir.mkdir(parents=True)
         env_file = qwerty_dir / ".env"
         env_file.write_text("OPENAI_API_KEY=sk-...")
@@ -1216,7 +1216,7 @@ class TestMediaDeliveryDefaultMode:
         self._patch_roots(monkeypatch)
 
         fake_home = tmp_path / "home"
-        qwerty_dir = fake_home / ".hermes"
+        qwerty_dir = fake_home / ".qwerty"
         (qwerty_dir / "mcp-tokens").mkdir(parents=True)
         secret = qwerty_dir / rel
         secret.write_text('{"access_token": "live-bearer-abc123"}')
@@ -1237,7 +1237,7 @@ class TestMediaDeliveryDefaultMode:
         self._patch_roots(monkeypatch)
 
         fake_home = tmp_path / "home"
-        qwerty_dir = fake_home / ".hermes"
+        qwerty_dir = fake_home / ".qwerty"
         qwerty_dir.mkdir(parents=True)
         config_file = qwerty_dir / "config.yaml"
         config_file.write_text("model:\n  provider: openai\n")
@@ -1254,9 +1254,9 @@ class TestMediaDeliveryDefaultMode:
         self._patch_roots(monkeypatch)
 
         fake_home = tmp_path / "home"
-        profile_home = fake_home / ".hermes" / "profiles" / "work"
+        profile_home = fake_home / ".qwerty" / "profiles" / "work"
         profile_home.mkdir(parents=True)
-        qwerty_root = fake_home / ".hermes"
+        qwerty_root = fake_home / ".qwerty"
         config_file = qwerty_root / "config.yaml"
         config_file.write_text("profiles:\n  active: work\n")
         monkeypatch.setenv("HOME", str(fake_home))
@@ -1281,7 +1281,7 @@ class TestMediaDeliveryDefaultMode:
         self._patch_roots(monkeypatch)
 
         fake_home = tmp_path / "home"
-        qwerty_dir = fake_home / ".hermes"
+        qwerty_dir = fake_home / ".qwerty"
         qwerty_dir.mkdir(parents=True)
         token = qwerty_dir / "google_token.json"
         token.write_text('{"access_token": "***", "refresh_token": "***"}')
@@ -1303,7 +1303,7 @@ class TestMediaDeliveryDefaultMode:
         monkeypatch.setenv("QWERTY_MEDIA_TRUST_RECENT_SECONDS", "600")
 
         fake_home = tmp_path / "home"
-        qwerty_dir = fake_home / ".hermes"
+        qwerty_dir = fake_home / ".qwerty"
         qwerty_dir.mkdir(parents=True)
         token = qwerty_dir / "google_token.json"
         token.write_text('{"access_token": "***"}')  # mtime = now → "recent"
@@ -1320,7 +1320,7 @@ class TestMediaDeliveryDefaultMode:
         self._patch_roots(monkeypatch)
 
         fake_home = tmp_path / "home"
-        qwerty_dir = fake_home / ".hermes"
+        qwerty_dir = fake_home / ".qwerty"
         pairing = qwerty_dir / "pairing"
         pairing.mkdir(parents=True)
         token = pairing / "telegram-approved.json"
@@ -1337,7 +1337,7 @@ class TestMediaDeliveryDefaultMode:
         matched before the denylist and still delivers.
         """
         fake_home = tmp_path / "home"
-        qwerty_dir = fake_home / ".hermes"
+        qwerty_dir = fake_home / ".qwerty"
         cache_dir = qwerty_dir / "cache" / "documents"
         cache_dir.mkdir(parents=True)
         artifact = cache_dir / "report.pdf"
@@ -1360,7 +1360,7 @@ class TestMediaDeliveryDefaultMode:
         monkeypatch.setenv("QWERTY_MEDIA_TRUST_RECENT_SECONDS", "600")
 
         fake_home = tmp_path / "home"
-        qwerty_dir = fake_home / ".hermes"
+        qwerty_dir = fake_home / ".qwerty"
         qwerty_dir.mkdir(parents=True)
         artifact = qwerty_dir / "adhoc_report.pdf"
         artifact.write_bytes(b"%PDF-1.4")  # fresh mtime
@@ -1465,7 +1465,7 @@ class TestMediaDeliveryDefaultMode:
         self._patch_roots(monkeypatch)
 
         fake_home = tmp_path / "root"
-        qwerty_dir = fake_home / ".hermes"
+        qwerty_dir = fake_home / ".qwerty"
         qwerty_dir.mkdir(parents=True)
         env_file = qwerty_dir / ".env"
         env_file.write_text("OPENROUTER_API_KEY=sk-...")
@@ -1491,7 +1491,7 @@ class TestMediaDeliveryDefaultMode:
 
         # Stand-in for the literal /root deny prefix in the deployment.
         denied_root = tmp_path / "root"
-        qwerty_root = denied_root / ".hermes"
+        qwerty_root = denied_root / ".qwerty"
         prof_cache = qwerty_root / "profiles" / "myprof" / "cache" / "images"
         prof_cache.mkdir(parents=True)
         image = prof_cache / "gen.png"
@@ -1522,7 +1522,7 @@ class TestMediaDeliveryDefaultMode:
         self._patch_roots(monkeypatch)
 
         denied_root = tmp_path / "root"
-        qwerty_root = denied_root / ".hermes"
+        qwerty_root = denied_root / ".qwerty"
         prof_dir = qwerty_root / "profiles" / "myprof"
         prof_dir.mkdir(parents=True)
         cred = prof_dir / "auth.json"

@@ -17,7 +17,7 @@ from trajectory_compressor import (
 
 
 def test_import_loads_env_from_qwerty_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / ".env").write_text("OPENROUTER_API_KEY=from-qwerty-home\n", encoding="utf-8")
 

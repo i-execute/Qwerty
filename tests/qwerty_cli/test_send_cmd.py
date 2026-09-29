@@ -344,7 +344,7 @@ def test_load_qwerty_env_bridges_config_yaml_scalars(tmp_path, monkeypatch):
     """
     import os
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / ".env").write_text("SOME_TOKEN=abc123\n")
     (qwerty_home / "config.yaml").write_text(
@@ -371,7 +371,7 @@ def test_load_qwerty_env_does_not_override_existing(tmp_path, monkeypatch):
     """Existing env vars must not be clobbered by config.yaml values."""
     import os
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text("TELEGRAM_HOME_CHANNEL: yaml_value\n")
 
@@ -389,7 +389,7 @@ def test_load_qwerty_env_does_not_override_existing(tmp_path, monkeypatch):
 
 def test_load_qwerty_env_handles_missing_files(tmp_path, monkeypatch):
     """No .env or config.yaml should be a silent no-op, not an exception."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 

@@ -62,7 +62,7 @@ def test_marker_matches_the_schema_the_desktop_validates(tmp_path):
     result = run_write_marker(install_dir)
     assert result.returncode == 0, result.stderr
 
-    marker = install_dir / ".hermes-bootstrap-complete"
+    marker = install_dir / ".qwerty-bootstrap-complete"
     assert marker.is_file(), "install.sh must stamp the bootstrap marker"
 
     payload = json.loads(marker.read_text())
@@ -78,8 +78,8 @@ def test_marker_publish_leaves_no_temp_sibling(tmp_path):
 
     run_write_marker(install_dir)
 
-    assert (install_dir / ".hermes-bootstrap-complete").is_file()
-    assert not (install_dir / ".hermes-bootstrap-complete.tmp").exists()
+    assert (install_dir / ".qwerty-bootstrap-complete").is_file()
+    assert not (install_dir / ".qwerty-bootstrap-complete.tmp").exists()
 
 
 def test_explicit_commit_pin_wins_over_head(tmp_path):
@@ -88,7 +88,7 @@ def test_explicit_commit_pin_wins_over_head(tmp_path):
 
     run_write_marker(install_dir, commit=pinned)
 
-    payload = json.loads((install_dir / ".hermes-bootstrap-complete").read_text())
+    payload = json.loads((install_dir / ".qwerty-bootstrap-complete").read_text())
     assert payload["pinnedCommit"] == pinned
 
 
@@ -100,7 +100,7 @@ def test_no_marker_written_when_head_cannot_be_resolved(tmp_path):
     result = run_write_marker(install_dir)
 
     assert result.returncode == 0, "an unresolvable HEAD must not fail the install"
-    assert not (install_dir / ".hermes-bootstrap-complete").exists()
+    assert not (install_dir / ".qwerty-bootstrap-complete").exists()
 
 
 def test_missing_install_dir_is_not_fatal(tmp_path):

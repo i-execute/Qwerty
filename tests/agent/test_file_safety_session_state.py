@@ -26,7 +26,7 @@ def fake_homes(tmp_path, monkeypatch):
     derive <root> via the `profiles` parent-dir rule, so both the
     profile-scoped and root-scoped deny lists resolve into tmp_path.
     """
-    root = tmp_path / ".hermes"
+    root = tmp_path / ".qwerty"
     profile = root / "profiles" / "work"
     profile.mkdir(parents=True)
     monkeypatch.setenv("QWERTY_HOME", str(profile))

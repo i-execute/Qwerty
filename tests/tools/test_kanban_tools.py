@@ -23,7 +23,7 @@ def test_kanban_tools_hidden_without_env_var(monkeypatch, tmp_path):
     """Normal `qwerty chat` sessions (no QWERTY_KANBAN_TASK) must have
     zero kanban_* tools in their schema."""
     monkeypatch.delenv("QWERTY_KANBAN_TASK", raising=False)
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
 
@@ -43,7 +43,7 @@ def test_kanban_tools_hidden_without_env_var(monkeypatch, tmp_path):
 def test_kanban_tools_visible_with_env_var(monkeypatch, tmp_path):
     """Worker sessions get task lifecycle tools, not board-routing tools."""
     monkeypatch.setenv("QWERTY_KANBAN_TASK", "t_fake")
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
 
@@ -68,7 +68,7 @@ def test_kanban_worker_env_overrides_profile_toolset_filter(monkeypatch, tmp_pat
     assignee profile restricts enabled toolsets and does not list kanban.
     """
     monkeypatch.setenv("QWERTY_KANBAN_TASK", "t_fake")
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
 
@@ -97,7 +97,7 @@ def test_worker_with_kanban_toolset_still_hides_board_routing(monkeypatch, tmp_p
     worker and must not see kanban_list / kanban_unblock.
     """
     monkeypatch.setenv("QWERTY_KANBAN_TASK", "t_fake")
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text("toolsets:\n  - kanban\n")
     monkeypatch.setenv("QWERTY_HOME", str(home))
@@ -122,7 +122,7 @@ def test_worker_with_kanban_toolset_still_hides_board_routing(monkeypatch, tmp_p
 def test_kanban_tools_visible_with_toolset_config(monkeypatch, tmp_path):
     """Orchestrator profiles with toolsets: [kanban] see all kanban tools."""
     monkeypatch.delenv("QWERTY_KANBAN_TASK", raising=False)
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text("toolsets:\n  - kanban\n")
     monkeypatch.setenv("QWERTY_HOME", str(home))
@@ -153,7 +153,7 @@ def test_kanban_tools_visible_with_toolset_config(monkeypatch, tmp_path):
 def worker_env(monkeypatch, tmp_path):
     """Simulate being a worker: QWERTY_HOME isolated, QWERTY_KANBAN_TASK set
     after we've created the task."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setenv("QWERTY_PROFILE", "test-worker")
@@ -626,7 +626,7 @@ def test_complete_goal_mode_rejected_by_judge(monkeypatch, tmp_path):
     from tools import kanban_tools as kt
 
     # Set up isolated QWERTY_HOME
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setenv("QWERTY_PROFILE", "test-worker")
@@ -684,7 +684,7 @@ def test_complete_goal_mode_allows_when_judge_unavailable(monkeypatch, tmp_path)
     from qwerty_cli import kanban_db as kb
     from tools import kanban_tools as kt
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setenv("QWERTY_PROFILE", "test-worker")
@@ -749,7 +749,7 @@ def _make_goal_mode_worker_env(monkeypatch, tmp_path):
     from pathlib import Path as _Path
     from qwerty_cli import kanban_db as kb
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setenv("QWERTY_PROFILE", "test-worker")
@@ -1611,7 +1611,7 @@ def test_unblock_happy_path(monkeypatch, worker_env):
 
 def test_unblock_with_pending_parents_returns_todo(monkeypatch, tmp_path):
     monkeypatch.delenv("QWERTY_KANBAN_TASK", raising=False)
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setenv("QWERTY_PROFILE", "orchestrator")
@@ -1717,7 +1717,7 @@ def test_kanban_guidance_not_in_normal_prompt(monkeypatch, tmp_path):
     """A normal chat session (no QWERTY_KANBAN_TASK) must NOT have
     KANBAN_GUIDANCE in its system prompt."""
     monkeypatch.delenv("QWERTY_KANBAN_TASK", raising=False)
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     from pathlib import Path as _P
@@ -1745,7 +1745,7 @@ def test_kanban_guidance_in_worker_prompt(monkeypatch, tmp_path):
     """A worker session (QWERTY_KANBAN_TASK set) MUST have the full
     lifecycle guidance in its system prompt."""
     monkeypatch.setenv("QWERTY_KANBAN_TASK", "t_fake")
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     from pathlib import Path as _P
@@ -1788,7 +1788,7 @@ def test_kanban_guidance_prompt_size_bounded(monkeypatch, tmp_path):
     ceiling is sized to fit that content with a little headroom.
     """
     monkeypatch.setenv("QWERTY_KANBAN_TASK", "t_fake")
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     from pathlib import Path as _P
@@ -2010,7 +2010,7 @@ def test_orchestrator_complete_any_task_allowed(monkeypatch, tmp_path):
     """Orchestrator profiles (no QWERTY_KANBAN_TASK) can still complete
     any task via explicit task_id. The check only applies to workers."""
     monkeypatch.delenv("QWERTY_KANBAN_TASK", raising=False)
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     from pathlib import Path as _P
@@ -2054,7 +2054,7 @@ def multi_board_env(monkeypatch, tmp_path):
     QWERTY_KANBAN_TASK is pinned (orchestrator context) — workers test
     the env-task case via the existing ``worker_env`` fixture.
     """
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     # Make sure neither QWERTY_KANBAN_DB nor QWERTY_KANBAN_BOARD pin a
@@ -2266,7 +2266,7 @@ def test_board_param_routes_heartbeat_to_alt_board(monkeypatch, tmp_path):
     """kanban_heartbeat targets the alt board's DB. Worker-scoped, so we
     use the worker-env style fixture inline (pinning QWERTY_KANBAN_TASK
     to a task that exists in the alt board)."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setenv("QWERTY_PROFILE", "alt-worker")
@@ -2538,7 +2538,7 @@ def test_create_respects_auto_subscribe_on_create_false(monkeypatch, worker_env,
     explicit kanban_notify-subscribe calls per task get that."""
     # worker_env already created <tmp>/.qwerty; use a fresh sibling
     # home to avoid mkdir() colliding with the worker's directory.
-    home = tmp_path / "gate-home" / ".hermes"
+    home = tmp_path / "gate-home" / ".qwerty"
     home.mkdir(parents=True)
     (home / "config.yaml").write_text(
         "kanban:\n  auto_subscribe_on_create: false\n"

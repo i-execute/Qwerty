@@ -377,13 +377,13 @@ class TestTempHomeServiceDefinitionGuard:
         )
 
     def test_accepts_real_home(self):
-        unit = '[Service]\nEnvironment="QWERTY_HOME=/home/alice/.hermes"\n'
+        unit = '[Service]\nEnvironment="QWERTY_HOME=/home/alice/.qwerty"\n'
         assert gateway_cli._temp_home_in_service_definition(unit) is None
 
     def test_accepts_macos_real_home_plist(self):
         plist = (
             "<dict>\n  <key>QWERTY_HOME</key>\n"
-            "  <string>/Users/alice/.hermes</string>\n</dict>\n"
+            "  <string>/Users/alice/.qwerty</string>\n</dict>\n"
         )
         assert gateway_cli._temp_home_in_service_definition(plist) is None
 
@@ -394,7 +394,7 @@ class TestTempHomeServiceDefinitionGuard:
     def test_tmp_prefixed_non_temp_path_is_accepted(self):
         # /tmpfs-data is NOT under /tmp — prefix matching must be
         # component-wise, not string startswith.
-        unit = '[Service]\nEnvironment="QWERTY_HOME=/tmpfs-data/.hermes"\n'
+        unit = '[Service]\nEnvironment="QWERTY_HOME=/tmpfs-data/.qwerty"\n'
         assert gateway_cli._temp_home_in_service_definition(unit) is None
 
 
@@ -472,7 +472,7 @@ class TestGeneratedSystemdUnits:
         # systemd_unit_is_current() perpetually false and forcing a
         # daemon-reload restart loop on every boot.
         local_bin = tmp_path / ".local" / "bin"
-        profile_node_bin = tmp_path / ".hermes" / "profiles" / "jarvis" / "node" / "bin"
+        profile_node_bin = tmp_path / ".qwerty" / "profiles" / "jarvis" / "node" / "bin"
         local_bin.mkdir(parents=True)
         profile_node_bin.mkdir(parents=True)
         real_node = profile_node_bin / "node"
@@ -490,7 +490,7 @@ class TestGeneratedSystemdUnits:
     def test_launchd_plist_does_not_leak_profile_node_symlink_target(self, tmp_path, monkeypatch):
         # Same #48700 regression for the macOS twin generate_launchd_plist().
         local_bin = tmp_path / ".local" / "bin"
-        profile_node_bin = tmp_path / ".hermes" / "profiles" / "jarvis" / "node" / "bin"
+        profile_node_bin = tmp_path / ".qwerty" / "profiles" / "jarvis" / "node" / "bin"
         local_bin.mkdir(parents=True)
         profile_node_bin.mkdir(parents=True)
         real_node = profile_node_bin / "node"
@@ -534,7 +534,7 @@ class TestGeneratedSystemdUnits:
             "_system_service_identity",
             lambda run_as_user=None: ("alice", "alice", "/home/alice"),
         )
-        monkeypatch.setattr(gateway_cli, "_qwerty_home_for_target_user", lambda home: "/home/alice/.hermes")
+        monkeypatch.setattr(gateway_cli, "_qwerty_home_for_target_user", lambda home: "/home/alice/.qwerty")
         monkeypatch.setenv("PATH", "/usr/local/bin:/mnt/c/WINDOWS/system32")
         monkeypatch.setattr(gateway_cli.shutil, "which", lambda cmd: None)
 
@@ -650,7 +650,7 @@ class TestLaunchdServiceRecovery:
         )
 
     def test_launchd_install_repairs_outdated_plist_without_force(self, tmp_path, monkeypatch):
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text("<plist>old content</plist>", encoding="utf-8")
 
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
@@ -662,7 +662,7 @@ class TestLaunchdServiceRecovery:
             "generate_launchd_plist",
             lambda: (
                 "<plist>--replace\n<key>QWERTY_HOME</key>"
-                "<string>/Users/alice/.hermes</string></plist>"
+                "<string>/Users/alice/.qwerty</string></plist>"
             ),
         )
 
@@ -693,7 +693,7 @@ class TestLaunchdServiceRecovery:
         """#43842: when the refresh runs inside the gateway's own process tree,
         a direct bootout would kill this CLI before bootstrap. The reload must
         be delegated to a detached helper instead."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text("<plist>old content</plist>", encoding="utf-8")
 
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
@@ -703,7 +703,7 @@ class TestLaunchdServiceRecovery:
             "generate_launchd_plist",
             lambda: (
                 "<plist>--replace\n<key>QWERTY_HOME</key>"
-                "<string>/Users/alice/.hermes</string></plist>"
+                "<string>/Users/alice/.qwerty</string></plist>"
             ),
         )
         # Pretend the gateway is running and that we ARE inside its tree.
@@ -760,7 +760,7 @@ class TestLaunchdServiceRecovery:
     def test_refresh_uses_direct_reload_when_not_inside_gateway_tree(self, tmp_path, monkeypatch):
         """Normal CLI-initiated refresh (outside the service tree) keeps the
         direct synchronous bootout/bootstrap path."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text("<plist>old content</plist>", encoding="utf-8")
 
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
@@ -770,7 +770,7 @@ class TestLaunchdServiceRecovery:
             "generate_launchd_plist",
             lambda: (
                 "<plist>--replace\n<key>QWERTY_HOME</key>"
-                "<string>/Users/alice/.hermes</string></plist>"
+                "<string>/Users/alice/.qwerty</string></plist>"
             ),
         )
         # Gateway running, but we are NOT inside its tree.
@@ -807,7 +807,7 @@ class TestLaunchdServiceRecovery:
         ]
 
     def test_launchd_start_reloads_unloaded_job_and_retries(self, tmp_path, monkeypatch):
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text(gateway_cli.generate_launchd_plist(), encoding="utf-8")
         label = gateway_cli.get_launchd_label()
 
@@ -835,7 +835,7 @@ class TestLaunchdServiceRecovery:
 
     def test_launchd_start_reloads_on_kickstart_exit_code_113(self, tmp_path, monkeypatch):
         """Exit code 113 (\"Could not find service\") should also trigger bootstrap recovery."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text(gateway_cli.generate_launchd_plist(), encoding="utf-8")
         label = gateway_cli.get_launchd_label()
 
@@ -974,7 +974,7 @@ class TestLaunchdServiceRecovery:
         assert wait_called[0] == {"timeout": 10.0, "force_after": 5.0}
 
     def test_launchd_status_reports_local_stale_plist_when_unloaded(self, tmp_path, monkeypatch, capsys):
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text("<plist>old content</plist>", encoding="utf-8")
 
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
@@ -1018,7 +1018,7 @@ class TestLaunchdServiceRecovery:
 
     def test_launchd_start_reloads_on_kickstart_exit_code_125(self, tmp_path, monkeypatch):
         """Exit code 125 means the job is absent from the domain → bootstrap recovery."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text(gateway_cli.generate_launchd_plist(), encoding="utf-8")
         label = gateway_cli.get_launchd_label()
 
@@ -1048,7 +1048,7 @@ class TestLaunchdServiceRecovery:
 
     def test_launchd_start_falls_back_to_detached_when_rebootstrap_fails(self, tmp_path, monkeypatch, capsys):
         """If even a fresh bootstrap can't manage the domain, spawn detached."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text(gateway_cli.generate_launchd_plist(), encoding="utf-8")
         label = gateway_cli.get_launchd_label()
         target = f"{gateway_cli._launchd_domain()}/{label}"
@@ -1085,7 +1085,7 @@ class TestLaunchdServiceRecovery:
 
     def test_launchd_install_falls_back_to_detached_on_bootstrap_5(self, tmp_path, monkeypatch, capsys):
         """macOS bootstrap error 5 should spawn a detached gateway, not crash."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
         # Synthetic plist with a non-temp home so the temp-home write guard
         # (which would trip on the pytest-tmp test QWERTY_HOME) stays out of
@@ -1095,7 +1095,7 @@ class TestLaunchdServiceRecovery:
             "generate_launchd_plist",
             lambda: (
                 "<plist><key>QWERTY_HOME</key>"
-                "<string>/Users/alice/.hermes</string></plist>"
+                "<string>/Users/alice/.qwerty</string></plist>"
             ),
         )
 
@@ -1151,7 +1151,7 @@ class TestLaunchdServiceRecovery:
     def test_launchd_restart_boots_out_stale_registration_before_bootstrap(
         self, tmp_path, monkeypatch
     ):
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text(gateway_cli.generate_launchd_plist(), encoding="utf-8")
         label = gateway_cli.get_launchd_label()
         domain = gateway_cli._launchd_domain()
@@ -1219,11 +1219,11 @@ class TestLaunchdServiceRecovery:
     # ── PID parsing ──────────────────────────────────────────────────────
 
     def test_parse_launchd_pid_from_list_output_with_pid(self):
-        output = '{\n    "PID" = 12345;\n    "Label" = "ai.hermes.gateway";\n}'
+        output = '{\n    "PID" = 12345;\n    "Label" = "ai.qwerty.gateway";\n}'
         assert gateway_cli._parse_launchd_pid_from_list_output(output) == 12345
 
     def test_parse_launchd_pid_from_list_output_without_pid(self):
-        output = '{\n    "Label" = "ai.hermes.gateway";\n    "OnDemand" = true;\n}'
+        output = '{\n    "Label" = "ai.qwerty.gateway";\n    "OnDemand" = true;\n}'
         assert gateway_cli._parse_launchd_pid_from_list_output(output) is None
 
     def test_parse_launchd_pid_from_list_output_empty(self):
@@ -1236,14 +1236,14 @@ class TestLaunchdServiceRecovery:
 
     def test_parse_launchd_pid_from_list_output_negative_pid_returns_none(self):
         """PID = -1 (recently-crashed service sentinel) must return None."""
-        output = '{\n    "PID" = -1;\n    "Label" = "ai.hermes.gateway";\n}'
+        output = '{\n    "PID" = -1;\n    "Label" = "ai.qwerty.gateway";\n}'
         assert gateway_cli._parse_launchd_pid_from_list_output(output) is None
 
     # ── Probe requires PID ───────────────────────────────────────────────
 
     def test_probe_launchd_service_running_false_without_pid_in_output(self, tmp_path, monkeypatch):
         """launchctl list returns 0 but no PID → not actually running."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text(gateway_cli.generate_launchd_plist(), encoding="utf-8")
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
         monkeypatch.setattr(
@@ -1251,7 +1251,7 @@ class TestLaunchdServiceRecovery:
             "run",
             lambda *args, **kwargs: SimpleNamespace(
                 returncode=0,
-                stdout='{\n    "Label" = "ai.hermes.gateway";\n}',
+                stdout='{\n    "Label" = "ai.qwerty.gateway";\n}',
                 stderr="",
             ),
         )
@@ -1259,7 +1259,7 @@ class TestLaunchdServiceRecovery:
 
     def test_probe_launchd_service_running_true_with_pid_in_output(self, tmp_path, monkeypatch):
         """launchctl list returns 0 with PID → actually running."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text(gateway_cli.generate_launchd_plist(), encoding="utf-8")
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
         monkeypatch.setattr(
@@ -1267,7 +1267,7 @@ class TestLaunchdServiceRecovery:
             "run",
             lambda *args, **kwargs: SimpleNamespace(
                 returncode=0,
-                stdout='{\n    "PID" = 55555;\n    "Label" = "ai.hermes.gateway";\n}',
+                stdout='{\n    "PID" = 55555;\n    "Label" = "ai.qwerty.gateway";\n}',
                 stderr="",
             ),
         )
@@ -1285,7 +1285,7 @@ class TestLaunchdServiceRecovery:
 
     def test_launchd_start_clears_unsupported_marker_on_bootstrap_success(self, tmp_path, monkeypatch, capsys):
         """When bootstrap succeeds (OS update fixes the issue), clear the marker."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
         # Pre-seed the marker as if a previous fallback wrote it
         monkeypatch.setattr(gateway_cli, "get_qwerty_home", lambda: tmp_path)
@@ -1308,7 +1308,7 @@ class TestLaunchdServiceRecovery:
 
     def test_launchd_status_reports_supervised_when_pid_present(self, tmp_path, monkeypatch, capsys):
         """When launchd is actively supervising, report it clearly."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text(gateway_cli.generate_launchd_plist(), encoding="utf-8")
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
 
@@ -1316,7 +1316,7 @@ class TestLaunchdServiceRecovery:
             if isinstance(cmd, list) and cmd[:2] == ["launchctl", "list"]:
                 return SimpleNamespace(
                     returncode=0,
-                    stdout='{\n    "PID" = 77777;\n    "Label" = "ai.hermes.gateway";\n}',
+                    stdout='{\n    "PID" = 77777;\n    "Label" = "ai.qwerty.gateway";\n}',
                     stderr="",
                 )
             return SimpleNamespace(returncode=0, stdout="", stderr="")
@@ -1333,7 +1333,7 @@ class TestLaunchdServiceRecovery:
 
     def test_launchd_status_reports_fallback_when_unsupported_and_pid_running(self, tmp_path, monkeypatch, capsys):
         """When the unsupported marker exists and a fallback PID is running."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text(gateway_cli.generate_launchd_plist(), encoding="utf-8")
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
 
@@ -1341,7 +1341,7 @@ class TestLaunchdServiceRecovery:
             if isinstance(cmd, list) and cmd[:2] == ["launchctl", "list"]:
                 return SimpleNamespace(
                     returncode=0,
-                    stdout='{\n    "Label" = "ai.hermes.gateway";\n    "OnDemand" = true;\n}',
+                    stdout='{\n    "Label" = "ai.qwerty.gateway";\n    "OnDemand" = true;\n}',
                     stderr="",
                 )
             return SimpleNamespace(returncode=0, stdout="", stderr="")
@@ -1361,7 +1361,7 @@ class TestLaunchdServiceRecovery:
 
     def test_launchd_status_reports_fallback_unavailable_when_unsupported_no_pid(self, tmp_path, monkeypatch, capsys):
         """Unsupported marker exists but no fallback process is running."""
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text(gateway_cli.generate_launchd_plist(), encoding="utf-8")
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
 
@@ -1369,7 +1369,7 @@ class TestLaunchdServiceRecovery:
             if isinstance(cmd, list) and cmd[:2] == ["launchctl", "list"]:
                 return SimpleNamespace(
                     returncode=0,
-                    stdout='{\n    "Label" = "ai.hermes.gateway";\n    "OnDemand" = true;\n}',
+                    stdout='{\n    "Label" = "ai.qwerty.gateway";\n    "OnDemand" = true;\n}',
                     stderr="",
                 )
             return SimpleNamespace(returncode=0, stdout="", stderr="")
@@ -1907,7 +1907,7 @@ class TestGatewaySystemServiceRouting:
         assert "install as user service" not in out
 
     def test_gateway_restart_does_not_fallback_to_foreground_when_launchd_restart_fails(self, tmp_path, monkeypatch):
-        plist_path = tmp_path / "ai.hermes.gateway.plist"
+        plist_path = tmp_path / "ai.qwerty.gateway.plist"
         plist_path.write_text("plist\n", encoding="utf-8")
 
         monkeypatch.setattr(gateway_cli, "is_linux", lambda: False)
@@ -1917,7 +1917,7 @@ class TestGatewaySystemServiceRouting:
             gateway_cli,
             "launchd_restart",
             lambda: (_ for _ in ()).throw(
-                gateway_cli.subprocess.CalledProcessError(5, ["launchctl", "kickstart", "-k", "gui/501/ai.hermes.gateway"])
+                gateway_cli.subprocess.CalledProcessError(5, ["launchctl", "kickstart", "-k", "gui/501/ai.qwerty.gateway"])
             ),
         )
 
@@ -2012,8 +2012,8 @@ class TestSystemUnitQwertyHome:
 
         unit = gateway_cli.generate_systemd_unit(system=True, run_as_user="alice")
 
-        assert 'QWERTY_HOME=/home/alice/.hermes' in unit
-        assert '/root/.hermes' not in unit
+        assert 'QWERTY_HOME=/home/alice/.qwerty' in unit
+        assert '/root/.qwerty' not in unit
 
     def test_system_unit_remaps_profile_to_target_user(self, monkeypatch):
         # Simulate sudo with a profile: QWERTY_HOME was resolved under root
@@ -2059,13 +2059,13 @@ class TestSystemUnitQwertyHome:
 
 
 class TestSystemUnitRefreshSyncsQwertyHome:
-    """sudo system refresh must not flip TimeoutStopSec via /root/.hermes."""
+    """sudo system refresh must not flip TimeoutStopSec via /root/.qwerty."""
 
     def test_refresh_adopts_unit_qwerty_home_before_rewriting(self, tmp_path, monkeypatch):
         root_home = tmp_path / "root"
         alice_home = tmp_path / "alice"
-        root_qwerty = root_home / ".hermes"
-        alice_qwerty = alice_home / ".hermes"
+        root_qwerty = root_home / ".qwerty"
+        alice_qwerty = alice_home / ".qwerty"
         root_qwerty.mkdir(parents=True)
         alice_qwerty.mkdir(parents=True)
         (root_qwerty / "config.yaml").write_text(
@@ -2197,7 +2197,7 @@ class TestQwertyHomeForTargetUser:
         monkeypatch.delenv("QWERTY_HOME", raising=False)
 
         result = gateway_cli._qwerty_home_for_target_user("/home/alice")
-        assert result == "/home/alice/.hermes"
+        assert result == "/home/alice/.qwerty"
 
     def test_remaps_profile_path(self, monkeypatch):
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/root")))
@@ -2218,7 +2218,7 @@ class TestQwertyHomeForTargetUser:
         monkeypatch.delenv("QWERTY_HOME", raising=False)
 
         result = gateway_cli._qwerty_home_for_target_user("/home/alice")
-        assert result == "/home/alice/.hermes"
+        assert result == "/home/alice/.qwerty"
 
 
 class TestGeneratedUnitUsesDetectedVenv:
@@ -2509,7 +2509,7 @@ class TestProfileArg:
 
     def test_default_qwerty_home_returns_empty(self, tmp_path, monkeypatch):
         """Default ~/.hermes should not produce a --profile flag."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
@@ -2518,16 +2518,16 @@ class TestProfileArg:
 
     def test_named_profile_returns_flag(self, tmp_path, monkeypatch):
         """~/.hermes/profiles/mybot should return '--profile mybot'."""
-        profile_dir = tmp_path / ".hermes" / "profiles" / "mybot"
+        profile_dir = tmp_path / ".qwerty" / "profiles" / "mybot"
         profile_dir.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
         result = gateway_cli._profile_arg(str(profile_dir))
         assert result == "--profile mybot"
 
     def test_named_profile_under_target_user_root_returns_flag(self, tmp_path):
         """System installs generated under sudo must compare against target user's root."""
-        target_root = tmp_path / "home" / "alice" / ".hermes"
+        target_root = tmp_path / "home" / "alice" / ".qwerty"
         profile_dir = target_root / "profiles" / "mybot"
         profile_dir.mkdir(parents=True)
 
@@ -2540,31 +2540,31 @@ class TestProfileArg:
         custom_home = tmp_path / "custom" / "qwerty"
         custom_home.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
         result = gateway_cli._profile_arg(str(custom_home))
         assert result == ""
 
     def test_nested_profile_path_returns_empty(self, tmp_path, monkeypatch):
         """~/.hermes/profiles/mybot/subdir should NOT match — too deep."""
-        nested = tmp_path / ".hermes" / "profiles" / "mybot" / "subdir"
+        nested = tmp_path / ".qwerty" / "profiles" / "mybot" / "subdir"
         nested.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
         result = gateway_cli._profile_arg(str(nested))
         assert result == ""
 
     def test_invalid_profile_name_returns_empty(self, tmp_path, monkeypatch):
         """Profile names with invalid chars should not match the regex."""
-        bad_profile = tmp_path / ".hermes" / "profiles" / "My Bot!"
+        bad_profile = tmp_path / ".qwerty" / "profiles" / "My Bot!"
         bad_profile.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
         result = gateway_cli._profile_arg(str(bad_profile))
         assert result == ""
 
     def test_systemd_unit_includes_profile(self, tmp_path, monkeypatch):
         """generate_systemd_unit should include --profile in ExecStart for named profiles."""
-        profile_dir = tmp_path / ".hermes" / "profiles" / "mybot"
+        profile_dir = tmp_path / ".qwerty" / "profiles" / "mybot"
         profile_dir.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("QWERTY_HOME", str(profile_dir))
@@ -2582,7 +2582,7 @@ class TestProfileArg:
         """sudo system install must keep the target user's named profile in ExecStart."""
         root_home = tmp_path / "root"
         target_home = tmp_path / "home" / "alice"
-        root_profile = root_home / ".hermes" / "profiles" / "mybot"
+        root_profile = root_home / ".qwerty" / "profiles" / "mybot"
         root_profile.mkdir(parents=True)
 
         monkeypatch.setattr(Path, "home", lambda: root_home)
@@ -2598,11 +2598,11 @@ class TestProfileArg:
 
         assert "ExecStart=" in unit
         assert "--profile mybot gateway run" in unit
-        assert f'QWERTY_HOME={target_home / ".hermes" / "profiles" / "mybot"}' in unit
+        assert f'QWERTY_HOME={target_home / ".qwerty" / "profiles" / "mybot"}' in unit
 
     def test_launchd_plist_includes_profile(self, tmp_path, monkeypatch):
         """generate_launchd_plist should include --profile in ProgramArguments for named profiles."""
-        profile_dir = tmp_path / ".hermes" / "profiles" / "mybot"
+        profile_dir = tmp_path / ".qwerty" / "profiles" / "mybot"
         profile_dir.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("QWERTY_HOME", str(profile_dir))
@@ -2620,7 +2620,7 @@ class TestProfileArg:
         assert "<string>Background</string>" in plist
 
     def test_launchd_plist_path_uses_real_user_home_not_profile_home(self, tmp_path, monkeypatch):
-        profile_dir = tmp_path / ".hermes" / "profiles" / "orcha"
+        profile_dir = tmp_path / ".qwerty" / "profiles" / "orcha"
         profile_dir.mkdir(parents=True)
         machine_home = tmp_path / "machine-home"
         machine_home.mkdir()
@@ -2634,7 +2634,7 @@ class TestProfileArg:
 
         plist_path = gateway_cli.get_launchd_plist_path()
 
-        assert plist_path == machine_home / "Library" / "LaunchAgents" / "ai.hermes.gateway-orcha.plist"
+        assert plist_path == machine_home / "Library" / "LaunchAgents" / "ai.qwerty.gateway-orcha.plist"
 
 
 class TestRemapPathForUser:
@@ -2644,10 +2644,10 @@ class TestRemapPathForUser:
         monkeypatch.setattr(Path, "home", lambda: tmp_path / "root")
         (tmp_path / "root").mkdir()
         result = gateway_cli._remap_path_for_user(
-            str(tmp_path / "root" / ".hermes" / "qwerty-agent"),
+            str(tmp_path / "root" / ".qwerty" / "qwerty-agent"),
             str(tmp_path / "alice"),
         )
-        assert result == str(tmp_path / "alice" / ".hermes" / "qwerty-agent")
+        assert result == str(tmp_path / "alice" / ".qwerty" / "qwerty-agent")
 
     def test_keeps_system_path_unchanged(self, monkeypatch, tmp_path):
         monkeypatch.setattr(Path, "home", lambda: tmp_path / "root")
@@ -2658,7 +2658,7 @@ class TestRemapPathForUser:
     def test_noop_when_same_user(self, monkeypatch, tmp_path):
         monkeypatch.setattr(Path, "home", lambda: tmp_path / "alice")
         (tmp_path / "alice").mkdir()
-        original = str(tmp_path / "alice" / ".hermes" / "qwerty-agent")
+        original = str(tmp_path / "alice" / ".qwerty" / "qwerty-agent")
         result = gateway_cli._remap_path_for_user(original, str(tmp_path / "alice"))
         assert result == original
 
@@ -2669,7 +2669,7 @@ class TestSystemUnitPathRemapping:
     def test_system_unit_has_no_root_paths(self, monkeypatch, tmp_path):
         root_home = tmp_path / "root"
         root_home.mkdir()
-        project = root_home / ".hermes" / "qwerty-agent"
+        project = root_home / ".qwerty" / "qwerty-agent"
         project.mkdir(parents=True)
         venv_bin = project / "venv" / "bin"
         venv_bin.mkdir(parents=True)
@@ -2678,8 +2678,8 @@ class TestSystemUnitPathRemapping:
         target_home = "/home/alice"
 
         monkeypatch.setattr(Path, "home", lambda: root_home)
-        monkeypatch.setenv("QWERTY_HOME", str(root_home / ".hermes"))
-        monkeypatch.setattr(gateway_cli, "get_qwerty_home", lambda: root_home / ".hermes")
+        monkeypatch.setenv("QWERTY_HOME", str(root_home / ".qwerty"))
+        monkeypatch.setattr(gateway_cli, "get_qwerty_home", lambda: root_home / ".qwerty")
         monkeypatch.setattr(gateway_cli, "PROJECT_ROOT", project)
         monkeypatch.setattr(gateway_cli, "_detect_venv_dir", lambda: project / "venv")
         monkeypatch.setattr(gateway_cli, "get_python_path", lambda: str(venv_bin / "python"))
@@ -2698,7 +2698,7 @@ class TestSystemUnitPathRemapping:
         # always exists) — NOT the source checkout under it. Pinning cwd to the
         # checkout is the rot bug fixed alongside this: a relocated/removed
         # checkout would crash-loop the unit on CHDIR (status=200).
-        assert "WorkingDirectory=/home/alice/.hermes" in unit
+        assert "WorkingDirectory=/home/alice/.qwerty" in unit
         assert "WorkingDirectory=/home/alice/.hermes/qwerty-agent" not in unit
 
 
@@ -3535,19 +3535,19 @@ class TestServiceWorkingDirIsStable:
     """
 
     def test_stable_working_dir_uses_qwerty_home(self, tmp_path, monkeypatch):
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".qwerty"
         home.mkdir()
         monkeypatch.setattr(gateway_cli, "get_qwerty_home", lambda: home)
         assert Path(gateway_cli._stable_service_working_dir()) == home.resolve()
 
     def test_stable_working_dir_falls_back_to_project_root(self, tmp_path, monkeypatch):
         # QWERTY_HOME points somewhere that does not exist -> fall back.
-        missing = tmp_path / "does-not-exist" / ".hermes"
+        missing = tmp_path / "does-not-exist" / ".qwerty"
         monkeypatch.setattr(gateway_cli, "get_qwerty_home", lambda: missing)
         assert gateway_cli._stable_service_working_dir() == str(gateway_cli.PROJECT_ROOT)
 
     def test_user_unit_workingdirectory_is_qwerty_home_not_checkout(self, tmp_path, monkeypatch):
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".qwerty"
         home.mkdir()
         monkeypatch.setattr(gateway_cli, "get_qwerty_home", lambda: home)
         unit = gateway_cli.generate_systemd_unit(system=False)
@@ -3561,7 +3561,7 @@ class TestServiceWorkingDirIsStable:
     def test_launchd_workingdirectory_is_qwerty_home(self, tmp_path, monkeypatch):
         import re
 
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".qwerty"
         home.mkdir()
         monkeypatch.setattr(gateway_cli, "get_qwerty_home", lambda: home)
         plist = gateway_cli.generate_launchd_plist()
@@ -3578,7 +3578,7 @@ class TestServiceWorkingDirIsStable:
         causes the old instance to exit cleanly).  Switching to the scalar
         ``<key>KeepAlive</key><true/>`` makes launchd restart regardless of exit code.
         """
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".qwerty"
         home.mkdir()
         monkeypatch.setattr(gateway_cli, "get_qwerty_home", lambda: home)
         plist = gateway_cli.generate_launchd_plist()
@@ -3603,9 +3603,9 @@ class TestLaunchctlBootstrapEioRetry:
     version" and needlessly degraded the gateway to a detached process.
     """
 
-    PLIST = "/tmp/ai.hermes.gateway.plist"
+    PLIST = "/tmp/ai.qwerty.gateway.plist"
     DOMAIN = "gui/501"
-    LABEL = "ai.hermes.gateway"
+    LABEL = "ai.qwerty.gateway"
 
     def test_bootstrap_succeeds_first_try_without_bootout(self, monkeypatch):
         calls = []
@@ -3683,8 +3683,8 @@ class TestRetryLaunchctlBootstrapUntilRegistered:
     """
 
     DOMAIN = "gui/501"
-    PLIST = "/tmp/ai.hermes.gateway.plist"
-    LABEL = "ai.hermes.gateway"
+    PLIST = "/tmp/ai.qwerty.gateway.plist"
+    LABEL = "ai.qwerty.gateway"
 
     def test_returns_true_once_label_is_registered(self, monkeypatch):
         """Success requires launchctl list to confirm registration, not just

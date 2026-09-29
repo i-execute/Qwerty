@@ -115,13 +115,13 @@ def test_build_gateway_argv_keeps_venv_console_python_for_uv_venv(monkeypatch, t
 
 class TestStableWindowsGatewayWorkingDir:
     def test_stable_gateway_working_dir_uses_qwerty_home(self, tmp_path, monkeypatch):
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".qwerty"
         home.mkdir()
         monkeypatch.setattr("qwerty_cli.config.get_qwerty_home", lambda: home)
         assert gateway_windows._stable_gateway_working_dir(tmp_path / "checkout") == str(home.resolve())
 
     def test_stable_gateway_working_dir_falls_back_to_project_root(self, tmp_path, monkeypatch):
-        missing = tmp_path / "missing" / ".hermes"
+        missing = tmp_path / "missing" / ".qwerty"
         project = tmp_path / "checkout"
         monkeypatch.setattr("qwerty_cli.config.get_qwerty_home", lambda: missing)
         assert gateway_windows._stable_gateway_working_dir(project) == str(project)

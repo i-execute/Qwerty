@@ -107,7 +107,7 @@ Backend resolution is an ordered ladder:
 1. `QWERTY_DESKTOP_QWERTY_ROOT`
 2. the current source checkout during development
 3. a completed managed install
-4. `QWERTY_DESKTOP_HERMES`, or `qwerty` on `PATH`
+4. `QWERTY_DESKTOP_QWERTY`, or `qwerty` on `PATH`
 5. a system Python that can import the Qwerty runtime
 6. the first-launch bootstrap installer
 

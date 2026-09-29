@@ -265,7 +265,7 @@ class TestCmdUpdateNpmLockfileCache:
         checkout = tmp_path / "checkout"
         checkout.mkdir()
         (checkout / "package.json").write_text("{}")
-        shared_root = tmp_path / ".hermes"
+        shared_root = tmp_path / ".qwerty"
         named_profile = shared_root / "profiles" / "work"
         named_profile.mkdir(parents=True)
 
@@ -707,7 +707,7 @@ class TestCmdUpdateProfileSkillSync:
             branch="main", verify_ok=True, commit_count="1"
         )
 
-        default_p = SimpleNamespace(name="default", path=Path("/fake/.hermes"))
+        default_p = SimpleNamespace(name="default", path=Path("/fake/.qwerty"))
         active_p = SimpleNamespace(name="bit", path=Path("/fake/.hermes/profiles/bit"))
         other_p = SimpleNamespace(name="work", path=Path("/fake/.hermes/profiles/work"))
         all_profiles = [default_p, active_p, other_p]
@@ -745,7 +745,7 @@ class TestCmdUpdateProfileSkillSync:
             branch="main", verify_ok=True, commit_count="1"
         )
 
-        default_p = SimpleNamespace(name="default", path=Path("/fake/.hermes"))
+        default_p = SimpleNamespace(name="default", path=Path("/fake/.qwerty"))
         synced_paths = []
 
         def fake_seed(path, quiet=False):

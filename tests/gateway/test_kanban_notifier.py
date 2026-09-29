@@ -214,7 +214,7 @@ def test_active_named_profile_subscription_is_delivered(tmp_path, monkeypatch):
 
 def test_kanban_db_path_is_test_isolated_from_real_home():
     qwerty_home = Path(kb.kanban_home())
-    production_db = Path.home() / ".hermes" / "kanban.db"
+    production_db = Path.home() / ".qwerty" / "kanban.db"
     assert kb.kanban_db_path().resolve() != production_db.resolve()
 
     conn = kb.connect()

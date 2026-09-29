@@ -23,7 +23,7 @@ from qwerty_cli import goals
 
 @pytest.fixture
 def kanban_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -69,7 +69,7 @@ def test_goal_mode_without_max_turns(kanban_home):
 
 def test_legacy_db_migrates_goal_columns(tmp_path, monkeypatch):
     """A tasks table created without goal columns must gain them on init."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)

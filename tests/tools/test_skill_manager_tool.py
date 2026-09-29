@@ -1241,7 +1241,7 @@ class TestBackgroundOwnershipPolicyConsistency:
 
     def test_missing_record_fails_closed_like_explicit_null(self, tmp_path, monkeypatch):
         """Both unmanaged record shapes must produce the SAME verdict."""
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
         with _skill_dir(tmp_path):
             _create_skill("no-record", VALID_SKILL_CONTENT)
             with patch("tools.skill_usage.load_usage", return_value={}):
@@ -1264,8 +1264,8 @@ class TestBackgroundOwnershipPolicyConsistency:
     def test_repeated_identical_write_gets_the_same_answer(self, tmp_path, monkeypatch):
         """The real #67140 shape: no stubbing of load_usage, so the first write's
         telemetry side effect is live. Both attempts must agree."""
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
-        (tmp_path / ".hermes" / "skills").mkdir(parents=True, exist_ok=True)
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
+        (tmp_path / ".qwerty" / "skills").mkdir(parents=True, exist_ok=True)
         with _skill_dir(tmp_path):
             _create_skill("flip-skill", VALID_SKILL_CONTENT)
             first = self._bg_patch(
@@ -1282,7 +1282,7 @@ class TestBackgroundOwnershipPolicyConsistency:
         assert first["success"] is False
 
     def test_refusal_points_at_the_supported_way_in(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
         with _skill_dir(tmp_path):
             _create_skill("no-record", VALID_SKILL_CONTENT)
             with patch("tools.skill_usage.load_usage", return_value={}):
@@ -1294,7 +1294,7 @@ class TestBackgroundOwnershipPolicyConsistency:
     def test_foreground_write_to_unmanaged_skill_still_allowed(self, tmp_path, monkeypatch):
         """Fail-closed applies to AUTONOMOUS writes only. A user-directed
         foreground edit to their own skill must keep working."""
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
         with _skill_dir(tmp_path):
             _create_skill("no-record", VALID_SKILL_CONTENT)
             with patch("tools.skill_usage.load_usage", return_value={}):
@@ -1306,7 +1306,7 @@ class TestBackgroundOwnershipPolicyConsistency:
 
     def test_adopted_skill_becomes_writable_by_autonomous_curation(self, tmp_path, monkeypatch):
         """Adoption is the documented path from refused to allowed."""
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
         with _skill_dir(tmp_path):
             _create_skill("adopt-me", VALID_SKILL_CONTENT)
             with patch("tools.skill_usage.load_usage", return_value={}):
@@ -1571,7 +1571,7 @@ def _curator_pass(tmp_path, *, monkeypatch):
     here; tests that specifically exercise the ownership guard set their own
     records instead.
     """
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     skills_root = qwerty_home / "skills"
     skills_root.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
@@ -1733,7 +1733,7 @@ class TestCuratorConsolidationDeleteGuard:
         _reset_background_review_read_marks()
         with _curator_pass(tmp_path, monkeypatch=monkeypatch):
             _create_curator_skill("reviewed", _skill_content("reviewed"))
-            ref = tmp_path / ".hermes" / "skills" / "reviewed" / "references"
+            ref = tmp_path / ".qwerty" / "skills" / "reviewed" / "references"
             ref.mkdir()
             (ref / "workflow.md").write_text("old workflow\n", encoding="utf-8")
 

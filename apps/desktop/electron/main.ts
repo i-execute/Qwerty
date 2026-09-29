@@ -3743,7 +3743,7 @@ function resolveQwertyBackend(backendArgs) {
   //    QWERTY_DESKTOP_IGNORE_EXISTING=1 forces the bootstrap path for testing.
   if (process.env.QWERTY_DESKTOP_IGNORE_EXISTING !== '1') {
     let qwertyCommand = null
-    const qwertyOverride = process.env.QWERTY_DESKTOP_HERMES
+    const qwertyOverride = process.env.QWERTY_DESKTOP_QWERTY
 
     if (qwertyOverride) {
       const resolvedOverride = findOnPath(qwertyOverride)
@@ -3782,7 +3782,7 @@ function resolveQwertyBackend(backendArgs) {
       // and lets the resolver fall through to step 6 / bootstrap.
       const shellForProbe = isCommandScript(qwertyCommand)
 
-      // QWERTY_DESKTOP_HERMES is an explicit deployment override (used by
+      // QWERTY_DESKTOP_QWERTY is an explicit deployment override (used by
       // the Nix wrapper), not a discovered PATH candidate. It must not fall
       // through to the install-script bootstrap if the optional probe times
       // out under load; the pinned backend is the only valid runtime there.

@@ -7508,7 +7508,7 @@ def test_v18_backfill_from_sessions_json(tmp_path, monkeypatch):
     """Migration backfills display_name/origin_json/expiry_finalized from sessions.json."""
     import qwerty_state as hs
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     (home / "sessions").mkdir(parents=True)
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr(hs, "DEFAULT_DB_PATH", home / "state.db")

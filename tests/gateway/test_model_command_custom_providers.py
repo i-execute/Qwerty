@@ -27,7 +27,7 @@ def _make_event(text="/model"):
 
 @pytest.mark.asyncio
 async def test_handle_model_command_lists_saved_custom_provider(tmp_path, monkeypatch):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         yaml.safe_dump(
@@ -72,7 +72,7 @@ async def test_direct_model_switch_offloads_to_thread(tmp_path, monkeypatch):
 
     from qwerty_cli.model_switch import ModelSwitchResult
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         yaml.safe_dump(

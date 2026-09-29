@@ -41,7 +41,7 @@ def _make_user_data(qwerty_home: Path) -> None:
 
 
 def test_agent_is_installed_detects_source_and_venv(tmp_path):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     assert gu.agent_is_installed(qwerty_home) is False
     _make_agent(qwerty_home)
@@ -50,13 +50,13 @@ def test_agent_is_installed_detects_source_and_venv(tmp_path):
 
 def test_agent_is_installed_venv_only(tmp_path):
     """A checkout with only a venv (no package dir yet) still counts."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     (qwerty_home / "qwerty-agent" / "venv").mkdir(parents=True)
     assert gu.agent_is_installed(qwerty_home) is True
 
 
 def test_source_built_artifacts_lists_known_paths(tmp_path):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     _make_gui_build(qwerty_home)
     artifacts = gu.source_built_gui_artifacts(qwerty_home)
     names = {p.name for p in artifacts}
@@ -67,7 +67,7 @@ def test_source_built_artifacts_lists_known_paths(tmp_path):
 
 
 def test_gui_is_installed_true_when_built(tmp_path, monkeypatch):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     _make_gui_build(qwerty_home)
     # Make sure packaged-app + userdata probes don't false-positive on the box
     # running the test.
@@ -77,7 +77,7 @@ def test_gui_is_installed_true_when_built(tmp_path, monkeypatch):
 
 
 def test_gui_is_installed_false_when_nothing(tmp_path, monkeypatch):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setattr(gu, "packaged_gui_app_paths", lambda: [])
     monkeypatch.setattr(gu, "desktop_userdata_dir", lambda: tmp_path / "nope")
@@ -86,7 +86,7 @@ def test_gui_is_installed_false_when_nothing(tmp_path, monkeypatch):
 
 def test_uninstall_gui_removes_only_gui_artifacts(tmp_path, monkeypatch):
     """The core invariant: GUI gone, agent + user data untouched."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     agent_root = _make_agent(qwerty_home)
     _make_gui_build(qwerty_home)
     _make_user_data(qwerty_home)
@@ -118,7 +118,7 @@ def test_uninstall_gui_removes_only_gui_artifacts(tmp_path, monkeypatch):
 
 
 def test_uninstall_gui_removes_userdata(tmp_path, monkeypatch):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     _make_agent(qwerty_home)
     userdata = tmp_path / "Qwerty-userdata"
     userdata.mkdir()
@@ -132,7 +132,7 @@ def test_uninstall_gui_removes_userdata(tmp_path, monkeypatch):
 
 
 def test_uninstall_gui_keeps_userdata_when_requested(tmp_path, monkeypatch):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     _make_agent(qwerty_home)
     userdata = tmp_path / "Qwerty-userdata"
     userdata.mkdir()
@@ -145,7 +145,7 @@ def test_uninstall_gui_keeps_userdata_when_requested(tmp_path, monkeypatch):
 
 
 def test_uninstall_gui_removes_packaged_bundle(tmp_path, monkeypatch):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     _make_agent(qwerty_home)
     bundle = tmp_path / "Qwerty.app"
     (bundle / "Contents").mkdir(parents=True)
@@ -159,7 +159,7 @@ def test_uninstall_gui_removes_packaged_bundle(tmp_path, monkeypatch):
 
 
 def test_gui_install_summary_shape(tmp_path, monkeypatch):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     _make_agent(qwerty_home)
     _make_gui_build(qwerty_home)
     monkeypatch.setattr(gu, "packaged_gui_app_paths", lambda: [])
@@ -227,7 +227,7 @@ def test_run_uninstall_yes_keep_data_is_non_interactive(tmp_path, monkeypatch):
     """
     import qwerty_cli.uninstall as uninstall
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     agent_root = qwerty_home / "qwerty-agent"
     (agent_root / "qwerty_cli").mkdir(parents=True)
     (qwerty_home / "config.yaml").write_text("x: 1\n")
@@ -267,7 +267,7 @@ def test_run_uninstall_yes_full_wipes_home(tmp_path, monkeypatch):
     """``--yes --full`` removes the whole QWERTY_HOME non-interactively."""
     import qwerty_cli.uninstall as uninstall
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     (qwerty_home / "qwerty-agent" / "qwerty_cli").mkdir(parents=True)
     (qwerty_home / "config.yaml").write_text("x: 1\n")
     fake_code = tmp_path / "checkout"
@@ -300,7 +300,7 @@ def test_uninstall_module_main_gui_mode(tmp_path, monkeypatch):
     """
     import qwerty_cli.uninstall as uninstall
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     agent_root = qwerty_home / "qwerty-agent"
     (agent_root / "qwerty_cli").mkdir(parents=True)
     desktop = agent_root / "apps" / "desktop"

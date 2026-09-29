@@ -5,7 +5,7 @@ from types import SimpleNamespace
 def test_postprocess_adds_agent_visible_image_for_active_ssh_env(monkeypatch, tmp_path):
     from tools import image_generation_tool
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     image_dir = qwerty_home / "cache" / "images"
     image_dir.mkdir(parents=True)
     image_path = image_dir / "xai_grok-imagine-image_test.jpg"
@@ -41,7 +41,7 @@ def test_postprocess_adds_agent_visible_image_for_active_ssh_env(monkeypatch, tm
 def test_postprocess_maps_docker_cache_path_without_active_env(monkeypatch, tmp_path):
     from tools import image_generation_tool
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     image_dir = qwerty_home / "cache" / "images"
     image_dir.mkdir(parents=True)
     image_path = image_dir / "generated.png"
@@ -61,7 +61,7 @@ def test_postprocess_maps_docker_cache_path_without_active_env(monkeypatch, tmp_
 def test_postprocess_maps_ssh_cache_path_without_active_env(monkeypatch, tmp_path):
     from tools import image_generation_tool
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     image_dir = qwerty_home / "cache" / "images"
     image_dir.mkdir(parents=True)
     image_path = image_dir / "first-call.png"
@@ -91,7 +91,7 @@ def test_postprocess_leaves_remote_image_urls_unchanged(monkeypatch):
 def test_handle_image_generate_postprocesses_plugin_result(monkeypatch, tmp_path):
     from tools import image_generation_tool
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     image_dir = qwerty_home / "cache" / "images"
     image_dir.mkdir(parents=True)
     image_path = image_dir / "plugin.png"

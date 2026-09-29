@@ -38,11 +38,11 @@ class TestGetDefaultQwertyRoot:
         monkeypatch.delenv("QWERTY_HOME", raising=False)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
-        assert get_default_qwerty_root() == tmp_path / ".hermes"
+        assert get_default_qwerty_root() == tmp_path / ".qwerty"
 
     def test_qwerty_home_is_native(self, tmp_path, monkeypatch):
         """When QWERTY_HOME = ~/.hermes, returns ~/.hermes."""
-        native = tmp_path / ".hermes"
+        native = tmp_path / ".qwerty"
         native.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("QWERTY_HOME", str(native))
@@ -50,7 +50,7 @@ class TestGetDefaultQwertyRoot:
 
     def test_qwerty_home_is_profile(self, tmp_path, monkeypatch):
         """When QWERTY_HOME is a profile under ~/.hermes, returns ~/.hermes."""
-        native = tmp_path / ".hermes"
+        native = tmp_path / ".qwerty"
         profile = native / "profiles" / "coder"
         profile.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -135,7 +135,7 @@ class TestGetProcessQwertyHome:
     def test_env_unset_returns_platform_default(self, tmp_path, monkeypatch):
         monkeypatch.delenv("QWERTY_HOME", raising=False)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        assert get_process_qwerty_home() == tmp_path / ".hermes"
+        assert get_process_qwerty_home() == tmp_path / ".qwerty"
 
     def test_ignores_context_local_override(self, tmp_path, monkeypatch):
         launch_home = tmp_path / "launch-home"
@@ -831,7 +831,7 @@ class TestSecureParentDir:
 
     def test_safe_path_calls_chmod(self, tmp_path, monkeypatch):
         """Normal nested path (depth >= 3) should call os.chmod."""
-        safe_dir = tmp_path / "home" / "user" / ".hermes"
+        safe_dir = tmp_path / "home" / "user" / ".qwerty"
         safe_dir.mkdir(parents=True)
         target = safe_dir / "auth.json"
         target.touch()

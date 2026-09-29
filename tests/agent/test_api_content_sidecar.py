@@ -469,9 +469,9 @@ def wire_env():
     t.start()
 
     test_home = tempfile.mkdtemp(prefix="qwerty_api_content_")
-    os.makedirs(os.path.join(test_home, ".hermes"))
+    os.makedirs(os.path.join(test_home, ".qwerty"))
     prev_home = os.environ.get("QWERTY_HOME")
-    os.environ["QWERTY_HOME"] = os.path.join(test_home, ".hermes")
+    os.environ["QWERTY_HOME"] = os.path.join(test_home, ".qwerty")
 
     from run_agent import AIAgent
 

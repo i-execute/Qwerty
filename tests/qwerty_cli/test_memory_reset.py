@@ -14,7 +14,7 @@ import pytest
 @pytest.fixture
 def memory_env(tmp_path, monkeypatch):
     """Set up a fake QWERTY_HOME with memory files."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     memories = qwerty_home / "memories"
     memories.mkdir(parents=True)
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
@@ -93,7 +93,7 @@ class TestMemoryReset:
 
     def test_reset_no_files_exist(self, tmp_path, monkeypatch):
         """Should return 'nothing' when no memory files exist."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         (qwerty_home / "memories").mkdir(parents=True)
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -144,7 +144,7 @@ class TestMemoryReset:
 
     def test_reset_empty_memories_dir(self, tmp_path, monkeypatch):
         """No memories dir at all should report nothing."""
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir(parents=True)
         # No memories dir
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))

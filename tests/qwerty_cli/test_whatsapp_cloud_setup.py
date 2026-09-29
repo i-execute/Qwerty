@@ -164,7 +164,7 @@ class TestWabaIdValidator:
 def isolated_home(tmp_path, monkeypatch):
     """Redirect QWERTY_HOME so save_env_value writes into a temp .env."""
     home = tmp_path / "home"
-    qwerty = home / ".hermes"
+    qwerty = home / ".qwerty"
     qwerty.mkdir(parents=True)
     monkeypatch.setattr(Path, "home", lambda: home)
     monkeypatch.setenv("QWERTY_HOME", str(qwerty))

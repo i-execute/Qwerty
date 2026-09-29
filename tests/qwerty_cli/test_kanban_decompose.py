@@ -19,7 +19,7 @@ from qwerty_cli import kanban_decompose as decomp
 
 @pytest.fixture
 def kanban_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)

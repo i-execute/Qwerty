@@ -380,7 +380,7 @@ def test_running_under_gateway_supervisor_markers(monkeypatch):
     _clear_supervisor_markers(monkeypatch)
     assert gateway._running_under_gateway_supervisor() is False
 
-    monkeypatch.setenv("XPC_SERVICE_NAME", "org.nousresearch.hermes.gateway")
+    monkeypatch.setenv("XPC_SERVICE_NAME", "org.nousresearch.qwerty.gateway")
     assert gateway._running_under_gateway_supervisor() is True
 
     monkeypatch.setenv("XPC_SERVICE_NAME", "0")
@@ -697,7 +697,7 @@ def test_systemd_install_checks_linger_status(monkeypatch, tmp_path, capsys):
         gateway,
         "generate_systemd_unit",
         lambda system=False, run_as_user=None: (
-            '[Service]\nEnvironment="QWERTY_HOME=/home/alice/.hermes"\n'
+            '[Service]\nEnvironment="QWERTY_HOME=/home/alice/.qwerty"\n'
         ),
     )
 
@@ -733,7 +733,7 @@ def test_systemd_install_can_skip_enable_on_startup(monkeypatch, tmp_path, capsy
         gateway,
         "generate_systemd_unit",
         lambda system=False, run_as_user=None: (
-            '[Service]\nEnvironment="QWERTY_HOME=/home/alice/.hermes"\n'
+            '[Service]\nEnvironment="QWERTY_HOME=/home/alice/.qwerty"\n'
         ),
     )
 

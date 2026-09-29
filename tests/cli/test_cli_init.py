@@ -556,7 +556,7 @@ class TestRootLevelProviderOverride:
         """model.provider takes priority — root-level provider is only a fallback."""
         import yaml
 
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -579,7 +579,7 @@ class TestRootLevelProviderOverride:
         """Legacy root-level provider still populates model.provider in the CLI loader."""
         import yaml
 
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -602,7 +602,7 @@ class TestRootLevelProviderOverride:
         """Legacy root-level base_url still populates model.base_url in the CLI loader."""
         import yaml
 
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
 
@@ -791,7 +791,7 @@ class TestRootLevelProviderOverride:
         """A model.name config is permanently migrated to model.default on save."""
         import qwerty_cli.config as cfgmod
 
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".qwerty"
         home.mkdir()
         monkeypatch.setenv("QWERTY_HOME", str(home))
         cfg_path = home / "config.yaml"

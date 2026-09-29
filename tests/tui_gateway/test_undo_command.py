@@ -25,7 +25,7 @@ from qwerty_state import SessionDB
 
 @pytest.fixture()
 def qwerty_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("QWERTY_HOME", str(home))

@@ -27,7 +27,7 @@ def isolated_home(tmp_path, monkeypatch):
     files in the same worker (which breaks their import-time mocks), we snapshot
     the affected modules and restore them on teardown.
     """
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
     monkeypatch.delenv("QWERTY_MAX_TOKENS", raising=False)

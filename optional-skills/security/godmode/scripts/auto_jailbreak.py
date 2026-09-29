@@ -35,7 +35,7 @@ try:
     _SKILL_DIR = Path(__file__).resolve().parent.parent
 except NameError:
     # __file__ not defined when loaded via exec() — search standard paths
-    _SKILL_DIR = Path(os.getenv("QWERTY_HOME", Path.home() / ".hermes")) / "skills" / "red-teaming" / "godmode"
+    _SKILL_DIR = Path(os.getenv("QWERTY_HOME", Path.home() / ".qwerty")) / "skills" / "red-teaming" / "godmode"
 
 _SCRIPTS_DIR = _SKILL_DIR / "scripts"
 _TEMPLATES_DIR = _SKILL_DIR / "templates"
@@ -57,7 +57,7 @@ if _race_path.exists():
 # Qwerty config paths
 # ═══════════════════════════════════════════════════════════════════
 
-QWERTY_HOME = Path(os.getenv("QWERTY_HOME", Path.home() / ".hermes"))
+QWERTY_HOME = Path(os.getenv("QWERTY_HOME", Path.home() / ".qwerty"))
 CONFIG_PATH = QWERTY_HOME / "config.yaml"
 PREFILL_PATH = QWERTY_HOME / "prefill.json"
 

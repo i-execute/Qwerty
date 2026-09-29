@@ -29,7 +29,7 @@ except (ModuleNotFoundError, ImportError):
 
         Mirrors ``qwerty_constants.get_qwerty_home()``."""
         val = os.environ.get("QWERTY_HOME", "").strip()
-        return Path(val) if val else Path.home() / ".hermes"
+        return Path(val) if val else Path.home() / ".qwerty"
 
     def display_qwerty_home() -> str:
         """Return a user-friendly ``~/``-shortened display string.

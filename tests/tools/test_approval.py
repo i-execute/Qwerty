@@ -1061,9 +1061,9 @@ class TestWindowsAbsolutePathFolding:
         # Qwerty home nests under the user home on Windows; it must fold before
         # the user-home rewrite eats its prefix.
         monkeypatch.setenv("HOME", r"C:\Users\tester")
-        monkeypatch.setenv("QWERTY_HOME", r"C:\Users\tester\.hermes")
+        monkeypatch.setenv("QWERTY_HOME", r"C:\Users\tester\.qwerty")
         dangerous, key, _ = detect_dangerous_command(
-            r"sed -i 's/manual/off/' C:\Users\tester\.hermes\config.yaml"
+            r"sed -i 's/manual/off/' C:\Users\tester\.qwerty\config.yaml"
         )
         assert dangerous is True
         assert key is not None
@@ -1656,23 +1656,23 @@ class TestLaunchctlGatewayLifecycle:
     """
 
     def test_launchctl_stop_qwerty_detected(self):
-        cmd = "launchctl stop ai.hermes.gateway"
+        cmd = "launchctl stop ai.qwerty.gateway"
         dangerous, _, desc = detect_dangerous_command(cmd)
         assert dangerous is True
         assert "launchd" in desc.lower() or "qwerty" in desc.lower()
 
     def test_launchctl_kickstart_qwerty_detected(self):
-        cmd = "launchctl kickstart -k system/ai.hermes.gateway"
+        cmd = "launchctl kickstart -k system/ai.qwerty.gateway"
         dangerous, _, _ = detect_dangerous_command(cmd)
         assert dangerous is True
 
     def test_launchctl_bootout_qwerty_detected(self):
-        cmd = "launchctl bootout system/ai.hermes.gateway"
+        cmd = "launchctl bootout system/ai.qwerty.gateway"
         dangerous, _, _ = detect_dangerous_command(cmd)
         assert dangerous is True
 
     def test_launchctl_unload_qwerty_detected(self):
-        cmd = "launchctl unload ~/Library/LaunchAgents/ai.hermes.gateway.plist"
+        cmd = "launchctl unload ~/Library/LaunchAgents/ai.qwerty.gateway.plist"
         dangerous, _, _ = detect_dangerous_command(cmd)
         assert dangerous is True
 

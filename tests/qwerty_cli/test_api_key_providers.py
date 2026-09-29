@@ -734,7 +734,7 @@ class TestHasAnyProviderConfigured:
     def test_glm_key_counts(self, monkeypatch, tmp_path):
         from qwerty_cli import config as config_module
         monkeypatch.setenv("GLM_API_KEY", "test-key")
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setattr(config_module, "get_env_path", lambda: qwerty_home / ".env")
         monkeypatch.setattr(config_module, "get_qwerty_home", lambda: qwerty_home)
@@ -744,7 +744,7 @@ class TestHasAnyProviderConfigured:
     def test_minimax_key_counts(self, monkeypatch, tmp_path):
         from qwerty_cli import config as config_module
         monkeypatch.setenv("MINIMAX_API_KEY", "test-key")
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setattr(config_module, "get_env_path", lambda: qwerty_home / ".env")
         monkeypatch.setattr(config_module, "get_qwerty_home", lambda: qwerty_home)
@@ -754,7 +754,7 @@ class TestHasAnyProviderConfigured:
     def test_gh_cli_token_counts(self, monkeypatch, tmp_path):
         from qwerty_cli import config as config_module
         monkeypatch.setattr("qwerty_cli.copilot_auth._try_gh_cli_token", lambda: "gho_cli_secret")
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setattr(config_module, "get_env_path", lambda: qwerty_home / ".env")
         monkeypatch.setattr(config_module, "get_qwerty_home", lambda: qwerty_home)
@@ -765,7 +765,7 @@ class TestHasAnyProviderConfigured:
         """Claude Code credentials should NOT skip the wizard when Qwerty is unconfigured."""
         from qwerty_cli import config as config_module
         from qwerty_cli.auth import PROVIDER_REGISTRY
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setattr(config_module, "get_env_path", lambda: qwerty_home / ".env")
         monkeypatch.setattr(config_module, "get_qwerty_home", lambda: qwerty_home)
@@ -796,7 +796,7 @@ class TestHasAnyProviderConfigured:
         """config.yaml with model.provider set should count as configured."""
         import yaml
         from qwerty_cli import config as config_module
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_file = qwerty_home / "config.yaml"
         config_file.write_text(yaml.dump({
@@ -816,7 +816,7 @@ class TestHasAnyProviderConfigured:
         """config.yaml with model.base_url set (custom endpoint) should count."""
         import yaml
         from qwerty_cli import config as config_module
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_file = qwerty_home / "config.yaml"
         config_file.write_text(yaml.dump({
@@ -835,7 +835,7 @@ class TestHasAnyProviderConfigured:
         """config.yaml with model.api_key set should count."""
         import yaml
         from qwerty_cli import config as config_module
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_file = qwerty_home / "config.yaml"
         config_file.write_text(yaml.dump({
@@ -855,7 +855,7 @@ class TestHasAnyProviderConfigured:
         import yaml
         from qwerty_cli import config as config_module
         from qwerty_cli.auth import PROVIDER_REGISTRY
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         config_file = qwerty_home / "config.yaml"
         config_file.write_text(yaml.dump({
@@ -881,7 +881,7 @@ class TestHasAnyProviderConfigured:
         """Claude Code credentials should count when Qwerty has been explicitly configured."""
         import yaml
         from qwerty_cli import config as config_module
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         # Write a config with a non-default model to simulate explicit configuration
         config_file = qwerty_home / "config.yaml"

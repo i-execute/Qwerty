@@ -464,7 +464,7 @@ def test_bot_uid_none_processes_channel_message():
 def test_config_bridges_slack_free_response_channels(monkeypatch, tmp_path):
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "slack:\n"
@@ -496,7 +496,7 @@ def test_config_bridges_slack_free_response_channels(monkeypatch, tmp_path):
 def test_top_level_slack_settings_do_not_disable_env_token_setup(monkeypatch, tmp_path):
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "slack:\n"
@@ -520,7 +520,7 @@ def test_top_level_slack_settings_do_not_disable_env_token_setup(monkeypatch, tm
 def test_explicit_top_level_slack_enabled_false_wins_over_env_token(monkeypatch, tmp_path):
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "slack:\n"
@@ -545,7 +545,7 @@ def test_explicit_top_level_slack_enabled_false_wins_over_env_token(monkeypatch,
 def test_explicit_platforms_slack_enabled_false_wins_over_env_token(monkeypatch, tmp_path):
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "platforms:\n"
@@ -571,7 +571,7 @@ def test_explicit_platforms_slack_enabled_false_wins_over_env_token(monkeypatch,
 def test_config_bridges_slack_reply_in_thread(monkeypatch, tmp_path):
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "slack:\n"
@@ -613,7 +613,7 @@ def test_config_bridges_slack_cron_continuable_surface_toplevel(monkeypatch, tmp
     into slack.extra, mirroring reply_in_thread (specs D1/D6)."""
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "slack:\n"
@@ -638,7 +638,7 @@ def test_config_bridges_slack_cron_continuable_surface_nested(monkeypatch, tmp_p
     """The key also bridges from the nested ``platforms.slack.extra`` path."""
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "platforms:\n"
@@ -661,7 +661,7 @@ def test_config_bridges_slack_cron_continuable_surface_nested(monkeypatch, tmp_p
 def test_config_bridges_slack_strict_mention(monkeypatch, tmp_path):
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "slack:\n"
@@ -865,7 +865,7 @@ async def test_block_extraction_debug_log_does_not_include_message_preview(caplo
 def test_config_bridges_slack_allowed_channels(monkeypatch, tmp_path):
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "slack:\n"
@@ -889,7 +889,7 @@ def test_config_bridges_slack_allowed_channels_env_takes_precedence(monkeypatch,
     """Env var set before load_gateway_config() should not be overwritten."""
     from gateway.config import load_gateway_config
 
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     (qwerty_home / "config.yaml").write_text(
         "slack:\n"
@@ -926,7 +926,7 @@ def test_mention_patterns_list_matches():
 
 def test_mention_patterns_case_insensitive():
     adapter = _make_adapter(mention_patterns=["hey qwerty"])
-    assert adapter._slack_message_matches_mention_patterns("HEY HERMES!") is True
+    assert adapter._slack_message_matches_mention_patterns("HEY QWERTY!") is True
 
 
 def test_mention_patterns_single_string():

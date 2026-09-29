@@ -46,7 +46,7 @@ def _make_legacy_db(path: Path) -> None:
 
 
 def _setup_home(tmp_path, monkeypatch) -> Path:
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -70,7 +70,7 @@ def _table_struct(conn: sqlite3.Connection, table: str):
 
 
 def test_connect_initialization_is_thread_safe(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)

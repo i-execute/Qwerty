@@ -1034,21 +1034,21 @@ def test_bootstrap_marker_not_autostashed_by_update(tmp_path):
     git("add", "-A")
     git("commit", "-qm", "init")
 
-    marker = tmp_path / ".hermes-bootstrap-complete"
+    marker = tmp_path / ".qwerty-bootstrap-complete"
     marker.write_text("")
 
     # Exact flags used by qwerty update (qwerty_cli/main.py).
     git("stash", "push", "--include-untracked", "-m", "qwerty-update-autostash")
 
     assert marker.exists(), (
-        ".hermes-bootstrap-complete was swept into the update autostash — it must "
+        ".qwerty-bootstrap-complete was swept into the update autostash — it must "
         "be listed in .gitignore so `git stash -u` skips it (#38529)."
     )
     # It must not even register as a dirty/untracked change.
     status = subprocess.run(
         ["git", "status", "--porcelain"], cwd=tmp_path, capture_output=True, text=True
     ).stdout
-    assert ".hermes-bootstrap-complete" not in status
+    assert ".qwerty-bootstrap-complete" not in status
 
 
 def test_install_method_marker_not_autostashed_by_update(tmp_path):

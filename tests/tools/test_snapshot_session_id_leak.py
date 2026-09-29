@@ -46,8 +46,8 @@ def test_regex_preserves_user_env():
     for line in (
         'declare -x PATH="/usr/bin:/bin"',
         'declare -x HOME="/home/user"',
-        'declare -x QWERTY_HOME="/home/user/.hermes"',  # NOT a session var
-        'declare -x HERMESX="x"',
+        'declare -x QWERTY_HOME="/home/user/.qwerty"',  # NOT a session var
+        'declare -x QWERTYX="x"',
         'declare -x MY_QWERTY_SESSION_ID="x"',  # prefix must anchor after "declare -x "
     ):
         assert not rx.search(line), f"{line!r} must be preserved in the snapshot"

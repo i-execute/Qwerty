@@ -163,7 +163,7 @@ def test_env_loader_prints_remediation_hint(tmp_path, monkeypatch, capsys):
     registry._reset_registry_for_tests()
     env_loader.reset_secret_source_cache()
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         "secrets:\n"
@@ -217,7 +217,7 @@ def test_env_loader_hint_survives_broken_remediation(tmp_path, monkeypatch, caps
     registry.register_source(_Broken())
     env_loader.reset_secret_source_cache()
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         "secrets:\n  brokensrc:\n    enabled: true\n"

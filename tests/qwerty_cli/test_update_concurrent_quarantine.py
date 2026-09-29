@@ -92,13 +92,13 @@ def test_detect_concurrent_matches_case_insensitively(_winp, tmp_path):
     shim.write_bytes(b"")
 
     # Simulate the desktop spawning qwerty.EXE (uppercase ext) from same path
-    upper = str(shim).replace("qwerty.exe", "HERMES.EXE")
-    procs = [_make_proc(9999, upper, "HERMES.EXE")]
+    upper = str(shim).replace("qwerty.exe", "QWERTY.EXE")
+    procs = [_make_proc(9999, upper, "QWERTY.EXE")]
     fake_psutil = types.SimpleNamespace(process_iter=lambda attrs: iter(procs))
     with patch.dict(sys.modules, {"psutil": fake_psutil}):
         result = cli_main._detect_concurrent_qwerty_instances(scripts_dir)
 
-    assert result == [(9999, "HERMES.EXE")]
+    assert result == [(9999, "QWERTY.EXE")]
 
 
 @patch.object(cli_main, "_is_windows", return_value=True)

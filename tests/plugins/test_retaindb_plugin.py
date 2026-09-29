@@ -20,7 +20,7 @@ import pytest
 @pytest.fixture(autouse=True)
 def _isolate_env(tmp_path, monkeypatch):
     """Ensure QWERTY_HOME and RETAINDB vars are isolated."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
     monkeypatch.delenv("RETAINDB_API_KEY", raising=False)
@@ -317,8 +317,8 @@ class TestRetainDBMemoryProvider:
 
     def _make_provider(self, tmp_path, monkeypatch, api_key="rdb-test-key"):
         monkeypatch.setenv("RETAINDB_API_KEY", api_key)
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
-        (tmp_path / ".hermes").mkdir(exist_ok=True)
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
+        (tmp_path / ".qwerty").mkdir(exist_ok=True)
         provider = RetainDBMemoryProvider()
         return provider
 
@@ -346,7 +346,7 @@ class TestRetainDBMemoryProvider:
 
     def test_initialize_creates_client_and_queue(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         assert p._client is not None
         assert p._queue is not None
         assert p._session_id == "test-session"
@@ -354,14 +354,14 @@ class TestRetainDBMemoryProvider:
 
     def test_initialize_default_project(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         assert p._client.project == "default"
         p.shutdown()
 
     def test_initialize_explicit_project(self, tmp_path, monkeypatch):
         monkeypatch.setenv("RETAINDB_PROJECT", "my-project")
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         assert p._client.project == "my-project"
         p.shutdown()
 
@@ -374,10 +374,10 @@ class TestRetainDBMemoryProvider:
 
     def test_initialize_seeds_soul_md(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        soul_path = tmp_path / ".hermes" / "SOUL.md"
+        soul_path = tmp_path / ".qwerty" / "SOUL.md"
         soul_path.write_text("I am a helpful agent.")
         with patch.object(RetainDBMemoryProvider, "_seed_soul") as mock_seed:
-            p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+            p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
             # Give thread time to start
             time.sleep(0.5)
             mock_seed.assert_called_once_with("I am a helpful agent.")
@@ -385,7 +385,7 @@ class TestRetainDBMemoryProvider:
 
     def test_system_prompt_block(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         block = p.system_prompt_block()
         assert "RetainDB Memory" in block
         assert "Active" in block
@@ -399,14 +399,14 @@ class TestRetainDBMemoryProvider:
 
     def test_handle_tool_call_unknown_tool(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         result = json.loads(p.handle_tool_call("retaindb_nonexistent", {}))
         assert result == {"error": "Unknown tool: retaindb_nonexistent"}
         p.shutdown()
 
     def test_dispatch_profile(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         with patch.object(p._client, "get_profile", return_value={"memories": []}):
             result = json.loads(p.handle_tool_call("retaindb_profile", {}))
             assert "memories" in result
@@ -414,14 +414,14 @@ class TestRetainDBMemoryProvider:
 
     def test_dispatch_search_requires_query(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         result = json.loads(p.handle_tool_call("retaindb_search", {}))
         assert result == {"error": "query is required"}
         p.shutdown()
 
     def test_dispatch_search(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         with patch.object(p._client, "search", return_value={"results": [{"content": "found"}]}):
             result = json.loads(p.handle_tool_call("retaindb_search", {"query": "test"}))
             assert "results" in result
@@ -429,7 +429,7 @@ class TestRetainDBMemoryProvider:
 
     def test_dispatch_search_top_k_capped(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         with patch.object(p._client, "search") as mock_search:
             mock_search.return_value = {"results": []}
             p.handle_tool_call("retaindb_search", {"query": "test", "top_k": 100})
@@ -439,7 +439,7 @@ class TestRetainDBMemoryProvider:
 
     def test_dispatch_remember(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         with patch.object(p._client, "add_memory", return_value={"id": "mem-1"}):
             result = json.loads(p.handle_tool_call("retaindb_remember", {"content": "test fact"}))
             assert result["id"] == "mem-1"
@@ -447,14 +447,14 @@ class TestRetainDBMemoryProvider:
 
     def test_dispatch_remember_requires_content(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         result = json.loads(p.handle_tool_call("retaindb_remember", {}))
         assert result == {"error": "content is required"}
         p.shutdown()
 
     def test_dispatch_forget(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         with patch.object(p._client, "delete_memory", return_value={"deleted": True}):
             result = json.loads(p.handle_tool_call("retaindb_forget", {"memory_id": "mem-1"}))
             assert result["deleted"] is True
@@ -462,14 +462,14 @@ class TestRetainDBMemoryProvider:
 
     def test_dispatch_forget_requires_id(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         result = json.loads(p.handle_tool_call("retaindb_forget", {}))
         assert result == {"error": "memory_id is required"}
         p.shutdown()
 
     def test_dispatch_context(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         with patch.object(p._client, "query_context", return_value={"results": [{"content": "relevant"}]}), \
              patch.object(p._client, "get_profile", return_value={"memories": []}):
             result = json.loads(p.handle_tool_call("retaindb_context", {"query": "current task"}))
@@ -479,7 +479,7 @@ class TestRetainDBMemoryProvider:
 
     def test_dispatch_file_list(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         with patch.object(p._client, "list_files", return_value={"files": []}):
             result = json.loads(p.handle_tool_call("retaindb_list_files", {}))
             assert "files" in result
@@ -487,41 +487,41 @@ class TestRetainDBMemoryProvider:
 
     def test_dispatch_file_upload_missing_path(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         result = json.loads(p.handle_tool_call("retaindb_upload_file", {}))
         assert "error" in result
 
     def test_dispatch_file_upload_not_found(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         result = json.loads(p.handle_tool_call("retaindb_upload_file", {"local_path": "/nonexistent/file.txt"}))
         assert "File not found" in result["error"]
         p.shutdown()
 
     def test_dispatch_file_read_requires_id(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         result = json.loads(p.handle_tool_call("retaindb_read_file", {}))
         assert result == {"error": "file_id is required"}
         p.shutdown()
 
     def test_dispatch_file_ingest_requires_id(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         result = json.loads(p.handle_tool_call("retaindb_ingest_file", {}))
         assert result == {"error": "file_id is required"}
         p.shutdown()
 
     def test_dispatch_file_delete_requires_id(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         result = json.loads(p.handle_tool_call("retaindb_delete_file", {}))
         assert result == {"error": "file_id is required"}
         p.shutdown()
 
     def test_handle_tool_call_wraps_exception(self, tmp_path, monkeypatch):
         p = self._make_provider(tmp_path, monkeypatch)
-        p.initialize("test-session", qwerty_home=str(tmp_path / ".hermes"))
+        p.initialize("test-session", qwerty_home=str(tmp_path / ".qwerty"))
         with patch.object(p._client, "get_profile", side_effect=RuntimeError("API exploded")):
             result = json.loads(p.handle_tool_call("retaindb_profile", {}))
             assert "API exploded" in result["error"]
@@ -537,7 +537,7 @@ class TestPrefetch:
 
     def _make_initialized_provider(self, tmp_path, monkeypatch):
         monkeypatch.setenv("RETAINDB_API_KEY", "rdb-test-key")
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir(exist_ok=True)
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         p = RetainDBMemoryProvider()
@@ -637,7 +637,7 @@ class TestSyncTurn:
 
     def test_sync_turn_enqueues(self, tmp_path, monkeypatch):
         monkeypatch.setenv("RETAINDB_API_KEY", "rdb-test-key")
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir(exist_ok=True)
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         p = RetainDBMemoryProvider()
@@ -656,7 +656,7 @@ class TestSyncTurn:
 
     def test_sync_turn_skips_empty_user_content(self, tmp_path, monkeypatch):
         monkeypatch.setenv("RETAINDB_API_KEY", "rdb-test-key")
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir(exist_ok=True)
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         p = RetainDBMemoryProvider()
@@ -676,7 +676,7 @@ class TestOnMemoryWrite:
 
     def test_mirrors_add_action(self, tmp_path, monkeypatch):
         monkeypatch.setenv("RETAINDB_API_KEY", "rdb-test-key")
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir(exist_ok=True)
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         p = RetainDBMemoryProvider()
@@ -689,7 +689,7 @@ class TestOnMemoryWrite:
 
     def test_skips_non_add_action(self, tmp_path, monkeypatch):
         monkeypatch.setenv("RETAINDB_API_KEY", "rdb-test-key")
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir(exist_ok=True)
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         p = RetainDBMemoryProvider()
@@ -701,7 +701,7 @@ class TestOnMemoryWrite:
 
     def test_skips_empty_content(self, tmp_path, monkeypatch):
         monkeypatch.setenv("RETAINDB_API_KEY", "rdb-test-key")
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir(exist_ok=True)
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         p = RetainDBMemoryProvider()
@@ -713,7 +713,7 @@ class TestOnMemoryWrite:
 
     def test_memory_target_maps_to_type(self, tmp_path, monkeypatch):
         monkeypatch.setenv("RETAINDB_API_KEY", "rdb-test-key")
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir(exist_ok=True)
         monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         p = RetainDBMemoryProvider()

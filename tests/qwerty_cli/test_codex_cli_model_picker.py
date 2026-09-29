@@ -31,7 +31,7 @@ def _make_fake_jwt(expiry_offset: int = 3600) -> str:
 @pytest.fixture()
 def qwerty_auth_only_env(tmp_path, monkeypatch):
     """Tokens already in Qwerty auth store (no Codex CLI needed)."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
 
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
@@ -111,7 +111,7 @@ def claude_code_only_env(tmp_path, monkeypatch):
     """Set up an environment where Anthropic credentials only exist in
     ~/.claude/.credentials.json (Claude Code) — not in env vars or Qwerty
     auth store."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
 
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
@@ -166,7 +166,7 @@ def test_claude_code_file_detected_by_model_picker(claude_code_only_env):
 
 def test_no_codex_when_no_credentials(tmp_path, monkeypatch):
     """openai-codex should NOT appear when no credentials exist anywhere."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
 
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))

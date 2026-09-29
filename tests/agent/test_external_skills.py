@@ -22,7 +22,7 @@ def external_skills_dir(tmp_path):
 @pytest.fixture
 def qwerty_home(tmp_path):
     """Create a minimal QWERTY_HOME with config."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "skills").mkdir()
     return home

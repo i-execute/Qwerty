@@ -105,7 +105,7 @@ class TestConfigFilePermissions(unittest.TestCase):
             self.assertEqual(file_mode, 0o600)
 
     def test_ensure_qwerty_home_sets_0700(self):
-        home = Path(self.tmpdir) / ".hermes"
+        home = Path(self.tmpdir) / ".qwerty"
         with patch("qwerty_cli.config.get_qwerty_home", return_value=home):
             from qwerty_cli.config import ensure_qwerty_home
             ensure_qwerty_home()

@@ -34,7 +34,7 @@ def cron_env(tmp_path, monkeypatch):
     after that reload and defeat ``pytest.raises(...)`` checks. Each test
     re-imports via this fixture's return value instead.
     """
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     skills_dir = qwerty_home / "skills"
     skills_dir.mkdir()

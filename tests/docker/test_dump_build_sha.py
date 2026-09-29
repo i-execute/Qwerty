@@ -51,11 +51,11 @@ def _run_dump(image: str) -> str:
 
 
 def _read_baked_sha_from_image(image: str) -> str | None:
-    """Return the ``/opt/qwerty/.hermes_build_sha`` content, or None if absent."""
+    """Return the ``/opt/qwerty/.qwerty_build_sha`` content, or None if absent."""
     r = subprocess.run(
         [
             "docker", "run", "--rm", "--entrypoint", "cat", image,
-            "/opt/qwerty/.hermes_build_sha",
+            "/opt/qwerty/.qwerty_build_sha",
         ],
         capture_output=True, text=True, timeout=30,
     )

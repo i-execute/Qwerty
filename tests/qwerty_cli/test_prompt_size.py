@@ -36,7 +36,7 @@ def _seed_skill(qwerty_home, name, description):
 
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
     monkeypatch.chdir(tmp_path)  # avoid picking up the repo's AGENTS.md

@@ -26,7 +26,7 @@ import pytest
 # Load ~/.qwerty/.env so live runs pick up OPENROUTER_API_KEY without
 # needing the runner to shell-source it first. Silent if the file is absent.
 def _load_user_env() -> None:
-    env_file = Path.home() / ".hermes" / ".env"
+    env_file = Path.home() / ".qwerty" / ".env"
     if not env_file.exists():
         return
     for raw in env_file.read_text().splitlines():

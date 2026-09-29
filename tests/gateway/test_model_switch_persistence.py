@@ -320,7 +320,7 @@ class TestOneTurnNeverPersisted:
         from gateway.run import GatewayRunner
         from qwerty_cli.model_switch import ModelSwitchResult
 
-        qwerty_home = tmp_path / ".hermes"
+        qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         (qwerty_home / "config.yaml").write_text(
             _yaml.safe_dump(

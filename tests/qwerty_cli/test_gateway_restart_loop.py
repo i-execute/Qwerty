@@ -30,15 +30,15 @@ class TestGatewayLifecyclePattern:
         "qwerty gateway stop",
         "qwerty  gateway  restart",         # double spaces
         "Hermez Gateway Restart".lower().replace("z", "s"),  # case handled
-        "HERMES GATEWAY RESTART",           # uppercase
+        "QWERTY GATEWAY RESTART",           # uppercase
     ])
     def test_qwerty_gateway_commands(self, text):
         assert _contains_gateway_lifecycle_command(text), f"Should match: {text!r}"
 
     @pytest.mark.parametrize("text", [
-        "launchctl kickstart gui/501/ai.hermes.gateway",
-        "launchctl unload ~/Library/LaunchAgents/ai.hermes.gateway.plist",
-        "launchctl stop ai.hermes.gateway",
+        "launchctl kickstart gui/501/ai.qwerty.gateway",
+        "launchctl unload ~/Library/LaunchAgents/ai.qwerty.gateway.plist",
+        "launchctl stop ai.qwerty.gateway",
         "systemctl restart qwerty-gateway",
         "systemctl stop qwerty-gateway.service",
         "systemctl start qwerty-gateway",
@@ -71,8 +71,8 @@ class TestGatewayLifecyclePattern:
         # Tightened launchctl/systemctl branches: ops on NON-gateway qwerty
         # services must not be falsely blocked (the old `.*qwerty` matched any
         # qwerty token).
-        "launchctl unload ai.hermes.update-checker.plist",
-        "launchctl restart ai.hermes.daemon",
+        "launchctl unload ai.qwerty.update-checker.plist",
+        "launchctl restart ai.qwerty.daemon",
         "systemctl restart qwerty-meta.service",
         "systemctl restart qwerty-cron-helper",
         # Regression (#30728 follow-up): legit prompts that merely mention an
@@ -123,7 +123,7 @@ class TestCronCreateLifecycleBlock:
         args = Namespace(
             cron_command="create",
             schedule="0 9 * * *",
-            prompt="Run launchctl kickstart -k gui/501/ai.hermes.gateway",
+            prompt="Run launchctl kickstart -k gui/501/ai.qwerty.gateway",
             name=None,
             deliver=None,
             repeat=None,
@@ -143,8 +143,8 @@ class TestCronCreateLifecycleBlock:
         # A no_agent job whose script IS the job (the issue's real abuse path:
         # restart_qwerty_gateway_once.sh). The script must live under
         # QWERTY_HOME/scripts so the scheduler — and the guard — resolve it.
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
-        scripts_dir = tmp_path / ".hermes" / "scripts"
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
+        scripts_dir = tmp_path / ".qwerty" / "scripts"
         scripts_dir.mkdir(parents=True)
         (scripts_dir / "restart.sh").write_text("#!/bin/bash\nqwerty gateway restart\n")
         args = Namespace(
@@ -315,7 +315,7 @@ class TestTerminalToolGatewayLifecycleGuard:
         "systemctl --user restart qwerty-gateway",
         "systemctl stop qwerty-gateway.service",
         "qwerty gateway restart",
-        "launchctl kickstart gui/501/ai.hermes.gateway",
+        "launchctl kickstart gui/501/ai.qwerty.gateway",
         "pkill -f qwerty.*gateway",
     ])
     def test_blocks_lifecycle_commands_inside_gateway(self, monkeypatch, cmd):
@@ -433,11 +433,11 @@ class TestLifecycleGuardModule:
         same place the scheduler runs it from) — otherwise the guard would read
         a nonexistent relative path and scan prompt-only content."""
         from cron.lifecycle_guard import GatewayLifecycleBlocked, check_gateway_lifecycle
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
-        scripts_dir = tmp_path / ".hermes" / "scripts"
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
+        scripts_dir = tmp_path / ".qwerty" / "scripts"
         scripts_dir.mkdir(parents=True)
         (scripts_dir / "restart.sh").write_text(
-            "launchctl kickstart -k gui/501/ai.hermes.gateway\n"
+            "launchctl kickstart -k gui/501/ai.qwerty.gateway\n"
         )
         with pytest.raises(GatewayLifecycleBlocked):
             check_gateway_lifecycle("daily", "restart.sh")
@@ -473,8 +473,8 @@ class TestCreateJobBlocksLifecycleCommands:
     def test_cronjob_tool_surfaces_block_as_error(self, tmp_path, monkeypatch):
         """End-to-end through the model tool: the block comes back as
         result['error'] with the #30719 hint, not an unhandled exception."""
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
-        (tmp_path / ".hermes").mkdir(parents=True)
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
+        (tmp_path / ".qwerty").mkdir(parents=True)
         from tools.cronjob_tools import cronjob
         result = json.loads(cronjob(
             action="create", schedule="0 9 * * *",
@@ -495,8 +495,8 @@ class TestRestartLoopGuard:
 
     @pytest.fixture(autouse=True)
     def _isolate_state(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".hermes"))
-        (tmp_path / ".hermes").mkdir(parents=True)
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / ".qwerty"))
+        (tmp_path / ".qwerty").mkdir(parents=True)
         import gateway.restart_loop_guard as rlg
         rlg.clear()
 

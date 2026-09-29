@@ -19,7 +19,7 @@ import pytest
 @pytest.fixture
 def worker_env(monkeypatch, tmp_path):
     """Isolated QWERTY_HOME with a running task; returns the task id."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(home))
     monkeypatch.setenv("QWERTY_PROFILE", "test-worker")

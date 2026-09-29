@@ -36,7 +36,7 @@ class TestGetQwertyHome:
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("QWERTY_HOME", None)
             home = get_qwerty_home()
-            assert home == Path.home() / ".hermes"
+            assert home == Path.home() / ".qwerty"
 
     def test_env_override(self):
         with patch.dict(os.environ, {"QWERTY_HOME": "/custom/path"}):
@@ -92,7 +92,7 @@ class TestEnsureQwertyHome:
             assert soul_path.read_text(encoding="utf-8") == mixed
 
     def test_existing_named_profile_still_bootstraps_subdirs(self, tmp_path):
-        profile_home = tmp_path / ".hermes" / "profiles" / "coder"
+        profile_home = tmp_path / ".qwerty" / "profiles" / "coder"
         profile_home.mkdir(parents=True)
         with patch.dict(os.environ, {"QWERTY_HOME": str(profile_home)}):
             ensure_qwerty_home()
@@ -101,7 +101,7 @@ class TestEnsureQwertyHome:
             assert (profile_home / "memories").is_dir()
 
     def test_missing_named_profile_is_not_recreated(self, tmp_path):
-        profile_home = tmp_path / ".hermes" / "profiles" / "coder"
+        profile_home = tmp_path / ".qwerty" / "profiles" / "coder"
         with patch.dict(os.environ, {"QWERTY_HOME": str(profile_home)}):
             with pytest.raises(FileNotFoundError, match="Named profile home does not exist"):
                 ensure_qwerty_home()

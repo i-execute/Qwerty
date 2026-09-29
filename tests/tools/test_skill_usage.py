@@ -25,7 +25,7 @@ def skills_home(tmp_path, monkeypatch):
     default. Tests that want built-ins to be curation-eligible flip it back on
     explicitly via ``monkeypatch.setattr(mod, "_prune_builtins_enabled", ...)``.
     """
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "skills").mkdir()
     monkeypatch.setattr(Path, "home", lambda: tmp_path)

@@ -42,7 +42,7 @@ import pytest
 def isolated_home(monkeypatch):
     """Temp QWERTY_HOME with config + clean credential env vars."""
     test_home = tempfile.mkdtemp(prefix="qwerty_test_31179_")
-    qwerty_home = os.path.join(test_home, ".hermes")
+    qwerty_home = os.path.join(test_home, ".qwerty")
     os.makedirs(qwerty_home)
     monkeypatch.setenv("QWERTY_HOME", qwerty_home)
 

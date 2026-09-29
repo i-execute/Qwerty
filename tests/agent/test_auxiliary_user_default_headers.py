@@ -17,7 +17,7 @@ import pytest
 @pytest.fixture(autouse=True)
 def _isolate(tmp_path, monkeypatch):
     """Redirect QWERTY_HOME so load_config() reads our test config.yaml."""
-    qwerty_home = tmp_path / ".hermes"
+    qwerty_home = tmp_path / ".qwerty"
     qwerty_home.mkdir()
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
     (qwerty_home / "config.yaml").write_text("model:\n  default: test-model\n")
@@ -25,7 +25,7 @@ def _isolate(tmp_path, monkeypatch):
 
 def _write_config(tmp_path, config_dict):
     import yaml
-    (tmp_path / ".hermes" / "config.yaml").write_text(yaml.dump(config_dict))
+    (tmp_path / ".qwerty" / "config.yaml").write_text(yaml.dump(config_dict))
 
 
 class TestApplyUserDefaultHeadersHelper:

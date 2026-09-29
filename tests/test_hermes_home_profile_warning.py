@@ -35,32 +35,32 @@ class TestGetQwertyHomeProfileWarning:
     ):
         """Classic mode: no active_profile file → silent, returns ~/.hermes."""
         result = fresh_constants.get_qwerty_home()
-        assert result == tmp_path / ".hermes"
+        assert result == tmp_path / ".qwerty"
         assert "QWERTY_HOME fallback" not in capsys.readouterr().err
 
     def test_default_active_profile_no_warning(
         self, fresh_constants, tmp_path, capsys
     ):
         """active_profile=default → still no warning, returns ~/.hermes."""
-        qwerty_dir = tmp_path / ".hermes"
+        qwerty_dir = tmp_path / ".qwerty"
         qwerty_dir.mkdir()
         (qwerty_dir / "active_profile").write_text("default\n")
         result = fresh_constants.get_qwerty_home()
-        assert result == tmp_path / ".hermes"
+        assert result == tmp_path / ".qwerty"
         assert "QWERTY_HOME fallback" not in capsys.readouterr().err
 
     def test_named_profile_unset_home_warns_once(
         self, fresh_constants, tmp_path, capsys
     ):
         """active_profile=coder + QWERTY_HOME unset → warn loudly, still return fallback."""
-        qwerty_dir = tmp_path / ".hermes"
+        qwerty_dir = tmp_path / ".qwerty"
         qwerty_dir.mkdir()
         (qwerty_dir / "active_profile").write_text("coder\n")
 
         result = fresh_constants.get_qwerty_home()
 
         # 1. Still returns the fallback — no import-time crash
-        assert result == tmp_path / ".hermes"
+        assert result == tmp_path / ".qwerty"
         # 2. Stderr got the warning exactly once
         err = capsys.readouterr().err
         assert err.count("QWERTY_HOME fallback") == 1
@@ -77,9 +77,9 @@ class TestGetQwertyHomeProfileWarning:
         self, fresh_constants, tmp_path, capsys, monkeypatch
     ):
         """Even if active_profile is 'coder', setting QWERTY_HOME suppresses warning."""
-        profile_dir = tmp_path / ".hermes" / "profiles" / "coder"
+        profile_dir = tmp_path / ".qwerty" / "profiles" / "coder"
         profile_dir.mkdir(parents=True)
-        (tmp_path / ".hermes" / "active_profile").write_text("coder\n")
+        (tmp_path / ".qwerty" / "active_profile").write_text("coder\n")
         monkeypatch.setenv("QWERTY_HOME", str(profile_dir))
 
         result = fresh_constants.get_qwerty_home()
@@ -91,14 +91,14 @@ class TestGetQwertyHomeProfileWarning:
         self, fresh_constants, tmp_path, capsys
     ):
         """active_profile that can't be decoded → fall through silently."""
-        qwerty_dir = tmp_path / ".hermes"
+        qwerty_dir = tmp_path / ".qwerty"
         qwerty_dir.mkdir()
         # Write bytes that aren't valid utf-8
         (qwerty_dir / "active_profile").write_bytes(b"\xff\xfe\x00\x00")
 
         result = fresh_constants.get_qwerty_home()
 
-        assert result == tmp_path / ".hermes"
+        assert result == tmp_path / ".qwerty"
         # Shouldn't crash; shouldn't warn either (can't tell what profile was intended)
         assert "QWERTY_HOME fallback" not in capsys.readouterr().err
 
@@ -106,11 +106,11 @@ class TestGetQwertyHomeProfileWarning:
         self, fresh_constants, tmp_path, capsys
     ):
         """Empty active_profile file → treated as default, no warning."""
-        qwerty_dir = tmp_path / ".hermes"
+        qwerty_dir = tmp_path / ".qwerty"
         qwerty_dir.mkdir()
         (qwerty_dir / "active_profile").write_text("")
 
         result = fresh_constants.get_qwerty_home()
 
-        assert result == tmp_path / ".hermes"
+        assert result == tmp_path / ".qwerty"
         assert "QWERTY_HOME fallback" not in capsys.readouterr().err

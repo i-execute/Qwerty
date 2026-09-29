@@ -497,7 +497,7 @@ class TestMigrate:
                          default_permission_profile=None,
                          expose_qwerty_tools=True)
         text = (tmp_path / "config.toml").read_text()
-        assert "[mcp_servers.hermes-tools]" in text
+        assert "[mcp_servers.qwerty-tools]" in text
         assert "qwerty_tools_mcp_server" in text
         # Must include startup + tool timeouts so codex doesn't give up
         assert "startup_timeout_sec" in text
@@ -512,7 +512,7 @@ class TestMigrate:
                 default_permission_profile=None,
                 expose_qwerty_tools=False)
         text = (tmp_path / "config.toml").read_text()
-        assert "[mcp_servers.hermes-tools]" not in text
+        assert "[mcp_servers.qwerty-tools]" not in text
         assert "qwerty_tools_mcp_server" not in text
 
     def test_dry_run_doesnt_write(self, tmp_path):
@@ -625,7 +625,7 @@ class TestMigrate:
         assert "user-above" in final
         assert "user-below" in final
         # And our managed block is still there with the new content
-        assert "[mcp_servers.hermes-mcp]" in final
+        assert "[mcp_servers.qwerty-mcp]" in final
 
     def test_skipped_keys_reported(self, tmp_path):
         report = migrate({
@@ -816,8 +816,8 @@ class TestQwertyHomeLeakGuard:
         )
 
     def test_tempdir_detector_accepts_real_qwerty_home(self):
-        assert not _looks_like_test_tempdir("/Users/alice/.hermes")
-        assert not _looks_like_test_tempdir("/home/bob/.hermes")
+        assert not _looks_like_test_tempdir("/Users/alice/.qwerty")
+        assert not _looks_like_test_tempdir("/home/bob/.qwerty")
         assert not _looks_like_test_tempdir("/opt/qwerty")
         assert not _looks_like_test_tempdir("")
 
@@ -842,7 +842,7 @@ class TestQwertyHomeLeakGuard:
         # We can't easily create one in the test, so just use a stable path
         # outside any tempdir-detector needle. The detector checks for tempdir
         # markers, not for path existence.
-        real_path = "/Users/alice/.hermes"
+        real_path = "/Users/alice/.qwerty"
         monkeypatch.setenv("QWERTY_HOME", real_path)
         entry = _build_qwerty_tools_mcp_entry()
         env = entry.get("env", {})
