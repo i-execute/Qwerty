@@ -32,7 +32,7 @@ from gateway.session import build_session_key
 #   BadRequest → NetworkError → TelegramError → Exception
 
 
-class FakeNetworkError(Exception):
+class FakeNetworkError(ValueError):
     pass
 
 
@@ -44,7 +44,7 @@ class FakeTimedOut(FakeNetworkError):
     pass
 
 
-class FakeRetryAfter(Exception):
+class FakeRetryAfter(ValueError):
     def __init__(self, seconds):
         super().__init__(f"Retry after {seconds}")
         self.retry_after = seconds
@@ -126,6 +126,7 @@ def _make_adapter():
     adapter._config = config
     adapter._platform = Platform.TELEGRAM
     adapter._connected = True
+    adapter._app = None
     adapter._dm_topics = {}
     adapter._dm_topics_config = []
     adapter._reply_to_mode = "first"
@@ -147,7 +148,7 @@ def test_non_forum_group_reply_thread_id_does_not_fork_session_key():
         caption=None,
         chat=SimpleNamespace(
             id=-100123,
-            type=telegram_mod.ChatType.SUPERGROUP,
+            type="supergroup",
             is_forum=False,
             title="Regular group",
         ),
@@ -181,7 +182,7 @@ def test_forum_group_topic_message_preserves_thread_session_key():
         caption=None,
         chat=SimpleNamespace(
             id=-100123,
-            type=telegram_mod.ChatType.SUPERGROUP,
+            type="supergroup",
             is_forum=True,
             title="Forum group",
         ),
@@ -211,7 +212,7 @@ def test_forum_general_topic_without_message_thread_id_keeps_thread_context():
         caption=None,
         chat=SimpleNamespace(
             id=-100123,
-            type=telegram_mod.ChatType.SUPERGROUP,
+            type="supergroup",
             is_forum=True,
             title="Forum group",
         ),
@@ -1472,19 +1473,13 @@ async def test_send_retries_pool_timeout():
 
 @pytest.mark.asyncio
 async def test_send_drains_general_request_pool_before_retrying_pool_timeout():
-    """Pool timeout should reset the send-message request pool before retrying."""
+    """Pool timeout is retried promptly on the MTProto transport.
+
+    The goygram MTProto transport has no shared Bot API request pool to
+    drain (the drain hook is a no-op), so the retry must go straight
+    through without touching any polling/general request objects.
+    """
     adapter = _make_adapter()
-    general_request = SimpleNamespace(
-        shutdown=AsyncMock(),
-        initialize=AsyncMock(),
-    )
-    polling_request = SimpleNamespace(
-        shutdown=AsyncMock(),
-        initialize=AsyncMock(),
-    )
-    adapter._app = SimpleNamespace(
-        bot=SimpleNamespace(_request=(polling_request, general_request))
-    )
 
     attempt = [0]
 
@@ -1504,10 +1499,6 @@ async def test_send_drains_general_request_pool_before_retrying_pool_timeout():
     assert result.success is True
     assert result.message_id == "203"
     assert attempt[0] == 2
-    general_request.shutdown.assert_awaited_once()
-    general_request.initialize.assert_awaited_once()
-    polling_request.shutdown.assert_not_awaited()
-    polling_request.initialize.assert_not_awaited()
 
 
 @pytest.mark.asyncio

@@ -16491,6 +16491,12 @@ def main():
         )
         p.add_argument("--source", help="Only match sessions from this source")
         p.add_argument(
+            "--cron-job",
+            metavar="JOB",
+            help="Only match run sessions of this cron job "
+            "(job id, or 'all' for every cron job's runs)",
+        )
+        p.add_argument(
             "--title", help="Only match sessions whose title contains this substring"
         )
         p.add_argument(
@@ -17092,7 +17098,7 @@ def main():
 
             _filter_arg_names = (
                 "older_than", "newer_than", "before", "after",
-                "source", "title", "end_reason", "cwd",
+                "source", "cron_job", "title", "end_reason", "cwd",
                 "min_messages", "max_messages", "model", "provider",
                 "user", "chat_id", "chat_type", "branch",
                 "min_tokens", "max_tokens", "min_cost", "max_cost",
@@ -17584,7 +17590,7 @@ def main():
             _non_time_filters = any(
                 getattr(args, a, None) is not None
                 for a in (
-                    "source", "title", "end_reason", "cwd",
+                    "source", "cron_job", "title", "end_reason", "cwd",
                     "min_messages", "max_messages", "model", "provider",
                     "user", "chat_id", "chat_type", "branch",
                     "min_tokens", "max_tokens", "min_cost", "max_cost",

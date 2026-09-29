@@ -278,6 +278,7 @@ async def test_busy_voice_interrupt_transcribes_before_pending_drain(monkeypatch
 
 def test_telegram_audio_size_gate_rejects_oversized_media_before_download():
     adapter = object.__new__(TelegramAdapter)
+    adapter._app = None
     adapter._max_doc_bytes = 1024
 
     allowed, note = adapter._telegram_media_size_allowed(
@@ -293,6 +294,7 @@ def test_telegram_audio_size_gate_rejects_oversized_media_before_download():
 @pytest.mark.asyncio
 async def test_telegram_video_size_gate_rejects_oversized_media_before_download():
     adapter = object.__new__(TelegramAdapter)
+    adapter._app = None
     adapter._max_doc_bytes = 1024
     adapter._should_process_message = lambda _message: True
     adapter._build_message_event = lambda _message, _type, update_id=None: SimpleNamespace(

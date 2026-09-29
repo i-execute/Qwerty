@@ -159,6 +159,7 @@ def build_prune_filters(args: Any) -> Dict[str, Any]:
         "started_before": started_before,
         "started_after": started_after,
         "source": getattr(args, "source", None),
+        "cron_job": getattr(args, "cron_job", None),
         "title_like": getattr(args, "title", None),
         "end_reason": getattr(args, "end_reason", None),
         "cwd_prefix": getattr(args, "cwd", None),
@@ -197,6 +198,12 @@ def describe_filters(filters: Dict[str, Any]) -> str:
         parts.append(f"started after {format_epoch(filters['started_after'])}")
     if filters.get("source"):
         parts.append(f"source '{filters['source']}'")
+    if filters.get("cron_job"):
+        parts.append(
+            f"cron job '{filters['cron_job']}'"
+            if str(filters["cron_job"]).strip().lower() != "all"
+            else "all cron jobs"
+        )
     if filters.get("title_like"):
         parts.append(f"title contains '{filters['title_like']}'")
     if filters.get("end_reason"):

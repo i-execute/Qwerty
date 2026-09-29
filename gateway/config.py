@@ -1837,6 +1837,18 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
     if telegram_token:
         telegram_config = _enable_from_env(Platform.TELEGRAM)
         telegram_config.token = telegram_token
+
+    telegram_api_id = getenv("TELEGRAM_API_ID")
+    if telegram_api_id:
+        if Platform.TELEGRAM not in config.platforms:
+            config.platforms[Platform.TELEGRAM] = PlatformConfig()
+        config.platforms[Platform.TELEGRAM].extra["api_id"] = telegram_api_id
+
+    telegram_api_hash = getenv("TELEGRAM_API_HASH")
+    if telegram_api_hash:
+        if Platform.TELEGRAM not in config.platforms:
+            config.platforms[Platform.TELEGRAM] = PlatformConfig()
+        config.platforms[Platform.TELEGRAM].extra["api_hash"] = telegram_api_hash
     
     # Reply threading mode for Telegram (off/first/all)
     telegram_reply_mode = getenv("TELEGRAM_REPLY_TO_MODE", "").lower()

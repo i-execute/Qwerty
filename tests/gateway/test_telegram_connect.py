@@ -47,7 +47,7 @@ class TestTelegramUnconfiguredNonRetryable:
     async def test_no_telegram_lib_sets_non_retryable_fatal(self, monkeypatch):
         """connect() with python-telegram-bot unavailable → non-retryable fatal error."""
         adapter = TelegramAdapter(PlatformConfig(enabled=True, token="fake"))
-        monkeypatch.setattr(telegram_mod, "TELEGRAM_AVAILABLE", False)
+        monkeypatch.setattr(telegram_mod, "GOYGRAM_AVAILABLE", False)
         result = await adapter.connect()
         assert result is False
         assert adapter.has_fatal_error is True
@@ -57,7 +57,7 @@ class TestTelegramUnconfiguredNonRetryable:
     @pytest.mark.asyncio
     async def test_no_bot_token_sets_non_retryable_fatal(self, monkeypatch):
         """connect() with empty token → non-retryable fatal error."""
-        monkeypatch.setattr(telegram_mod, "TELEGRAM_AVAILABLE", True)
+        monkeypatch.setattr(telegram_mod, "GOYGRAM_AVAILABLE", True)
         adapter = TelegramAdapter(PlatformConfig(enabled=True, token=""))
         result = await adapter.connect()
         assert result is False

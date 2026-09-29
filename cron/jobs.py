@@ -1634,8 +1634,31 @@ def remove_job(job_id: str) -> bool:
             # Clean up output directory to prevent orphaned dirs accumulating
             if job_output_dir.exists():
                 shutil.rmtree(job_output_dir)
+            # Also remove the job's run sessions: a recurring job creates one
+            # persistent session per execution (cron_{job_id}_{timestamp}), and
+            # leaving them behind makes the session history grow without bound
+            # while the job itself is already gone.
+            try:
+                from hermes_state import SessionDB
+                _sessions_dir = _hermes_home_sessions_dir()
+                _db = SessionDB(db_path=_sessions_dir.parent / "state.db")
+                try:
+                    _roots, _total = _db.delete_cron_job_sessions(
+                        canonical_id,
+                        keep_last=0,
+                        sessions_dir=_sessions_dir,
+                    )
+                finally:
+                    _db.close()
+            except Exception:
+                _roots, _total = 0, 0
             return True
     return False
+
+
+def _hermes_home_sessions_dir():
+    from hermes_constants import get_hermes_home
+    return get_hermes_home() / "sessions"
 
 
 def mark_job_run(job_id: str, success: bool, error: Optional[str] = None,

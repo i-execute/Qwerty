@@ -67,6 +67,7 @@ def _make_adapter(
         extra["observe_unmentioned_group_messages"] = observe_unmentioned_group_messages
 
     adapter = object.__new__(TelegramAdapter)
+    adapter._app = None
     adapter.platform = Platform.TELEGRAM
     adapter.config = PlatformConfig(enabled=True, token="***", extra=extra)
     adapter._bot = SimpleNamespace(id=999, username=bot_username)

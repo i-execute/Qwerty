@@ -1785,6 +1785,27 @@ def _setup_telegram():
     print_success("Telegram token saved")
 
     print()
+    print_info("GoyGram MTProto needs Telegram API credentials (api.telegram.org).")
+    print_info("   Get yours at https://my.telegram.org → API development tools.")
+    existing_api_id = get_env_value("TELEGRAM_API_ID")
+    if existing_api_id:
+        print_info("API credentials: already configured")
+        if not prompt_yes_no("Re-enter API credentials?", False):
+            api_prompt = None
+        else:
+            api_prompt = "reconfigure"
+    else:
+        api_prompt = "configure"
+
+    if api_prompt:
+        api_id = prompt("Telegram api_id", default="25395315")
+        api_hash = prompt("Telegram api_hash", default="37ac5da3430234c0e88fe7595244d5c7", password=True)
+        if api_id:
+            save_env_value("TELEGRAM_API_ID", str(api_id).strip())
+            save_env_value("TELEGRAM_API_HASH", str(api_hash).strip())
+            print_success("Telegram API credentials saved")
+
+    print()
     print_info("🔒 Security: Restrict who can use your bot")
     print_info("   To find your Telegram user ID:")
     print_info("   1. Message @userinfobot on Telegram")

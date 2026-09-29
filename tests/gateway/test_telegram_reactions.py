@@ -14,6 +14,7 @@ def _make_adapter(**extra_env):
     from plugins.platforms.telegram.adapter import TelegramAdapter
 
     adapter = object.__new__(TelegramAdapter)
+    adapter._app = None
     adapter.platform = Platform.TELEGRAM
     adapter.config = PlatformConfig(enabled=True, token="fake-token")
     adapter._bot = AsyncMock()

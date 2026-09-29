@@ -282,6 +282,48 @@ class TestJobCRUD:
         assert remove_job(job["id"]) is True
         assert get_job(job["id"]) is None
 
+    def test_remove_job_deletes_run_sessions(self, tmp_cron_dir, monkeypatch, tmp_path):
+        """Removing a job must also delete its run sessions — a recurring job
+        creates one persistent session per execution (cron_{job_id}_{ts}), and
+        leaving them behind makes the session history grow without bound while
+        the job itself is already gone."""
+        job = create_job(prompt="Watchdog", schedule="every 15m")
+        from hermes_state import SessionDB
+
+        db_dir = tmp_path / "hermes_home"
+        db_dir.mkdir()
+        db = SessionDB(db_path=db_dir / "state.db")
+        base = 1_700_000_000.0
+        for i in range(3):
+            sid = f"cron_{job['id']}_{i:08d}"
+            db.create_session(session_id=sid, source="cron")
+            db.append_message(sid, role="user", content=f"run {i}")
+            db.end_session(sid, "cron_complete")
+            db._conn.execute(
+                "UPDATE sessions SET started_at = ? WHERE id = ?",
+                (base + i * 60, sid),
+            )
+        other = "cron_otherjob_00000000"
+        db.create_session(session_id=other, source="cron")
+        db._conn.commit()
+        db.close()
+        monkeypatch.setattr(
+            "cron.jobs._hermes_home_sessions_dir",
+            lambda: db_dir / "sessions",
+        )
+
+        assert remove_job(job["id"]) is True
+
+        db2 = SessionDB(db_path=db_dir / "state.db")
+        remaining = [
+            r["id"]
+            for r in db2._conn.execute(
+                "SELECT id FROM sessions WHERE source = 'cron'"
+            ).fetchall()
+        ]
+        assert remaining == [other]
+        db2.close()
+
     def test_remove_job_rejects_unsafe_legacy_id_before_output_cleanup(self, tmp_cron_dir):
         """Legacy unsafe IDs left over from before the create-time guard
         must fail closed without half-applying the removal."""

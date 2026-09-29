@@ -89,7 +89,7 @@ def test_chat_id_key_is_stable_string():
 # Fake telegram module tree (mirrors test_telegram_thread_fallback.py)
 # ---------------------------------------------------------------------------
 
-class FakeNetworkError(Exception):
+class FakeNetworkError(ValueError):
     pass
 
 
@@ -162,6 +162,7 @@ def _make_adapter():
     adapter._config = config
     adapter._platform = Platform.TELEGRAM
     adapter._connected = True
+    adapter._app = None
     adapter._dm_topics = {}
     adapter._dm_topics_config = []
     adapter._reply_to_mode = "first"

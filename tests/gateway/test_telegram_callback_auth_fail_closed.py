@@ -63,6 +63,7 @@ def _make_adapter():
     adapter._config = config
     adapter._platform = Platform.TELEGRAM
     adapter._connected = True
+    adapter._app = None
     return adapter
 
 

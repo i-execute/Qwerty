@@ -19,6 +19,7 @@ from plugins.platforms.telegram.adapter import TelegramAdapter
 
 def _make_adapter():
     adapter = object.__new__(TelegramAdapter)
+    adapter._app = None
     adapter.platform = Platform.TELEGRAM
     adapter.config = PlatformConfig(enabled=True, token="***", extra={})
     adapter._bot = SimpleNamespace(id=999, username="hermes_bot")

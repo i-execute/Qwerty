@@ -6339,6 +6339,103 @@ class SessionDB:
             runs.append(s)
         return runs
 
+    def delete_cron_job_sessions(
+        self,
+        job_id: str,
+        keep_last: int = 0,
+        sessions_dir: Optional[Path] = None,
+    ) -> Tuple[int, int]:
+        """Delete the run sessions belonging to one cron job.
+
+        A recurring job creates one persistent session per execution
+        (``cron_{job_id}_{timestamp}``), so a 15-minute watchdog accumulates
+        thousands of rows forever. This is the retention/`remove_job` sink:
+        it selects the job's run roots (the same ``[prefix, prefix_hi)``
+        range scan as :meth:`list_cron_job_runs`), keeps the newest
+        ``keep_last`` by ``started_at``, and deletes the rest TOGETHER WITH
+        their compression-continuation chains — a rotation continuation gets a
+        fresh ``YYYYMMDD_HHMMSS_hex`` id (not the cron prefix), so deleting
+        only the prefix rows would orphan the tips and leave the history
+        cluttered exactly as before.
+
+        Only rows this job actually owns are touched: a run root is selected
+        by id prefix AND ``source='cron'``; continuation ids are collected by
+        walking ``parent_session_id`` links from those roots. Delegate
+        children (subagent runs) are cascade-deleted with their parent, same
+        contract as :meth:`delete_session`. Branch children of a pruned run
+        are orphaned, never deleted — same as bulk prune.
+
+        Returns ``(roots_deleted, total_deleted)`` where total counts
+        roots + continuations + delegates.
+        """
+        prefix = f"cron_{job_id}_"
+        prefix_hi = prefix[:-1] + chr(ord(prefix[-1]) + 1)
+
+        def _do(conn):
+            cursor = conn.execute(
+                """
+                SELECT s.id FROM sessions s
+                WHERE s.source = 'cron' AND s.id >= ? AND s.id < ?
+                ORDER BY s.started_at DESC, s.id DESC
+                """,
+                (prefix, prefix_hi),
+            )
+            roots = [row["id"] for row in cursor.fetchall()]
+            if not roots:
+                return (0, 0)
+            doomed_roots = roots if keep_last is None else roots[keep_last:]
+            if not doomed_roots:
+                return (0, 0)
+            doomed = list(doomed_roots)
+            # Collect forward compression-continuation chains (parent links
+            # FROM the doomed roots, then from those children, ...). Only
+            # continue while the parent is compression-ended so a branch
+            # child of a cron run is never swept.
+            frontier = list(doomed)
+            seen = set(doomed)
+            while frontier:
+                ph = ",".join("?" * len(frontier))
+                cursor = conn.execute(
+                    f"""
+                    SELECT c.id FROM sessions c
+                    JOIN sessions p ON p.id = c.parent_session_id
+                    WHERE c.parent_session_id IN ({ph})
+                      AND p.end_reason = 'compression'
+                      AND c.id NOT IN ({ph})
+                    """,
+                    frontier + frontier,
+                )
+                frontier = [
+                    row["id"] for row in cursor.fetchall() if row["id"] not in seen
+                ]
+                seen.update(frontier)
+                doomed.extend(frontier)
+            doomed_set = set(doomed)
+            # Cascade delegate subagent children with their parents.
+            delegate_ids = _collect_delegate_child_ids(conn, list(doomed_set))
+            doomed_set.update(delegate_ids)
+            # Orphan any untagged children (e.g. branches) of deleted rows.
+            ph = ",".join("?" * len(doomed_set))
+            conn.execute(
+                f"UPDATE sessions SET parent_session_id = NULL "
+                f"WHERE parent_session_id IN ({ph})",
+                sorted(doomed_set),
+            )
+            for sid in sorted(doomed_set):
+                conn.execute("DELETE FROM messages WHERE session_id = ?", (sid,))
+            conn.execute(
+                f"DELETE FROM sessions WHERE id IN ({ph})", sorted(doomed_set)
+            )
+            removed_ids.extend(sorted(doomed_set))
+            return (len(doomed_roots), len(doomed_set))
+
+        removed_ids: list[str] = []
+        count_roots, count_total = self._execute_write(_do)
+        # Clean up on-disk transcript files outside the DB transaction.
+        for sid in removed_ids:
+            self._remove_session_files(sessions_dir, sid)
+        return (count_roots, count_total)
+
     def _get_session_rich_row(self, session_id: str, compact_rows: bool = False) -> Optional[Dict[str, Any]]:
         """Fetch a single session with the same enriched columns as
         ``list_sessions_rich`` (preview + last_active). Returns None if the
@@ -9758,6 +9855,7 @@ class SessionDB:
         started_before: Optional[float] = None,
         started_after: Optional[float] = None,
         source: Optional[str] = None,
+        cron_job: Optional[str] = None,
         title_like: Optional[str] = None,
         end_reason: Optional[str] = None,
         cwd_prefix: Optional[str] = None,
@@ -9824,6 +9922,19 @@ class SessionDB:
         if source:
             clauses.append("s.source = ?")
             params.append(source)
+        if cron_job is not None:
+            # Cron run sessions use the flat ``cron_{job_id}_{timestamp}`` id
+            # format (see cron/scheduler.run_job), so an exact job binds with
+            # a ``[prefix, prefix_hi)`` index range over the id — same shape as
+            # :meth:`list_cron_job_runs`. The sentinel ``"all"`` targets every
+            # cron job's runs at once (``source='cron'`` without an id bound).
+            if str(cron_job).strip().lower() == "all":
+                clauses.append("s.source = 'cron'")
+            else:
+                _prefix = f"cron_{cron_job}_"
+                clauses.append("s.id >= ? AND s.id < ?")
+                params.append(_prefix)
+                params.append(_prefix[:-1] + chr(ord(_prefix[-1]) + 1))
         if title_like:
             clauses.append("LOWER(COALESCE(s.title, '')) LIKE ?")
             params.append(f"%{title_like.lower()}%")

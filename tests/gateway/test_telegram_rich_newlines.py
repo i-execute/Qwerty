@@ -22,6 +22,7 @@ from plugins.platforms.telegram.adapter import TelegramAdapter
 def adapter():
     """Bare adapter instance — _rich_message_payload doesn't use self."""
     return object.__new__(TelegramAdapter)
+    adapter._app = None
 
 
 class TestRichMessageNewlineNormalization:

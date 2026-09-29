@@ -1576,7 +1576,7 @@ class GatewayStreamConsumer:
         Adapter eligibility is checked via
         :meth:`BasePlatformAdapter.supports_draft_streaming`, which considers
         the chat type (e.g. Telegram drafts are DM-only) and platform-version
-        gates (e.g. python-telegram-bot 22.6+).
+        gates (e.g. goygram 0.7.71+).
         """
         transport = (self.cfg.transport or "edit").lower()
         if transport == "edit":
