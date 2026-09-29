@@ -1813,6 +1813,21 @@ class TelegramAdapter(BasePlatformAdapter):
         ('5208485257648555488', '📌'),  # 100
     )
 
+    # Tool-emoji aliases: gateway tool glyphs not present in any pack map to
+    # the closest GameEmoji entry so tool-progress lines promote to premium.
+    _GAME_EMOJI_ALIASES = {
+        '💻': '🖥', '🖥️': '🖥', '🪟': '🖥',
+        '✍️': '⚔️', '📝': '⚔️',
+        '📖': '👁', '📄': '👁', '🔍': '👁', '🔎': '👁', '🖼️': '👁', '🐦': '👁',
+        '🔧': '🛠', '⚙️': '🛠',
+        '🐍': '👾', '🧪': '🔮', '🎨': '🧙‍♀️',
+        '⏰': '⏱', '⏳': '⌛️',
+        '📋': '📦', '📚': '📦',
+        '🎬': '📀', '🔊': '💋',
+        '🏠': '🛡', '🔗': '🔄', '🔀': '🔄',
+        '⚡': '🔥',
+    }
+
     # GameEmoji pack — user upload #3 (t.me/addemoji/GameEmoji), 100 emoji.
     _GAME_EMOJI_PACK = (
         ('5465465194056525619', '👍'),
@@ -2014,6 +2029,13 @@ class TelegramAdapter(BasePlatformAdapter):
                 uploaded_by_glyph.setdefault(glyph, []).append(emoji_id)
                 emoji_ids.setdefault(glyph, emoji_id)
         known_glyphs = set(emoji_ids)
+        aliases = getattr(cls, "_GAME_EMOJI_ALIASES", {})
+        if aliases:
+            for alias, target in aliases.items():
+                if alias not in emoji_ids and target in emoji_ids:
+                    emoji_ids[alias] = emoji_ids[target]
+                    uploaded_by_glyph.setdefault(alias, []).append(emoji_ids[target])
+                    known_glyphs.add(alias)
         glyph_pattern = re.compile(
             "|".join(re.escape(glyph) for glyph in sorted(known_glyphs, key=len, reverse=True))
         )
