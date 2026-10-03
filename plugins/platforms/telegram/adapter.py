@@ -1978,12 +1978,6 @@ class TelegramAdapter(BasePlatformAdapter):
     # fallbacks within a pack cycle through that pack's IDs in upload order.
     _PREMIUM_EMOJI_PACKS = (
         (
-            "game-emoji",
-            "Game Emoji pack — user upload #3 (t.me/addemoji/GameEmoji): "
-            "game UI glyphs (hearts, weapons, coins, faces, status).",
-            _GAME_EMOJI_PACK,
-        ),
-        (
             "md3-expressive",
             "Material Design 3 Expressive (Material You) — Google-style icons. "
             "Segment roles for the progress waves: #4 начало, #5 продление, "
@@ -1998,6 +1992,12 @@ class TelegramAdapter(BasePlatformAdapter):
             "adaptive pack (animals, objects, weapons, drinks, status icons) "
             "— 100 IDs in photo order.",
             _USER_UPLOADED_NATIVE_PREMIUM_EMOJI,
+        ),
+        (
+            "game-emoji",
+            "Game Emoji pack — user upload #3 (t.me/addemoji/GameEmoji): "
+            "game UI glyphs (hearts, weapons, coins, faces, status).",
+            _GAME_EMOJI_PACK,
         ),
         (
             "legacy",

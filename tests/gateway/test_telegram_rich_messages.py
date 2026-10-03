@@ -139,7 +139,8 @@ def test_rich_payload_promotes_only_user_verified_premium_emoji_entities():
     payload = adapter._rich_message_payload("📝 Готово: 🤩")
 
     assert payload["markdown"] == (
-        "📝 Готово: ![🤩](tg://emoji?id=5346270183621171895)"
+        "![📝](tg://emoji?id=5454014806950429357) "
+        "Готово: ![🤩](tg://emoji?id=5346270183621171895)"
     )
 
 
@@ -200,7 +201,7 @@ def test_rich_payload_preserves_existing_custom_emoji_entity():
 
     assert payload["markdown"] == (
         "![🤩](tg://emoji?id=5190683945351535076) и "
-        "![🧠](tg://emoji?id=5447595110743168717)"
+        "![🧠](tg://emoji?id=5226639745106330551)"
     )
 
 

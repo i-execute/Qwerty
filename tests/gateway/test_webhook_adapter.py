@@ -1770,6 +1770,15 @@ class TestDualStackBind:
     @pytest.mark.asyncio
     async def test_default_bind_rejects_existing_ipv6_listener(self):
         """A specific IPv6 listener must block the wildcard dual-stack bind."""
+        import socket as _socket
+
+        probe = _socket.socket(_socket.AF_INET6, _socket.SOCK_STREAM)
+        try:
+            probe.bind(("::1", 0))
+        except OSError:
+            pytest.skip("IPv6 loopback (::1) disabled on this host")
+        finally:
+            probe.close()
         blocker = await asyncio.start_server(
             lambda _reader, _writer: None,
             host="::1",
