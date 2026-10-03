@@ -594,7 +594,7 @@ def test_build_message_event_sets_auto_skill():
     msg = _make_mock_message(chat_id=111, thread_id=100, text="check this page")
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill == "accessibility-auditor"
+    assert event.auto_skill == ["telegram-rich-gateway", "accessibility-auditor"]
     # chat_topic should be the clean topic name, no [skill: ...] suffix
     assert event.source.chat_topic == "My Project"
 
@@ -616,7 +616,7 @@ def test_build_message_event_no_auto_skill_without_binding():
     msg = _make_mock_message(chat_id=111, thread_id=200)
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill is None
+    assert event.auto_skill == ["telegram-rich-gateway"]
     assert event.source.chat_topic == "General"
 
 
@@ -628,7 +628,7 @@ def test_build_message_event_no_auto_skill_without_thread():
     msg = _make_mock_message(chat_id=111, thread_id=None)
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill is None
+    assert event.auto_skill == "telegram-rich-gateway"
 
 
 def test_build_message_event_filters_non_topic_dm_thread_id():
@@ -641,7 +641,7 @@ def test_build_message_event_filters_non_topic_dm_thread_id():
 
     assert event.source.thread_id is None
     assert event.source.chat_topic is None
-    assert event.auto_skill is None
+    assert event.auto_skill == "telegram-rich-gateway"
 
 
 def test_build_message_event_preserves_true_dm_topic_thread_id():
@@ -698,7 +698,7 @@ def test_group_topic_skill_binding():
     )
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill == "software-development"
+    assert event.auto_skill == ["telegram-rich-gateway", "software-development"]
     assert event.source.chat_topic == "Engineering"
 
 
@@ -726,7 +726,7 @@ def test_group_topic_skill_binding_second_topic():
     )
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill == "sales-framework"
+    assert event.auto_skill == ["telegram-rich-gateway", "sales-framework"]
     assert event.source.chat_topic == "Sales"
 
 
@@ -753,7 +753,7 @@ def test_group_topic_no_skill_binding():
     )
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill is None
+    assert event.auto_skill == ["telegram-rich-gateway"]
     assert event.source.chat_topic == "General"
 
 
@@ -780,7 +780,7 @@ def test_group_topic_unmapped_thread_id():
     )
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill is None
+    assert event.auto_skill == "telegram-rich-gateway"
     assert event.source.chat_topic is None
 
 
@@ -807,7 +807,7 @@ def test_group_topic_unmapped_chat_id():
     )
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill is None
+    assert event.auto_skill == "telegram-rich-gateway"
     assert event.source.chat_topic is None
 
 
@@ -822,7 +822,7 @@ def test_group_topic_no_config():
     )
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill is None
+    assert event.auto_skill == "telegram-rich-gateway"
     assert event.source.chat_topic is None
 
 
@@ -849,7 +849,7 @@ def test_group_topic_chat_id_int_string_coercion():
     )
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill == "qwerty-agent-dev"
+    assert event.auto_skill == ["telegram-rich-gateway", "qwerty-agent-dev"]
     assert event.source.chat_topic == "Dev"
 
 
@@ -875,7 +875,7 @@ def test_group_topic_mapping_shape_config():
     )
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill == "sales-framework"
+    assert event.auto_skill == ["telegram-rich-gateway", "sales-framework"]
     assert event.source.chat_topic == "Sales"
 
 
@@ -901,7 +901,7 @@ def test_group_topic_malformed_config_does_not_crash():
     )
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill is None
+    assert event.auto_skill == ["telegram-rich-gateway"]
     assert event.source.chat_topic == "Good"
 
 
@@ -923,7 +923,7 @@ def test_group_topic_non_list_topics_does_not_crash():
     )
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill is None
+    assert event.auto_skill == "telegram-rich-gateway"
     assert event.source.chat_topic is None
 
 
@@ -943,7 +943,7 @@ def test_group_topic_scalar_config_falls_through():
     )
     event = adapter._build_message_event(msg, MessageType.TEXT)
 
-    assert event.auto_skill is None
+    assert event.auto_skill == "telegram-rich-gateway"
     assert event.source.chat_topic is None
 
 

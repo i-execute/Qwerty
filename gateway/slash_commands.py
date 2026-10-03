@@ -5381,7 +5381,7 @@ class GatewaySlashCommandsMixin:
 
         qwerty_cmd = _resolve_qwerty_bin()
         if not qwerty_cmd:
-            return t("gateway.update.hermes_cmd_not_found")
+            return t("gateway.update.qwerty_cmd_not_found")
 
         pending_path = _qwerty_home / ".update_pending.json"
         output_path = _qwerty_home / ".update_output.txt"
