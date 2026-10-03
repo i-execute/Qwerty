@@ -6750,7 +6750,8 @@ class TestCredentialPoolRecovery:
                 return []
 
             def mark_exhausted_and_rotate(
-                self, *, status_code, error_context=None, api_key_hint=None
+                self, *, status_code, error_context=None, api_key_hint=None,
+                credential_id=None,
             ):
                 assert status_code == 429
                 assert error_context is None
@@ -6858,7 +6859,8 @@ class TestCredentialPoolRecovery:
                 return None  # refresh failed
 
             def mark_exhausted_and_rotate(
-                self, *, status_code, error_context=None, api_key_hint=None
+                self, *, status_code, error_context=None, api_key_hint=None,
+                credential_id=None,
             ):
                 assert status_code == 401
                 assert error_context is None
@@ -6885,7 +6887,8 @@ class TestCredentialPoolRecovery:
                 return None
 
             def mark_exhausted_and_rotate(
-                self, *, status_code, error_context=None, api_key_hint=None
+                self, *, status_code, error_context=None, api_key_hint=None,
+                credential_id=None,
             ):
                 assert error_context is None
                 return None  # no more credentials
@@ -6967,7 +6970,8 @@ class TestCredentialPoolRecovery:
                 return []
 
             def mark_exhausted_and_rotate(
-                self, *, status_code, error_context=None, api_key_hint=None
+                self, *, status_code, error_context=None, api_key_hint=None,
+                credential_id=None,
             ):
                 captured["status_code"] = status_code
                 captured["error_context"] = error_context

@@ -1129,12 +1129,12 @@ def recover_with_credential_pool(
         # Refresh the entry that supplied the failing key, not current():
         # a concurrent turn's select() may have moved the cursor onto a
         # healthy entry, and forcing a refresh on it benches it outright.
-        refreshed = (
-            pool.try_refresh_matching(failure_hint)
-            if getattr(pool, "provider", "")
-            and failure_hint
-            else pool.try_refresh_current()
-        )
+        if failure_hint and hasattr(pool, "try_refresh_matching"):
+            refreshed = pool.try_refresh_matching(failure_hint)
+        elif hasattr(pool, "try_refresh_current"):
+            refreshed = pool.try_refresh_current()
+        else:
+            refreshed = None
         if refreshed is not None:
             # ``try_refresh_current()`` re-mints a fresh OAuth token and reports
             # success even when the upstream keeps rejecting it — a single-entry
