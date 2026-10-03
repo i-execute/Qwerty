@@ -642,18 +642,27 @@ class CredentialPool:
         # Re-armed to None on every successful selection so a recover→re-exhaust
         # transition logs promptly instead of being swallowed by a stale window.
         self._last_no_entries_log_at: Optional[float] = None
+        # Consecutive rotations where the failing key hint matched no entry.
+        self._unmatched_rotation_streak: int = 0
 
     def has_credentials(self) -> bool:
-        return bool(self._entries)
+        with self._lock:
+            return bool(self._entries)
 
     def has_available(self) -> bool:
         """True if at least one entry is not currently in exhaustion cooldown."""
-        return bool(self._available_entries())
+        with self._lock:
+            return bool(self._available_entries())
 
     def entries(self) -> List[PooledCredential]:
-        return list(self._entries)
+        with self._lock:
+            return list(self._entries)
 
     def current(self) -> Optional[PooledCredential]:
+        with self._lock:
+            return self._current_unlocked()
+
+    def _current_unlocked(self) -> Optional[PooledCredential]:
         if not self._current_id:
             return None
         return next((entry for entry in self._entries if entry.id == self._current_id), None)
@@ -1586,7 +1595,10 @@ class CredentialPool:
 
     def select(self) -> Optional[PooledCredential]:
         with self._lock:
-            return self._select_unlocked()
+            entry = self._select_unlocked()
+        if entry is not None:
+            self._unmatched_rotation_streak = 0
+        return entry
 
     def _available_entries(self, *, clear_expired: bool = False, refresh: bool = False) -> List[PooledCredential]:
         """Return entries not currently in exhaustion cooldown.
@@ -1761,18 +1773,19 @@ class CredentialPool:
             self._entries = [replace(candidate, priority=idx) for idx, candidate in enumerate(rotated)]
             self._persist()
             self._current_id = entry.id
-            return self.current() or entry
+            return self._current_unlocked() or entry
 
         entry = available[0]
         self._current_id = entry.id
         return entry
 
     def peek(self) -> Optional[PooledCredential]:
-        current = self.current()
-        if current is not None:
-            return current
-        available = self._available_entries()
-        return available[0] if available else None
+        with self._lock:
+            current = self._current_unlocked()
+            if current is not None:
+                return current
+            available = self._available_entries()
+            return available[0] if available else None
 
     def mark_custom_429_and_rotate(
         self,
@@ -1792,7 +1805,7 @@ class CredentialPool:
             entry = next(
                 (e for e in self._entries if api_key_hint and e.runtime_api_key == api_key_hint),
                 None,
-            ) or self.current() or self._select_unlocked()
+            ) or self._current_unlocked() or self._select_unlocked()
             if entry is None:
                 return None, False
             self._mark_exhausted(entry, 429, error_context)
@@ -1871,10 +1884,16 @@ class CredentialPool:
         status_code: Optional[int],
         error_context: Optional[Dict[str, Any]] = None,
         api_key_hint: Optional[str] = None,
+        credential_id: Optional[str] = None,
     ) -> Optional[PooledCredential]:
         with self._lock:
             entry = None
-            if api_key_hint:
+            if credential_id:
+                # Stable identity wins over a stale runtime key and cursor.
+                entry = next(
+                    (e for e in self._entries if e.id == credential_id), None
+                )
+            if entry is None and api_key_hint:
                 # Prefer the specific entry whose API key matches the one that
                 # actually failed.  When this pool was freshly loaded from disk
                 # (another process already rotated), current() is None and
@@ -1883,8 +1902,56 @@ class CredentialPool:
                     (e for e in self._entries if e.runtime_api_key == api_key_hint),
                     None,
                 )
+                if entry is None:
+                    # The hint matches no entry (rotated OAuth token, wrapper
+                    # runtime key): never bench a healthy key for a failure it
+                    # did not cause. Rotate without marking; the streak bound
+                    # stops an endless no-mark retry loop.
+                    self._unmatched_rotation_streak += 1
+                    prev_id = self._current_id
+                    if self._unmatched_rotation_streak > max(
+                        len(self._available_entries()), 1
+                    ):
+                        logger.warning(
+                            "credential pool: failing key matched no %s entry "
+                            "for %d consecutive rotations — surfacing the error",
+                            self.provider, self._unmatched_rotation_streak,
+                        )
+                        self._unmatched_rotation_streak = 0
+                        self._current_id = None
+                        return None
+                    logger.info(
+                        "credential pool: failing key matched no %s entry; "
+                        "rotating without marking any credential exhausted",
+                        self.provider,
+                    )
+                    available = self._available_entries()
+                    if len(available) <= 1:
+                        # No progress — a no-op rotation must not be reported
+                        # as recovery.
+                        self._current_id = None
+                        return None
+                    ids = [e.id for e in available]
+                    idx = ids.index(prev_id) if prev_id in ids else -1
+                    rotated = available[(idx + 1) % len(ids)]
+                    self._current_id = rotated.id
+                    return rotated
+            if entry is not None:
+                self._unmatched_rotation_streak = 0
+                # A 402/429/401 is a key-level failure; the same key can back
+                # several entries (explicit row + model_config auto-seed).
+                # Mark every sibling sharing the failed key, or rotation
+                # never converges — _select_unlocked keeps handing back the
+                # depleted key.
+                failed_key = entry.runtime_api_key
+                if failed_key:
+                    for sibling in [
+                        s for s in self._entries
+                        if s.id != entry.id and s.runtime_api_key == failed_key
+                    ]:
+                        self._mark_exhausted(sibling, status_code, error_context)
             if entry is None:
-                entry = self.current() or self._select_unlocked()
+                entry = self._current_unlocked() or self._select_unlocked()
             if entry is None:
                 return None
             _label = entry.label or entry.id[:8]
@@ -1978,14 +2045,14 @@ class CredentialPool:
                     None,
                 )
             else:
-                entry = self.current() or self._select_unlocked(refresh=False)
+                entry = self._current_unlocked() or self._select_unlocked(refresh=False)
             if entry is None:
                 return None
             self._current_id = entry.id
             return self._try_refresh_current_unlocked()
 
     def _try_refresh_current_unlocked(self) -> Optional[PooledCredential]:
-        entry = self.current()
+        entry = self._current_unlocked()
         if entry is None:
             return None
         refreshed = self._refresh_entry(entry, force=True)
@@ -1994,6 +2061,10 @@ class CredentialPool:
         return refreshed
 
     def reset_statuses(self) -> int:
+        with self._lock:
+            return self._reset_statuses_unlocked()
+
+    def _reset_statuses_unlocked(self) -> int:
         count = 0
         new_entries = []
         for entry in self._entries:
@@ -2018,6 +2089,10 @@ class CredentialPool:
         return count
 
     def remove_index(self, index: int) -> Optional[PooledCredential]:
+        with self._lock:
+            return self._remove_index_unlocked(index)
+
+    def _remove_index_unlocked(self, index: int) -> Optional[PooledCredential]:
         if index < 1 or index > len(self._entries):
             return None
         removed = self._entries.pop(index - 1)
@@ -2035,6 +2110,10 @@ class CredentialPool:
         return removed
 
     def resolve_target(self, target: Any) -> Tuple[Optional[int], Optional[PooledCredential], Optional[str]]:
+        with self._lock:
+            return self._resolve_target_unlocked(target)
+
+    def _resolve_target_unlocked(self, target: Any) -> Tuple[Optional[int], Optional[PooledCredential], Optional[str]]:
         raw = str(target or "").strip()
         if not raw:
             return None, None, "No credential target provided."
@@ -2060,10 +2139,11 @@ class CredentialPool:
         return None, None, f'No credential matching "{raw}".'
 
     def add_entry(self, entry: PooledCredential) -> PooledCredential:
-        entry = replace(entry, priority=_next_priority(self._entries))
-        self._entries.append(entry)
-        self._persist()
-        return entry
+        with self._lock:
+            entry = replace(entry, priority=_next_priority(self._entries))
+            self._entries.append(entry)
+            self._persist()
+            return entry
 
 
 def _upsert_entry(entries: List[PooledCredential], provider: str, source: str, payload: Dict[str, Any]) -> bool:
