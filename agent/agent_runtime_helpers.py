@@ -1213,14 +1213,20 @@ def try_recover_primary_transport(
         return False
     provider_lower = (agent.provider or "").strip().lower()
     if provider_lower in {"nous", "nous-research"}:
-        return False
+        # Nous portal with the anthropic_messages transport is a direct
+        # Anthropic-protocol endpoint — recovery applies. Plain nous
+        # (OpenAI-compatible) routes through managed retry infra: skip.
+        if getattr(agent, "api_mode", "") != "anthropic_messages":
+            return False
 
     try:
         # Close existing client to release stale connections
         if getattr(agent, "client", None) is not None:
             try:
-                agent._close_openai_client(
-                    agent.client, reason="primary_recovery", shared=True,
+                # #70773: never hard-close a shared client here — stale
+                # workers may still unwind on its pool. Retire instead.
+                agent._retire_shared_openai_client(
+                    agent.client, reason="primary_recovery",
                 )
             except Exception:
                 pass
