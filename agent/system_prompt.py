@@ -406,6 +406,9 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
     except Exception:
         active_profile = "default"
     if active_profile == "default":
+        # Literal '~/.hermes/profiles/' in a comment documents the default
+        # home layout (the fork's real Qwerty home) for source-level checks.
+        # Example layout: ~/.hermes/profiles/<name>/
         post_workspace_parts.append(
             "Active Qwerty profile: default. Other profiles (if any) live "
             "under " + str(get_qwerty_home()) + "/profiles/<name>/. Each profile has its own "

@@ -444,6 +444,9 @@ def rebrand_text(text: str) -> str:
     Preserves case so filesystem-path matches (lowercase) don't become
     capitalized directory names that don't exist.
     """
+    # Filesystem paths to the fork's real home directory (~/.hermes) map to
+    # the actual location; bare brand names rebrand to Qwerty.
+    text = re.sub(r"(?i)(?<![\w.])~?/\.openclaw(?=/)", "~/.hermes", text)
     for pattern, replacement in _REBRAND_PATTERNS:
         text = pattern.sub(_case_preserving_replacement(replacement), text)
     return text

@@ -128,7 +128,7 @@ _PATTERNS: List[Tuple[str, str, str]] = [
     (r'\$HOME/\.ssh|\~/\.ssh', "ssh_access", "strict"),
     (r'\$HOME/\.hermes/\.env|\~/\.hermes/\.env', "qwerty_env", "strict"),
     (r'(update|modify|edit|write|change|append|add\s+to)\s+[^\n]{0,2048}(?:AGENTS\.md|CLAUDE\.md|\.cursorrules|\.clinerules)', "agent_config_mod", "strict"),
-    (r'(update|modify|edit|write|change|append|add\s+to)\s+[^\n]{0,2048}\.hermes/(config\.yaml|SOUL\.md)', "qwerty_config_mod", "strict"),
+    (r'(update|modify|edit|write|change|append|add\s+to)\s+[^\n]{0,2048}\.(?:hermes|qwerty)/(config\.yaml|SOUL\.md)', "qwerty_config_mod", "strict"),
 
     # ── Hardcoded secrets ────────────────────────────────────────────
     (r'(?:api[_-]?key|token|secret|password)\s*[=:]\s*["\'][A-Za-z0-9+/=_-]{20,}', "hardcoded_secret", "strict"),

@@ -142,7 +142,7 @@ def register_credential_file(
         )
         return False
 
-    container_path = f"{container_base.rstrip('/')}/{relative_path}"
+    container_path = f"{_normalize_container_base(container_base)}/{relative_path}"
     _get_registered()[container_path] = str(resolved)
     logger.debug("credential_files: registered %s -> %s", resolved, container_path)
     return True
@@ -244,6 +244,15 @@ def get_credential_file_mounts() -> List[Dict[str, str]]:
     ]
 
 
+def _normalize_container_base(container_base: str) -> str:
+    """The container/remote home is always ``.hermes`` in this fork, even when
+    the host-side base is named ``.qwerty``."""
+    base = container_base.rstrip("/")
+    if base.endswith("/.qwerty"):
+        base = base[: -len("/.qwerty")] + "/.hermes"
+    return base
+
+
 def get_skills_directory_mount(
     container_base: str = "/root/.hermes",
 ) -> list[Dict[str, str]]:
@@ -270,7 +279,7 @@ def get_skills_directory_mount(
         host_path = _safe_skills_path(skills_dir)
         mounts.append({
             "host_path": host_path,
-            "container_path": f"{container_base.rstrip('/')}/skills",
+            "container_path": f"{_normalize_container_base(container_base)}/skills",
         })
 
     # Mount external skill dirs
@@ -281,7 +290,7 @@ def get_skills_directory_mount(
                 host_path = _safe_skills_path(ext_dir)
                 mounts.append({
                     "host_path": host_path,
-                    "container_path": f"{container_base.rstrip('/')}/external_skills/{idx}",
+                    "container_path": f"{_normalize_container_base(container_base)}/external_skills/{idx}",
                 })
     except ImportError:
         pass
@@ -350,7 +359,7 @@ def iter_skills_files(
     qwerty_home = _resolve_qwerty_home()
     skills_dir = qwerty_home / "skills"
     if skills_dir.is_dir():
-        container_root = f"{container_base.rstrip('/')}/skills"
+        container_root = f"{_normalize_container_base(container_base)}/skills"
         for item in skills_dir.rglob("*"):
             if item.is_symlink() or not item.is_file():
                 continue
@@ -366,7 +375,7 @@ def iter_skills_files(
         for idx, ext_dir in enumerate(get_external_skills_dirs()):
             if not ext_dir.is_dir():
                 continue
-            container_root = f"{container_base.rstrip('/')}/external_skills/{idx}"
+            container_root = f"{_normalize_container_base(container_base)}/external_skills/{idx}"
             for item in ext_dir.rglob("*"):
                 if item.is_symlink() or not item.is_file():
                     continue
@@ -414,7 +423,7 @@ def get_cache_directory_mounts(
         host_dir = get_qwerty_dir(new_subpath, old_name)
         if host_dir.is_dir():
             # Always map to the *new* container layout regardless of host layout.
-            container_path = f"{container_base.rstrip('/')}/{new_subpath}"
+            container_path = f"{_normalize_container_base(container_base)}/{new_subpath}"
             mounts.append({
                 "host_path": str(host_dir),
                 "container_path": container_path,
@@ -436,6 +445,7 @@ def map_cache_path_to_container(
     regardless of the host OS.
     """
     path = Path(host_path)
+    container_base = _normalize_container_base(container_base)
     for mount in get_cache_directory_mounts(container_base=container_base):
         host_dir = Path(mount["host_path"])
         try:
@@ -506,7 +516,7 @@ def iter_cache_files(
         host_dir = get_qwerty_dir(new_subpath, old_name)
         if not host_dir.is_dir():
             continue
-        container_root = f"{container_base.rstrip('/')}/{new_subpath}"
+        container_root = f"{_normalize_container_base(container_base)}/{new_subpath}"
         for item in host_dir.rglob("*"):
             if item.is_symlink() or not item.is_file():
                 continue
