@@ -2146,7 +2146,8 @@ class TelegramAdapter(BasePlatformAdapter):
             if entities:
                 payload["entities"] = entities
             kbd = self._kbd(reply_markup)
-            payload["reply_markup"] = kbd if kbd is not None else {"_": "replyInlineMarkup", "rows": []}
+            if kbd is not None:
+                payload["reply_markup"] = kbd
             if inline_message_id is not None:
                 await self._app.mt_req(
                     "messages.editInlineBotMessage", id=inline_message_id, **payload
