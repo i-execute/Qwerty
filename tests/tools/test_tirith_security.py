@@ -1190,7 +1190,7 @@ class TestQwertyHomeIsolation:
             # falls back to the account database; compute expected under the
             # same environment instead of after patch.dict restores HOME.
             os.environ.pop("QWERTY_HOME", None)
-            expected = os.path.join(os.path.expanduser("~"), ".qwerty")
+            expected = os.path.join(os.path.expanduser("~"), ".hermes")
             result = _get_qwerty_home()
         assert result == expected
 
