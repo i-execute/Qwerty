@@ -125,6 +125,12 @@ def make_startup_runner(tmp_path):
 def patch_startup_side_effects(monkeypatch, tmp_path):
     monkeypatch.setattr(gateway_run, "_qwerty_home", tmp_path)
     monkeypatch.setattr("qwerty_cli.plugins.discover_plugins", lambda: None)
+    # Skip plugin platform imports (feishu etc.): a cold import blows the
+    # 2s startup timeout these tests use; plugin platforms aren't under test.
+    monkeypatch.setattr(
+        "gateway.platform_registry.platform_registry.plugin_entries",
+        lambda: [],
+    )
     monkeypatch.setattr("agent.shell_hooks.register_from_config", lambda *args, **kwargs: None)
     monkeypatch.setattr("tools.process_registry.process_registry.recover_from_checkpoint", lambda: 0)
 
