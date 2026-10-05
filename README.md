@@ -40,6 +40,15 @@ Use any model you want — [Nous Portal](https://portal.nousresearch.com), OpenR
 curl -fsSL https://qwerty-agent.nousresearch.com/install.sh | bash
 ```
 
+Installing a fork or a specific branch? Override the repo:
+
+```bash
+curl -fsSL https://qwerty-agent.nousresearch.com/install.sh \
+  | QWERTY_REPO_URL_SSH=git@github.com:i-execute/Qwerty.git \
+    QWERTY_REPO_URL_HTTPS=https://github.com/i-execute/Qwerty.git \
+    bash -s -- --branch forget
+```
+
 ### Windows (native, PowerShell)
 
 > **Heads up:** Native Windows runs Qwerty without WSL — CLI, gateway, TUI, and tools all work natively. If you'd rather use WSL2, the Linux/macOS one-liner above works there too. Found a bug? Please [file issues](https://github.com/NousResearch/qwerty-agent/issues).
