@@ -183,7 +183,7 @@ def _list_targets(platform_filter: Optional[str], *, json_mode: bool) -> int:
     if not any(platforms.values()):
         print("No messaging platforms configured or no channels discovered yet.")
         print("Set one up with `qwerty gateway setup`, or run the gateway once so")
-        print("channel discovery can populate ~/.hermes/channel_directory.json.")
+        print("channel discovery can populate ~/.qwerty/channel_directory.json.")
         return _SUCCESS_EXIT
 
     # Human display — when unfiltered, reuse the shared formatter the agent
@@ -378,7 +378,7 @@ def register_send_subparser(subparsers) -> argparse.ArgumentParser:
         description=(
             "Pipe text from any shell script to any messaging platform Qwerty "
             "is already configured for. Reuses the gateway's platform "
-            "credentials (~/.hermes/.env + ~/.hermes/config.yaml) — no LLM, "
+            "credentials (~/.qwerty/.env + ~/.qwerty/config.yaml) — no LLM, "
             "no agent loop, no running gateway required for bot-token "
             "platforms like Telegram/Discord/Slack/Signal."
         ),

@@ -1803,7 +1803,7 @@ def test_seed_from_singletons_respects_qwen_suppression(tmp_path, monkeypatch):
 
 
 def test_seed_from_singletons_respects_qwerty_pkce_suppression(tmp_path, monkeypatch):
-    """anthropic qwerty_pkce must not re-seed from ~/.hermes/.anthropic_oauth.json when suppressed."""
+    """anthropic qwerty_pkce must not re-seed from ~/.qwerty/.anthropic_oauth.json when suppressed."""
     qwerty_home = tmp_path / "qwerty"
     qwerty_home.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
@@ -1885,7 +1885,7 @@ def test_credential_sources_registry_has_expected_steps():
         "gh auth token / COPILOT_GITHUB_TOKEN / GH_TOKEN",
         "Any env-seeded credential (XAI_API_KEY, DEEPSEEK_API_KEY, etc.)",
         "~/.claude/.credentials.json",
-        "~/.hermes/.anthropic_oauth.json",
+        "~/.qwerty/.anthropic_oauth.json",
         "auth.json providers.nous",
         "auth.json providers.openai-codex + ~/.codex/auth.json",
         "auth.json providers.minimax-oauth",

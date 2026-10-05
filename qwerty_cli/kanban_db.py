@@ -8828,7 +8828,7 @@ def _default_spawn(
     # env, and when the child process starts `qwerty -p <name>` the
     # _apply_profile_override() runs *before* qwerty_constants is imported.
     # If QWERTY_HOME is absent from the child's env, get_qwerty_home() falls
-    # back to Path.home() / ".hermes" (the DEFAULT profile root), ignoring the
+    # back to Path.home() / ".qwerty" (the DEFAULT profile root), ignoring the
     # profile-specific config entirely.  Fixes profile-scoped fallback_providers
     # being invisible to kanban workers.
     from qwerty_cli.profiles import resolve_profile_env

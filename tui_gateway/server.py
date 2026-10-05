@@ -12739,7 +12739,7 @@ def _attachment_ref_path(session: dict, target: Path) -> str:
 
 
 def _desktop_attachment_dir(session: dict) -> Path:
-    root = Path(_session_cwd(session)).resolve() / ".hermes" / "desktop-attachments"
+    root = Path(_session_cwd(session)).resolve() / ".qwerty" / "desktop-attachments"
     root.mkdir(parents=True, exist_ok=True)
     return root
 

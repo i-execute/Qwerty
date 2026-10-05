@@ -107,7 +107,7 @@ class CodexAppServerClient:
                 else spawn_env.get(
                     "QWERTY_KANBAN_ROOT",
                     os.path.join(
-                        spawn_env.get("QWERTY_HOME", os.path.expanduser("~/.hermes")),
+                        spawn_env.get("QWERTY_HOME", os.path.expanduser("~/.qwerty")),
                         "kanban",
                     ),
                 )

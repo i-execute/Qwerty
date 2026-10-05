@@ -43,7 +43,7 @@ def _make_stub_cli(history):
 
 
 def test_save_conversation_writes_under_qwerty_home(qwerty_home, tmp_path, monkeypatch, capsys):
-    """Snapshot must land under ~/.hermes/sessions/saved/, not CWD."""
+    """Snapshot must land under ~/.qwerty/sessions/saved/, not CWD."""
     # Change CWD to a different directory to prove the file does NOT go there.
     work = tmp_path / "somewhere-else"
     work.mkdir()

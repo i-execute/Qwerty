@@ -1301,7 +1301,7 @@ class LineAdapter(BasePlatformAdapter):
             from qwerty_constants import get_qwerty_home
             qwerty_home = Path(get_qwerty_home()).resolve()
         except Exception:
-            qwerty_home = Path.home().joinpath(".hermes").resolve()
+            qwerty_home = Path.home().joinpath(".qwerty").resolve()
 
         allowed_roots = {
             Path(tempfile.gettempdir()).resolve(),
@@ -1593,7 +1593,7 @@ def interactive_setup() -> None:
     try:
         from qwerty_cli.config import get_env_var, set_env_var
     except ImportError:
-        print("qwerty_cli.config not available; set LINE_* vars manually in ~/.hermes/.env")
+        print("qwerty_cli.config not available; set LINE_* vars manually in ~/.qwerty/.env")
         return
 
     def _prompt(var: str, prompt: str, *, secret: bool = False) -> None:

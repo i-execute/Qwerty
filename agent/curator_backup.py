@@ -76,7 +76,7 @@ def _skills_dir() -> Path:
 
 
 def _cron_jobs_file() -> Path:
-    """Source path for the live cron jobs store (``~/.hermes/cron/jobs.json``)."""
+    """Source path for the live cron jobs store (``~/.qwerty/cron/jobs.json``)."""
     return get_qwerty_home() / "cron" / "jobs.json"
 
 
@@ -231,7 +231,7 @@ def snapshot_skills(reason: str = "manual", *, protect_ids: Optional[Set[str]] =
 
     skills = _skills_dir()
     if not skills.exists():
-        logger.debug("No ~/.hermes/skills/ directory — nothing to back up")
+        logger.debug("No ~/.qwerty/skills/ directory — nothing to back up")
         return None
 
     backups = _backups_dir()

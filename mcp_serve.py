@@ -66,7 +66,7 @@ def _get_sessions_dir() -> Path:
         from qwerty_constants import get_qwerty_home
         return get_qwerty_home() / "sessions"
     except ImportError:
-        return Path(os.environ.get("QWERTY_HOME", Path.home() / ".hermes")) / "sessions"
+        return Path(os.environ.get("QWERTY_HOME", Path.home() / ".qwerty")) / "sessions"
 
 
 def _get_session_db():
@@ -199,7 +199,7 @@ def _load_channel_directory() -> dict:
         directory_file = get_qwerty_home() / "channel_directory.json"
     except ImportError:
         directory_file = Path(
-            os.environ.get("QWERTY_HOME", Path.home() / ".hermes")
+            os.environ.get("QWERTY_HOME", Path.home() / ".qwerty")
         ) / "channel_directory.json"
 
     if not directory_file.exists():
@@ -454,7 +454,7 @@ class EventBridge:
             from qwerty_constants import get_qwerty_home
             db_file = get_qwerty_home() / "state.db"
         except ImportError:
-            db_file = Path(os.environ.get("QWERTY_HOME", Path.home() / ".hermes")) / "state.db"
+            db_file = Path(os.environ.get("QWERTY_HOME", Path.home() / ".qwerty")) / "state.db"
 
         try:
             db_mtime = db_file.stat().st_mtime if db_file.exists() else 0.0

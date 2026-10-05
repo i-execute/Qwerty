@@ -177,7 +177,7 @@ def _remove_env_source(provider: str, removed) -> RemovalResult:
     if shell_exported:
         result.hints.extend([
             f"Note: {env_var} is still set in your shell environment "
-            f"(not in ~/.hermes/.env).",
+            f"(not in ~/.qwerty/.env).",
             "  Unset it there (shell profile, systemd EnvironmentFile, "
             "launchd plist, etc.) or it will keep being visible to Qwerty.",
             f"  The pool entry is now suppressed — Qwerty will ignore "
@@ -205,7 +205,7 @@ def _remove_claude_code(provider: str, removed) -> RemovalResult:
 
 
 def _remove_qwerty_pkce(provider: str, removed) -> RemovalResult:
-    """~/.hermes/.anthropic_oauth.json is ours — delete it outright."""
+    """~/.qwerty/.anthropic_oauth.json is ours — delete it outright."""
     from qwerty_constants import get_qwerty_home
 
     result = RemovalResult()
@@ -404,7 +404,7 @@ def _register_all_sources() -> None:
     register(RemovalStep(
         provider="anthropic", source_id="qwerty_pkce",
         remove_fn=_remove_qwerty_pkce,
-        description="~/.hermes/.anthropic_oauth.json",
+        description="~/.qwerty/.anthropic_oauth.json",
     ))
     register(RemovalStep(
         provider="nous", source_id="device_code",

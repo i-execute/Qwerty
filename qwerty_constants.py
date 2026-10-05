@@ -48,7 +48,7 @@ def _get_platform_default_qwerty_home() -> Path:
         local_appdata = os.environ.get("LOCALAPPDATA", "").strip()
         base = Path(local_appdata) if local_appdata else Path.home() / "AppData" / "Local"
         return base / "qwerty"
-    return Path.home() / ".hermes"
+    return Path.home() / ".qwerty"
 
 
 def _qwerty_home_from_env() -> Path:

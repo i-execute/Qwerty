@@ -93,7 +93,7 @@ class TestPluginDiscovery:
     """Tests for plugin discovery from directories and entry points."""
 
     def test_discover_user_plugins(self, tmp_path, monkeypatch):
-        """Plugins in ~/.hermes/plugins/ are discovered."""
+        """Plugins in ~/.qwerty/plugins/ are discovered."""
         plugins_dir = tmp_path / "qwerty_test" / "plugins"
         _make_plugin_dir(plugins_dir, "hello_plugin")
         monkeypatch.setenv("QWERTY_HOME", str(tmp_path / "qwerty_test"))
@@ -322,7 +322,7 @@ class TestPluginDiscovery:
         assert result.payload["lock"] is args["lock"]
 
     def test_discover_project_plugins(self, tmp_path, monkeypatch):
-        """Plugins in ./.hermes/plugins/ are discovered."""
+        """Plugins in ./.qwerty/plugins/ are discovered."""
         project_dir = tmp_path / "project"
         project_dir.mkdir()
         monkeypatch.chdir(project_dir)

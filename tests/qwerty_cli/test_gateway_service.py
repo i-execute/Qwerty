@@ -2018,7 +2018,7 @@ class TestSystemUnitQwertyHome:
     def test_system_unit_remaps_profile_to_target_user(self, monkeypatch):
         # Simulate sudo with a profile: QWERTY_HOME was resolved under root
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/root")))
-        monkeypatch.setenv("QWERTY_HOME", "/root/.hermes/profiles/coder")
+        monkeypatch.setenv("QWERTY_HOME", "/root/.qwerty/profiles/coder")
         monkeypatch.setattr(
             gateway_cli, "_system_service_identity",
             lambda run_as_user=None: ("alice", "alice", "/home/alice"),
@@ -2030,7 +2030,7 @@ class TestSystemUnitQwertyHome:
 
         unit = gateway_cli.generate_systemd_unit(system=True, run_as_user="alice")
 
-        assert 'QWERTY_HOME=/home/alice/.hermes/profiles/coder' in unit
+        assert 'QWERTY_HOME=/home/alice/.qwerty/profiles/coder' in unit
         assert '/root/' not in unit
 
     def test_system_unit_preserves_custom_qwerty_home(self, monkeypatch):
@@ -2201,10 +2201,10 @@ class TestQwertyHomeForTargetUser:
 
     def test_remaps_profile_path(self, monkeypatch):
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/root")))
-        monkeypatch.setenv("QWERTY_HOME", "/root/.hermes/profiles/coder")
+        monkeypatch.setenv("QWERTY_HOME", "/root/.qwerty/profiles/coder")
 
         result = gateway_cli._qwerty_home_for_target_user("/home/alice")
-        assert result == "/home/alice/.hermes/profiles/coder"
+        assert result == "/home/alice/.qwerty/profiles/coder"
 
     def test_keeps_custom_path(self, monkeypatch):
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/root")))
@@ -2508,7 +2508,7 @@ class TestProfileArg:
     """Tests for _profile_arg — returns '--profile <name>' for named profiles."""
 
     def test_default_qwerty_home_returns_empty(self, tmp_path, monkeypatch):
-        """Default ~/.hermes should not produce a --profile flag."""
+        """Default ~/.qwerty should not produce a --profile flag."""
         qwerty_home = tmp_path / ".qwerty"
         qwerty_home.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -2517,7 +2517,7 @@ class TestProfileArg:
         assert result == ""
 
     def test_named_profile_returns_flag(self, tmp_path, monkeypatch):
-        """~/.hermes/profiles/mybot should return '--profile mybot'."""
+        """~/.qwerty/profiles/mybot should return '--profile mybot'."""
         profile_dir = tmp_path / ".qwerty" / "profiles" / "mybot"
         profile_dir.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -2545,7 +2545,7 @@ class TestProfileArg:
         assert result == ""
 
     def test_nested_profile_path_returns_empty(self, tmp_path, monkeypatch):
-        """~/.hermes/profiles/mybot/subdir should NOT match — too deep."""
+        """~/.qwerty/profiles/mybot/subdir should NOT match — too deep."""
         nested = tmp_path / ".qwerty" / "profiles" / "mybot" / "subdir"
         nested.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -2699,7 +2699,7 @@ class TestSystemUnitPathRemapping:
         # checkout is the rot bug fixed alongside this: a relocated/removed
         # checkout would crash-loop the unit on CHDIR (status=200).
         assert "WorkingDirectory=/home/alice/.qwerty" in unit
-        assert "WorkingDirectory=/home/alice/.hermes/qwerty-agent" not in unit
+        assert "WorkingDirectory=/home/alice/.qwerty/qwerty-agent" not in unit
 
 
 class TestDockerAwareGateway:

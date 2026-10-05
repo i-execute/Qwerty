@@ -189,7 +189,7 @@ def cmd_doctor(args) -> None:
         L.append("  Email mode: browser (no password) - the agent sends opt-outs and opens verify "
                  "links via the operator's logged-in webmail. This needs Qwerty pointed at the "
                  "operator's OWN Chrome over CDP (launch with --remote-debugging-port=9222 "
-                 "--user-data-dir=~/.hermes/chrome-debug, signed into the webmail once); else it falls "
+                 "--user-data-dir=~/.qwerty/chrome-debug, signed into the webmail once); else it falls "
                  "back to drafts. Run `pdd.py cdp` to launch it (or `pdd.py cdp --print` for the command). "
                  "See methods.md 'Browser backends'.")
         cloud_scan = cfg.get("browser_backend") == "browserbase" or (

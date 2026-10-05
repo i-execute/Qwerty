@@ -1715,7 +1715,7 @@ def test_credential_mount_skipped_when_source_is_directory(monkeypatch, tmp_path
 
     # Mock get_credential_file_mounts to return the corrupted entry
     fake_mounts = [
-        {"host_path": str(corrupted_dir), "container_path": "/root/.hermes/google_token.json"},
+        {"host_path": str(corrupted_dir), "container_path": "/root/.qwerty/google_token.json"},
     ]
     monkeypatch.setattr(
         "tools.credential_files.get_credential_file_mounts",
@@ -1755,7 +1755,7 @@ def test_credential_mount_skipped_when_source_missing(monkeypatch, tmp_path, cap
     calls = _mock_subprocess_run(monkeypatch)
 
     fake_mounts = [
-        {"host_path": str(missing_path), "container_path": "/root/.hermes/deleted_token.json"},
+        {"host_path": str(missing_path), "container_path": "/root/.qwerty/deleted_token.json"},
     ]
     monkeypatch.setattr(
         "tools.credential_files.get_credential_file_mounts",
@@ -1793,7 +1793,7 @@ def test_credential_mount_works_when_source_is_valid_file(monkeypatch, tmp_path)
     calls = _mock_subprocess_run(monkeypatch)
 
     fake_mounts = [
-        {"host_path": str(valid_file), "container_path": "/root/.hermes/token.json"},
+        {"host_path": str(valid_file), "container_path": "/root/.qwerty/token.json"},
     ]
     monkeypatch.setattr(
         "tools.credential_files.get_credential_file_mounts",

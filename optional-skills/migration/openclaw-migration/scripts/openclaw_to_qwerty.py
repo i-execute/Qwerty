@@ -73,11 +73,11 @@ MIGRATION_OPTION_METADATA: Dict[str, Dict[str, str]] = {
     },
     "skills": {
         "label": "User skills",
-        "description": "Copy OpenClaw skills into ~/.hermes/skills/openclaw-imports/.",
+        "description": "Copy OpenClaw skills into ~/.qwerty/skills/openclaw-imports/.",
     },
     "tts-assets": {
         "label": "TTS assets",
-        "description": "Copy compatible workspace TTS assets into ~/.hermes/tts/.",
+        "description": "Copy compatible workspace TTS assets into ~/.qwerty/tts/.",
     },
     "discord-settings": {
         "label": "Discord settings",
@@ -444,9 +444,9 @@ def rebrand_text(text: str) -> str:
     Preserves case so filesystem-path matches (lowercase) don't become
     capitalized directory names that don't exist.
     """
-    # Filesystem paths to the fork's real home directory (~/.hermes) map to
+    # Filesystem paths to the fork's real home directory (~/.qwerty) map to
     # the actual location; bare brand names rebrand to Qwerty.
-    text = re.sub(r"(?i)(?<![\w.])~?/\.openclaw(?=/)", "~/.hermes", text)
+    text = re.sub(r"(?i)(?<![\w.])~?/\.openclaw(?=/)", "~/.qwerty", text)
     for pattern, replacement in _REBRAND_PATTERNS:
         text = pattern.sub(_case_preserving_replacement(replacement), text)
     return text
@@ -2972,7 +2972,7 @@ class Migrator:
 
         notes.extend([
             "- Run `qwerty gateway install` if you need the gateway service",
-            "- Review `~/.hermes/config.yaml` for any adjustments",
+            "- Review `~/.qwerty/config.yaml` for any adjustments",
             "",
         ])
 
@@ -3093,7 +3093,7 @@ def main() -> int:
             seen_kinds.add(label)
             dest = item.get("destination") or ""
             if dest.startswith(str(report["target_root"])):
-                dest = "~/.hermes/" + dest[len(str(report["target_root"])) + 1:]
+                dest = "~/.qwerty/" + dest[len(str(report["target_root"])) + 1:]
             meta = MIGRATION_OPTION_METADATA.get(label, {})
             display = meta.get("label", label)
             print(f"    ✔ {display:<35s} -> {dest}")
@@ -3139,7 +3139,7 @@ def main() -> int:
     if args.execute:
         print()
         print("  Next steps:")
-        print("    1. Review ~/.hermes/config.yaml")
+        print("    1. Review ~/.qwerty/config.yaml")
         print("    2. Run: qwerty mcp list")
         if any(i["kind"] == "cron-jobs" and i["status"] == "archived" for i in items):
             print("    3. Recreate cron jobs: qwerty cron")

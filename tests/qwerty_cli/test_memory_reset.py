@@ -21,7 +21,7 @@ def memory_env(tmp_path, monkeypatch):
 
     # Create sample memory files
     (memories / "MEMORY.md").write_text(
-        "§\nQwerty repo is at ~/.hermes/qwerty-agent\n§\nUser prefers dark themes",
+        "§\nQwerty repo is at ~/.qwerty/qwerty-agent\n§\nUser prefers dark themes",
         encoding="utf-8",
     )
     (memories / "USER.md").write_text(

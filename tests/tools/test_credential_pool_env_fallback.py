@@ -53,7 +53,7 @@ def isolated_qwerty_home(tmp_path, monkeypatch):
 
 
 def _write_env_file(home: Path, **kwargs) -> None:
-    """Write key=value pairs to ~/.hermes/.env."""
+    """Write key=value pairs to ~/.qwerty/.env."""
     lines = [f"{k}={v}" for k, v in kwargs.items()]
     (home / ".env").write_text("\n".join(lines) + "\n")
 
@@ -127,7 +127,7 @@ class TestCredentialPoolSeedsFromDotEnv:
 
 
 class TestAuthResolvesFromDotEnv:
-    """_resolve_api_key_provider_secret must also read from ~/.hermes/.env."""
+    """_resolve_api_key_provider_secret must also read from ~/.qwerty/.env."""
 
     def test_key_from_dotenv_only(self, isolated_qwerty_home):
         """Key in .env but not os.environ → _resolve returns it with the env var source."""

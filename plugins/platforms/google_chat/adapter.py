@@ -722,7 +722,7 @@ class GoogleChatAdapter(BasePlatformAdapter):
             from qwerty_constants import get_qwerty_home as _get_qwerty_home
             _qwerty_home = _get_qwerty_home()
         except (ModuleNotFoundError, ImportError):
-            _qwerty_home = _Path.home() / ".hermes"
+            _qwerty_home = _Path.home() / ".qwerty"
         self._thread_count_store = _ThreadCountStore(
             _qwerty_home / "google_chat_thread_counts.json"
         )
@@ -916,7 +916,7 @@ class GoogleChatAdapter(BasePlatformAdapter):
     # ------------------------------------------------------------------
     def _bot_id_cache_path(self) -> _Path:
         """Location where the resolved bot user_id is cached across restarts."""
-        base = os.getenv("QWERTY_HOME", str(_Path.home() / ".hermes"))
+        base = os.getenv("QWERTY_HOME", str(_Path.home() / ".qwerty"))
         return _Path(base) / "google_chat_bot_id.json"
 
     def _load_cached_bot_id(self) -> Optional[str]:
@@ -3508,7 +3508,7 @@ def interactive_setup() -> None:
         save_env_value("GOOGLE_CHAT_HOME_CHANNEL", home.strip())
 
     print()
-    print_success("Google Chat configuration saved to ~/.hermes/.env")
+    print_success("Google Chat configuration saved to ~/.qwerty/.env")
     print_info("Restart the gateway: qwerty gateway restart")
 
 

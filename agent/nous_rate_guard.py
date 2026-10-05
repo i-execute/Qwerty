@@ -32,7 +32,7 @@ def _state_path() -> str:
         from qwerty_constants import get_qwerty_home
         base = get_qwerty_home()
     except ImportError:
-        base = os.path.join(os.path.expanduser("~"), ".hermes")
+        base = os.path.join(os.path.expanduser("~"), ".qwerty")
     return os.path.join(base, _STATE_SUBDIR, _STATE_FILENAME)
 
 

@@ -34,14 +34,14 @@ class TestGetDefaultQwertyRoot:
     """Tests for get_default_qwerty_root() — Docker/custom deployment awareness."""
 
     def test_no_qwerty_home_returns_native(self, tmp_path, monkeypatch):
-        """When QWERTY_HOME is not set, returns ~/.hermes."""
+        """When QWERTY_HOME is not set, returns ~/.qwerty."""
         monkeypatch.delenv("QWERTY_HOME", raising=False)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
         assert get_default_qwerty_root() == tmp_path / ".qwerty"
 
     def test_qwerty_home_is_native(self, tmp_path, monkeypatch):
-        """When QWERTY_HOME = ~/.hermes, returns ~/.hermes."""
+        """When QWERTY_HOME = ~/.qwerty, returns ~/.qwerty."""
         native = tmp_path / ".qwerty"
         native.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -49,7 +49,7 @@ class TestGetDefaultQwertyRoot:
         assert get_default_qwerty_root() == native
 
     def test_qwerty_home_is_profile(self, tmp_path, monkeypatch):
-        """When QWERTY_HOME is a profile under ~/.hermes, returns ~/.hermes."""
+        """When QWERTY_HOME is a profile under ~/.qwerty, returns ~/.qwerty."""
         native = tmp_path / ".qwerty"
         profile = native / "profiles" / "coder"
         profile.mkdir(parents=True)
@@ -58,7 +58,7 @@ class TestGetDefaultQwertyRoot:
         assert get_default_qwerty_root() == native
 
     def test_qwerty_home_is_docker(self, tmp_path, monkeypatch):
-        """When QWERTY_HOME points outside ~/.hermes (Docker), returns QWERTY_HOME."""
+        """When QWERTY_HOME points outside ~/.qwerty (Docker), returns QWERTY_HOME."""
         docker_home = tmp_path / "opt" / "data"
         docker_home.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -66,7 +66,7 @@ class TestGetDefaultQwertyRoot:
         assert get_default_qwerty_root() == docker_home
 
     def test_qwerty_home_is_custom_path(self, tmp_path, monkeypatch):
-        """Any QWERTY_HOME outside ~/.hermes is treated as the root."""
+        """Any QWERTY_HOME outside ~/.qwerty is treated as the root."""
         custom = tmp_path / "my-qwerty-data"
         custom.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -84,7 +84,7 @@ class TestGetDefaultQwertyRoot:
         assert get_default_qwerty_root() == docker_root
 
     def test_no_qwerty_home_returns_localappdata_root_on_windows(self, tmp_path, monkeypatch):
-        """Native Windows falls back to %LOCALAPPDATA%\\qwerty, not ~/.hermes."""
+        """Native Windows falls back to %LOCALAPPDATA%\\qwerty, not ~/.qwerty."""
         local_appdata = tmp_path / "LocalAppData"
         monkeypatch.delenv("QWERTY_HOME", raising=False)
         monkeypatch.setenv("LOCALAPPDATA", str(local_appdata))

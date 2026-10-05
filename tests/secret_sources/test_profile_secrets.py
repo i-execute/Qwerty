@@ -55,7 +55,7 @@ def _apply(secrets, cfg_extra=None, home=Path("/tmp/x/.qwerty"), env=None):
     return report, env
 
 
-PROFILE_HOME = Path("/home/u/.hermes/profiles/milla")
+PROFILE_HOME = Path("/home/u/.qwerty/profiles/milla")
 
 
 # ---------------------------------------------------------------------------
@@ -160,7 +160,7 @@ def test_default_profile_never_aliases():
 def test_hyphenated_profile_name_matches_underscore_suffix():
     _, env = _apply(
         {"SLACK_APP_TOKEN_MY_BOT": "xapp-1"},
-        home=Path("/home/u/.hermes/profiles/my-bot"),
+        home=Path("/home/u/.qwerty/profiles/my-bot"),
     )
     assert env["SLACK_APP_TOKEN"] == "xapp-1"
 

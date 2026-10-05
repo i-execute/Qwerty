@@ -197,7 +197,7 @@ async def test_legacy_send_keeps_chunk_indicators_outside_fenced_code_lines(adap
     content = (
         "Intro before code block\n"
         "```text\n"
-        + ("~/.hermes/skills/github/qwerty-contribution-workflow/SKILL.md\n" * 8)
+        + ("~/.qwerty/skills/github/qwerty-contribution-workflow/SKILL.md\n" * 8)
         + "```\n"
         "After."
     )

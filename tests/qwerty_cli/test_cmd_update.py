@@ -708,8 +708,8 @@ class TestCmdUpdateProfileSkillSync:
         )
 
         default_p = SimpleNamespace(name="default", path=Path("/fake/.qwerty"))
-        active_p = SimpleNamespace(name="bit", path=Path("/fake/.hermes/profiles/bit"))
-        other_p = SimpleNamespace(name="work", path=Path("/fake/.hermes/profiles/work"))
+        active_p = SimpleNamespace(name="bit", path=Path("/fake/.qwerty/profiles/bit"))
+        other_p = SimpleNamespace(name="work", path=Path("/fake/.qwerty/profiles/work"))
         all_profiles = [default_p, active_p, other_p]
 
         synced_paths = []

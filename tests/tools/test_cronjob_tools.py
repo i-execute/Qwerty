@@ -157,10 +157,10 @@ class TestScanCronSkillAssembled:
         """Security postmortems and runbooks routinely describe attack
         commands in prose — that's not a payload, it's documentation.
         Real example: the `qwerty-agent-dev` skill contains a postmortem
-        section saying 'the attacker could just cat ~/.hermes/.env'.
+        section saying 'the attacker could just cat ~/.qwerty/.env'.
         """
         assert _scan_cron_skill_assembled(
-            "the attacker could just cat ~/.hermes/.env to steal credentials"
+            "the attacker could just cat ~/.qwerty/.env to steal credentials"
         )[1] == ""
         assert _scan_cron_skill_assembled(
             "this rule writes to authorized_keys for persistence"

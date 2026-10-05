@@ -130,8 +130,8 @@ class TestBashSafePath:
         """Production get_temp_dir emits C:/... — still needs /c/... rewrite."""
         monkeypatch.setattr(local_mod, "_IS_WINDOWS", True)
         assert (
-            _bash_safe_path("C:/Users/Alexander/.hermes/cache/terminal/qwerty-snap-x.sh")
-            == "/c/Users/Alexander/.hermes/cache/terminal/qwerty-snap-x.sh"
+            _bash_safe_path("C:/Users/Alexander/.qwerty/cache/terminal/qwerty-snap-x.sh")
+            == "/c/Users/Alexander/.qwerty/cache/terminal/qwerty-snap-x.sh"
         )
 
     def test_mixed_msys_path_normalizes_backslashes(self, monkeypatch):
@@ -467,7 +467,7 @@ class TestWrapCommandWindowsNativeCwd:
         monkeypatch.setattr(LocalEnvironment, "_run_bash", fake_run_bash)
 
         # Production shape: get_temp_dir forces forward slashes but keeps C:.
-        snap = "C:/Users/Alexander/.hermes/cache/terminal/qwerty-snap-deadbeef.sh"
+        snap = "C:/Users/Alexander/.qwerty/cache/terminal/qwerty-snap-deadbeef.sh"
         with patch.object(LocalEnvironment, "__init__", lambda self, **kw: None):
             env = LocalEnvironment.__new__(LocalEnvironment)
             BaseEnvironment.__init__(
@@ -480,7 +480,7 @@ class TestWrapCommandWindowsNativeCwd:
             env.init_session()
 
         script = captured["script"]
-        assert "/c/Users/Alexander/.hermes/cache/terminal/qwerty-snap-deadbeef.sh" in script
+        assert "/c/Users/Alexander/.qwerty/cache/terminal/qwerty-snap-deadbeef.sh" in script
         assert "C:/Users/Alexander" not in script
         assert r"C:\Users\Alexander" not in script
 

@@ -162,7 +162,7 @@ class HolographicMemoryProvider(MemoryProvider):
         _default_db = _qwerty_home + "/memory_store.db"
         db_path = self._config.get("db_path", _default_db)
         # Expand $QWERTY_HOME in user-supplied paths so config values like
-        # "$QWERTY_HOME/memory_store.db" or "~/.hermes/memory_store.db" both
+        # "$QWERTY_HOME/memory_store.db" or "~/.qwerty/memory_store.db" both
         # resolve to the active profile's directory.
         if isinstance(db_path, str):
             db_path = db_path.replace("$QWERTY_HOME", _qwerty_home)

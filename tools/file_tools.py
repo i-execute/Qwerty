@@ -587,7 +587,7 @@ def _get_qwerty_config_resolved() -> str | None:
         _qwerty_config_resolved = str(get_config_path().resolve())
     except Exception:
         try:
-            _qwerty_config_resolved = str(Path(_expand_tilde("~/.hermes/config.yaml")).resolve())
+            _qwerty_config_resolved = str(Path(_expand_tilde("~/.qwerty/config.yaml")).resolve())
         except Exception:
             _qwerty_config_resolved = None
     return _qwerty_config_resolved
@@ -618,7 +618,7 @@ def _check_sensitive_path(filepath: str, task_id: str = "default") -> str | None
         return (
             f"Refusing to write to Qwerty config file: {filepath}\n"
             "Agent cannot modify security-sensitive configuration. "
-            "Edit ~/.hermes/config.yaml directly or use 'qwerty config' instead."
+            "Edit ~/.qwerty/config.yaml directly or use 'qwerty config' instead."
         )
     return None
 

@@ -102,7 +102,7 @@ def generate_bash(parser: argparse.ArgumentParser) -> str:
 #   eval "$(qwerty completion bash)"
 
 _qwerty_profiles() {{
-    local profiles_dir="$HOME/.hermes/profiles"
+    local profiles_dir="$HOME/.qwerty/profiles"
     local profiles="default"
     if [ -d "$profiles_dir" ]; then
         for f in "$profiles_dir"/*/; do
@@ -207,7 +207,7 @@ def generate_zsh(parser: argparse.ArgumentParser) -> str:
 _qwerty_profiles() {{
     local -a profiles
     profiles=(default)
-    if [[ -d "$HOME/.hermes/profiles" ]]; then
+    if [[ -d "$HOME/.qwerty/profiles" ]]; then
         profiles+=($HOME/.qwerty/profiles/*(N/:t))
     fi
     _describe 'profile' profiles
@@ -261,8 +261,8 @@ def generate_fish(parser: argparse.ArgumentParser) -> str:
         "# Helper: list available profiles",
         "function __qwerty_profiles",
         "    echo default",
-        "    if test -d $HOME/.hermes/profiles",
-        "        for d in $HOME/.hermes/profiles/*/",
+        "    if test -d $HOME/.qwerty/profiles",
+        "        for d in $HOME/.qwerty/profiles/*/",
         "            basename $d",
         "        end",
         "    end",

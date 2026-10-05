@@ -69,7 +69,7 @@ class OwnedTwilioNumber:
 
 
 def _qwerty_home() -> Path:
-    return Path(os.environ.get("QWERTY_HOME", "~/.hermes")).expanduser()
+    return Path(os.environ.get("QWERTY_HOME", "~/.qwerty")).expanduser()
 
 
 def _env_path() -> Path:

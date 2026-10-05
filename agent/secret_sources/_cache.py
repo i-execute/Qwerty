@@ -82,7 +82,7 @@ def resolve_cache_home(home_path: Optional[Path] = None) -> Path:
     (and tests that don't thread a home through) working.
     """
     if home_path is None:
-        home_path = Path(os.getenv("QWERTY_HOME", Path.home() / ".hermes"))
+        home_path = Path(os.getenv("QWERTY_HOME", Path.home() / ".qwerty"))
     return home_path
 
 

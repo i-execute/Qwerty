@@ -7957,7 +7957,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         except (RuntimeError, ValueError, OSError):
             try:
                 _fh_log_dir = getattr(self.config, "log_dir", None) or os.path.join(
-                    os.environ.get("QWERTY_HOME", str(Path.home() / ".hermes")),
+                    os.environ.get("QWERTY_HOME", str(Path.home() / ".qwerty")),
                     "logs",
                 )
                 os.makedirs(_fh_log_dir, exist_ok=True)
@@ -7976,7 +7976,7 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
         if _sigusr2 is not None and hasattr(faulthandler, "register"):
             try:
                 _log_dir = getattr(self.config, "log_dir", None) or os.path.join(
-                    os.environ.get("QWERTY_HOME", str(Path.home() / ".hermes")),
+                    os.environ.get("QWERTY_HOME", str(Path.home() / ".qwerty")),
                     "logs",
                 )
                 _faulthandler_path = os.path.join(_log_dir, "gateway_faulthandler.log")

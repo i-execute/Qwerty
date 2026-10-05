@@ -169,7 +169,7 @@ def _container_no_volume_mount(qwerty_home: Optional[Path]) -> Optional[str]:
     if not _in_container():
         return None
     home = qwerty_home or Path(
-        os.environ.get("QWERTY_HOME", os.path.expanduser("~/.hermes"))
+        os.environ.get("QWERTY_HOME", os.path.expanduser("~/.qwerty"))
     )
     try:
         if _path_is_mounted(home):

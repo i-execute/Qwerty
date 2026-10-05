@@ -1210,7 +1210,7 @@ def _openviking_server_log_path() -> Path:
         from qwerty_constants import get_qwerty_home
         home = get_qwerty_home()
     except Exception:
-        home = Path(os.environ.get("QWERTY_HOME", "")).expanduser() if os.environ.get("QWERTY_HOME") else Path.home() / ".hermes"
+        home = Path(os.environ.get("QWERTY_HOME", "")).expanduser() if os.environ.get("QWERTY_HOME") else Path.home() / ".qwerty"
     return home / _OPENVIKING_SERVER_LOG_RELATIVE_PATH
 
 
@@ -2305,7 +2305,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
                 from qwerty_constants import get_qwerty_home
                 qwerty_home = str(get_qwerty_home())
             except Exception:
-                qwerty_home = str(Path.home() / ".hermes")
+                qwerty_home = str(Path.home() / ".qwerty")
         self._qwerty_home = qwerty_home
         self._acquire_run_lock()
         self._profile_prefetched_sessions.clear()

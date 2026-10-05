@@ -307,7 +307,7 @@ def load_qwerty_dotenv(
     """
     loaded: list[Path] = []
 
-    home_path = Path(qwerty_home or os.getenv("QWERTY_HOME", Path.home() / ".hermes"))
+    home_path = Path(qwerty_home or os.getenv("QWERTY_HOME", Path.home() / ".qwerty"))
     user_env = home_path / ".env"
     project_env_path = Path(project_env) if project_env else None
 

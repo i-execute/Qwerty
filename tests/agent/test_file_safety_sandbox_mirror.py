@@ -109,7 +109,7 @@ class TestClassifySandboxMirrorTarget:
         assert classify_sandbox_mirror_target(str(target)) is None
 
     def test_truncated_sandbox_path_returns_none(self, tmp_path):
-        """``…/sandboxes/<backend>/<task>`` without ``home/.hermes/<thing>`` is not a mirror."""
+        """``…/sandboxes/<backend>/<task>`` without ``home/.qwerty/<thing>`` is not a mirror."""
         from agent.file_safety import classify_sandbox_mirror_target
 
         target = tmp_path / "sandboxes" / "docker" / "task-42"

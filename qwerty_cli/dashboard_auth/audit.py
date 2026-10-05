@@ -63,7 +63,7 @@ def _resolve_log_path() -> Path:
     else ``~/.qwerty``. A local copy avoids an import cycle with the
     middleware which lives below ``qwerty_cli``.
     """
-    home = os.environ.get("QWERTY_HOME") or str(Path.home() / ".hermes")
+    home = os.environ.get("QWERTY_HOME") or str(Path.home() / ".qwerty")
     return Path(home) / "logs" / "dashboard-auth.log"
 
 

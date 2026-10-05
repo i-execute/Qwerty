@@ -518,7 +518,7 @@ from qwerty_constants import get_default_qwerty_root, get_qwerty_dir, get_qwerty
 
 GATEWAY_SECRET_CAPTURE_UNSUPPORTED_MESSAGE = (
     "Secure secret entry is not supported over messaging. "
-    "Load this skill in the local CLI to be prompted, or add the key to ~/.hermes/.env manually."
+    "Load this skill in the local CLI to be prompted, or add the key to ~/.qwerty/.env manually."
 )
 
 

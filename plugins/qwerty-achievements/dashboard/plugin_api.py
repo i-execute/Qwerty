@@ -18,7 +18,7 @@ except ImportError:
     import os as _os
     def get_qwerty_home() -> Path:  # type: ignore[misc]
         val = (_os.environ.get("QWERTY_HOME") or "").strip()
-        return Path(val) if val else Path.home() / ".hermes"
+        return Path(val) if val else Path.home() / ".qwerty"
 
 try:
     from fastapi import APIRouter

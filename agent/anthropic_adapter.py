@@ -1609,7 +1609,7 @@ def run_qwerty_oauth_login_pure() -> Optional[Dict[str, Any]]:
 
 
 def read_qwerty_oauth_credentials() -> Optional[Dict[str, Any]]:
-    """Read Qwerty-managed OAuth credentials from ~/.hermes/.anthropic_oauth.json."""
+    """Read Qwerty-managed OAuth credentials from ~/.qwerty/.anthropic_oauth.json."""
     oauth_file = _get_qwerty_oauth_file()
     if oauth_file.exists():
         try:

@@ -277,7 +277,7 @@ class TestCreateProfile:
         assert not (profile_dir / "processes.json").exists()
 
     def test_clone_all_excludes_sibling_profiles_tree(self, profile_env):
-        """--clone-all from default ~/.hermes must not copy profiles/* (nested explosion)."""
+        """--clone-all from default ~/.qwerty must not copy profiles/* (nested explosion)."""
         tmp_path = profile_env
         default_home = tmp_path / ".qwerty"
         profiles_root = default_home / "profiles"
@@ -1554,7 +1554,7 @@ class TestInternalHelpers:
         assert home == tmp_path / ".qwerty"
 
     def test_profiles_root_docker_deployment(self, tmp_path, monkeypatch):
-        """In Docker (QWERTY_HOME outside ~/.hermes), profiles go under QWERTY_HOME."""
+        """In Docker (QWERTY_HOME outside ~/.qwerty), profiles go under QWERTY_HOME."""
         docker_home = tmp_path / "opt" / "data"
         docker_home.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -1572,7 +1572,7 @@ class TestInternalHelpers:
         assert home == docker_home
 
     def test_profiles_root_profile_mode(self, tmp_path, monkeypatch):
-        """In profile mode (QWERTY_HOME under ~/.hermes), profiles root is still ~/.hermes/profiles."""
+        """In profile mode (QWERTY_HOME under ~/.qwerty), profiles root is still ~/.qwerty/profiles."""
         native = tmp_path / ".qwerty"
         profile_dir = native / "profiles" / "coder"
         profile_dir.mkdir(parents=True)

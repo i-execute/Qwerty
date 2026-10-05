@@ -1238,7 +1238,7 @@ def interactive_setup() -> None:
     except ImportError:
         print(
             "qwerty_cli.config not available; set SIMPLEX_* vars manually in "
-            "~/.hermes/.env"
+            "~/.qwerty/.env"
         )
         return
 

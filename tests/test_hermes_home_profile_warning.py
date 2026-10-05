@@ -33,7 +33,7 @@ class TestGetQwertyHomeProfileWarning:
     def test_classic_mode_no_active_profile_no_warning(
         self, fresh_constants, tmp_path, capsys
     ):
-        """Classic mode: no active_profile file → silent, returns ~/.hermes."""
+        """Classic mode: no active_profile file → silent, returns ~/.qwerty."""
         result = fresh_constants.get_qwerty_home()
         assert result == tmp_path / ".qwerty"
         assert "QWERTY_HOME fallback" not in capsys.readouterr().err
@@ -41,7 +41,7 @@ class TestGetQwertyHomeProfileWarning:
     def test_default_active_profile_no_warning(
         self, fresh_constants, tmp_path, capsys
     ):
-        """active_profile=default → still no warning, returns ~/.hermes."""
+        """active_profile=default → still no warning, returns ~/.qwerty."""
         qwerty_dir = tmp_path / ".qwerty"
         qwerty_dir.mkdir()
         (qwerty_dir / "active_profile").write_text("default\n")

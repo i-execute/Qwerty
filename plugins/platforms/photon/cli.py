@@ -360,7 +360,7 @@ def _cmd_telemetry(args: argparse.Namespace) -> int:
     except Exception as e:
         print(f"could not save PHOTON_TELEMETRY: {e}", file=sys.stderr)
         return 1
-    print(f"✓ Spectrum telemetry turned {state} (PHOTON_TELEMETRY in ~/.hermes/.env)")
+    print(f"✓ Spectrum telemetry turned {state} (PHOTON_TELEMETRY in ~/.qwerty/.env)")
     print("  Restart the gateway for the sidecar to pick it up:  qwerty gateway restart")
     return 0
 

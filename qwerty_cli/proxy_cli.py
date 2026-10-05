@@ -252,7 +252,7 @@ def cmd_setup(args: argparse.Namespace) -> int:
         if loaded:
             console.print(
                 f"  [dim]Loaded {loaded} provider key name(s) from "
-                f"~/.hermes/.env for discovery.[/dim]"
+                f"~/.qwerty/.env for discovery.[/dim]"
             )
 
     discovered = ip.discover_provider_mappings(

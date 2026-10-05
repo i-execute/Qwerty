@@ -319,7 +319,7 @@ def _setup_platform(qwerty_home: str, config: dict, flags: dict[str, str]) -> No
         print(
             "\n  ⚠ MEM0_HOST is set in your environment "
             f"({os.environ['MEM0_HOST']}). It overrides platform mode — "
-            "remove it from ~/.hermes/.env (or unset it) or Qwerty will keep "
+            "remove it from ~/.qwerty/.env (or unset it) or Qwerty will keep "
             "routing to the self-hosted server."
         )
 

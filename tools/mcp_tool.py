@@ -3885,7 +3885,7 @@ def _handle_auth_error_and_retry(
         "error": (
             f"MCP server '{server_name}' requires re-authentication. "
             f"Run `qwerty mcp login {server_name}` (or delete the tokens "
-            f"file under ~/.hermes/mcp-tokens/ and restart). Do NOT retry "
+            f"file under ~/.qwerty/mcp-tokens/ and restart). Do NOT retry "
             f"this tool — ask the user to re-authenticate."
         ),
         "needs_reauth": True,

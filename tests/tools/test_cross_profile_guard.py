@@ -252,7 +252,7 @@ class TestSystemPromptActiveProfile:
         src = Path("agent/system_prompt.py").read_text()
         assert "Active Qwerty profile" in src
         assert "cross_profile=True" in src
-        assert "~/.hermes/profiles/" in src
+        assert "~/.qwerty/profiles/" in src
         # Both branches present (default and named profile).
         assert "Active Qwerty profile: default" in src
         assert "Active Qwerty profile: {active_profile}" in src

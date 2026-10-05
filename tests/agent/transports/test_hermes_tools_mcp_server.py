@@ -11,7 +11,7 @@ from __future__ import annotations
 import inspect
 from typing import get_args
 
-from agent.transports.hermes_tools_mcp_server import (
+from agent.transports.qwerty_tools_mcp_server import (
     _signature_from_schema,
 )
 
@@ -144,7 +144,7 @@ class TestModuleSurface:
         own builtins are better-integrated with its sandbox + approvals.
         Specifically: no terminal/shell, no read_file/write_file, no
         patch — those are codex's built-in tools."""
-        from agent.transports.hermes_tools_mcp_server import EXPOSED_TOOLS
+        from agent.transports.qwerty_tools_mcp_server import EXPOSED_TOOLS
         forbidden = {
             "terminal", "shell", "read_file", "write_file", "patch",
             "search_files", "process",
@@ -158,7 +158,7 @@ class TestModuleSurface:
     def test_expected_qwerty_specific_tools_listed(self):
         """The Qwerty-specific tools should be present so users on the
         codex runtime keep access to them."""
-        from agent.transports.hermes_tools_mcp_server import EXPOSED_TOOLS
+        from agent.transports.qwerty_tools_mcp_server import EXPOSED_TOOLS
         for required in (
             "web_search",
             "web_extract",
@@ -173,7 +173,7 @@ class TestModuleSurface:
         """delegate_task / memory / session_search / todo require the
         running AIAgent context to dispatch, so a stateless MCP callback
         can't drive them. They must NOT be in EXPOSED_TOOLS."""
-        from agent.transports.hermes_tools_mcp_server import EXPOSED_TOOLS
+        from agent.transports.qwerty_tools_mcp_server import EXPOSED_TOOLS
         for agent_loop_tool in ("delegate_task", "memory", "session_search", "todo"):
             assert agent_loop_tool not in EXPOSED_TOOLS, (
                 f"{agent_loop_tool!r} requires the agent loop context "
@@ -186,7 +186,7 @@ class TestModuleSurface:
         actual work via codex's shell but needs the kanban tools through
         the MCP callback to report back to the kernel. Without these
         tools available, the worker would hang at completion time."""
-        from agent.transports.hermes_tools_mcp_server import EXPOSED_TOOLS
+        from agent.transports.qwerty_tools_mcp_server import EXPOSED_TOOLS
         # Worker handoff tools — every dispatched worker uses at least
         # one of {complete, block, comment} to close out its task.
         for worker_tool in (
@@ -204,7 +204,7 @@ class TestModuleSurface:
         """Orchestrator agents need to dispatch new tasks, query the
         board, and unblock/link tasks. Exposed so an orchestrator on
         codex_app_server can do its job."""
-        from agent.transports.hermes_tools_mcp_server import EXPOSED_TOOLS
+        from agent.transports.qwerty_tools_mcp_server import EXPOSED_TOOLS
         for orch_tool in (
             "kanban_create",
             "kanban_show",
@@ -221,7 +221,7 @@ class TestMain:
     def test_main_returns_2_when_mcp_unavailable(self, monkeypatch):
         """When the mcp package isn't installed, main() should exit
         cleanly with code 2 and an install hint, not crash."""
-        import agent.transports.hermes_tools_mcp_server as m
+        import agent.transports.qwerty_tools_mcp_server as m
 
         def boom_build(*a, **kw):
             raise ImportError("mcp not installed")
@@ -231,7 +231,7 @@ class TestMain:
         assert rc == 2
 
     def test_main_handles_keyboard_interrupt(self, monkeypatch):
-        import agent.transports.hermes_tools_mcp_server as m
+        import agent.transports.qwerty_tools_mcp_server as m
 
         class FakeServer:
             def run(self):
@@ -242,7 +242,7 @@ class TestMain:
         assert rc == 0
 
     def test_main_returns_1_on_runtime_error(self, monkeypatch):
-        import agent.transports.hermes_tools_mcp_server as m
+        import agent.transports.qwerty_tools_mcp_server as m
 
         class CrashingServer:
             def run(self):

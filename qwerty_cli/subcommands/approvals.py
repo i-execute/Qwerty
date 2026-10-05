@@ -71,7 +71,7 @@ def build_approvals_parser(subparsers, *, cmd_approvals: Callable) -> None:
     )
     suggest_parser.add_argument(
         "--db",
-        help="Path to an alternate session database (default: ~/.hermes/state.db)",
+        help="Path to an alternate session database (default: ~/.qwerty/state.db)",
     )
     suggest_parser.set_defaults(func=cmd_approvals)
     approvals_parser.set_defaults(func=cmd_approvals)

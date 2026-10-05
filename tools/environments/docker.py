@@ -96,7 +96,7 @@ def _normalize_env_dict(env: dict | None) -> dict[str, str]:
 
 
 def _load_qwerty_env_vars() -> dict[str, str]:
-    """Load ~/.hermes/.env values without failing Docker command execution."""
+    """Load ~/.qwerty/.env values without failing Docker command execution."""
     try:
         from qwerty_cli.config import load_env
 

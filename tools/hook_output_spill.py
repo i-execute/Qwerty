@@ -122,7 +122,7 @@ def _resolve_spill_dir(directory_override: Optional[str], session_id: Optional[s
             base = Path(get_qwerty_home()) / "hook_outputs"
         except Exception:
             # Last-resort fallback: QWERTY_HOME env var, then ~/.qwerty
-            home = os.environ.get("QWERTY_HOME") or os.path.expanduser("~/.hermes")
+            home = os.environ.get("QWERTY_HOME") or os.path.expanduser("~/.qwerty")
             base = Path(home) / "hook_outputs"
 
     # Group by session so spills are contained per conversation.

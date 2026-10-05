@@ -46,7 +46,7 @@ DEFAULT_API_BASE = "https://api.hyperliquid.xyz"
 
 
 def _qwerty_home() -> Path:
-    return Path(os.environ.get("QWERTY_HOME", "~/.hermes")).expanduser()
+    return Path(os.environ.get("QWERTY_HOME", "~/.qwerty")).expanduser()
 
 
 def _dotenv_paths() -> List[Path]:

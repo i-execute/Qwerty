@@ -13,7 +13,7 @@ def _qwerty_home_path() -> Path:
         from qwerty_constants import get_qwerty_home  # local import to avoid cycles
         return get_qwerty_home()
     except Exception:
-        return Path(os.path.expanduser("~/.hermes"))
+        return Path(os.path.expanduser("~/.qwerty"))
 
 
 def _qwerty_root_path() -> Path:
@@ -22,7 +22,7 @@ def _qwerty_root_path() -> Path:
         from qwerty_constants import get_default_qwerty_root  # local import to avoid cycles
         return get_default_qwerty_root()
     except Exception:
-        return Path(os.path.expanduser("~/.hermes"))
+        return Path(os.path.expanduser("~/.qwerty"))
 
 
 def build_write_denied_paths(home: str) -> set[str]:
@@ -543,7 +543,7 @@ def _find_sandbox_mirror_segments(parts: tuple) -> Optional[int]:
         # Need at least: sandboxes / <backend> / <task> / home / .qwerty / <thing>
         if i + 5 >= len(parts):
             continue
-        if parts[i + 3] == "home" and parts[i + 4] == ".hermes":
+        if parts[i + 3] == "home" and parts[i + 4] == ".qwerty":
             return i + 4
     return None
 

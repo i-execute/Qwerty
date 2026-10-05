@@ -21,7 +21,7 @@ def test_service_path_includes_node_modules_when_present(tmp_path):
 
 
 def test_service_path_includes_qwerty_home_node_modules(tmp_path):
-    """Service PATH should include ~/.hermes/node_modules/.bin when it exists."""
+    """Service PATH should include ~/.qwerty/node_modules/.bin when it exists."""
     qwerty_nm = tmp_path / ".qwerty" / "node_modules" / ".bin"
     qwerty_nm.mkdir(parents=True)
     from qwerty_cli.gateway import _build_service_path_dirs

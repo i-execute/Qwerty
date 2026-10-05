@@ -43,7 +43,7 @@ class TestRegisterCredentialFiles:
         mounts = get_credential_file_mounts()
         assert len(mounts) == 1
         assert mounts[0]["host_path"] == str(qwerty_home / "token.json")
-        assert mounts[0]["container_path"] == "/root/.hermes/token.json"
+        assert mounts[0]["container_path"] == "/root/.qwerty/token.json"
 
     def test_dict_with_name_key_fallback(self, tmp_path):
         """Skills use 'name' instead of 'path' — both should work."""
@@ -114,7 +114,7 @@ class TestSkillsDirectoryMount:
 
         assert len(mounts) >= 1
         assert mounts[0]["host_path"] == str(skills_dir)
-        assert mounts[0]["container_path"] == "/root/.hermes/skills"
+        assert mounts[0]["container_path"] == "/root/.qwerty/skills"
 
     def test_returns_none_when_no_skills_dir(self, tmp_path):
         qwerty_home = tmp_path / ".qwerty"
@@ -134,7 +134,7 @@ class TestSkillsDirectoryMount:
         with patch.dict(os.environ, {"QWERTY_HOME": str(qwerty_home)}):
             mounts = get_skills_directory_mount(container_base="/home/user/.qwerty")
 
-        assert mounts[0]["container_path"] == "/home/user/.hermes/skills"
+        assert mounts[0]["container_path"] == "/home/user/.qwerty/skills"
 
     def test_symlinks_are_sanitized(self, tmp_path):
         """Symlinks in skills dir should be excluded from the mount."""
@@ -191,8 +191,8 @@ class TestIterSkillsFiles:
             files = iter_skills_files()
 
         paths = {f["container_path"] for f in files}
-        assert "/root/.hermes/skills/cat/myskill/SKILL.md" in paths
-        assert "/root/.hermes/skills/cat/myskill/scripts/run.sh" in paths
+        assert "/root/.qwerty/skills/cat/myskill/SKILL.md" in paths
+        assert "/root/.qwerty/skills/cat/myskill/scripts/run.sh" in paths
         # Symlink should be excluded
         assert not any("evil" in f["container_path"] for f in files)
 
@@ -383,9 +383,9 @@ class TestCacheDirectoryMounts:
 
         mounts = get_cache_directory_mounts()
         paths = {m["container_path"] for m in mounts}
-        assert "/root/.hermes/cache/documents" in paths
-        assert "/root/.hermes/cache/audio" in paths
-        assert "/root/.hermes/cache/videos" in paths
+        assert "/root/.qwerty/cache/documents" in paths
+        assert "/root/.qwerty/cache/audio" in paths
+        assert "/root/.qwerty/cache/videos" in paths
 
     def test_skips_nonexistent_dirs(self, tmp_path, monkeypatch):
         """Dirs that don't exist on disk are not returned."""
@@ -397,7 +397,7 @@ class TestCacheDirectoryMounts:
 
         mounts = get_cache_directory_mounts()
         assert len(mounts) == 1
-        assert mounts[0]["container_path"] == "/root/.hermes/cache/documents"
+        assert mounts[0]["container_path"] == "/root/.qwerty/cache/documents"
 
     def test_legacy_dir_names_resolved(self, tmp_path, monkeypatch):
         """Old-style dir names (e.g. document_cache) are resolved correctly.
@@ -424,8 +424,8 @@ class TestCacheDirectoryMounts:
         assert str(qwerty_home / "image_cache") in host_paths
         # Container paths always use the new layout
         container_paths = {m["container_path"] for m in mounts}
-        assert "/root/.hermes/cache/documents" in container_paths
-        assert "/root/.hermes/cache/images" in container_paths
+        assert "/root/.qwerty/cache/documents" in container_paths
+        assert "/root/.qwerty/cache/images" in container_paths
 
     def test_empty_qwerty_home(self, tmp_path, monkeypatch):
         """No cache dirs → empty list."""
@@ -448,7 +448,7 @@ class TestMapCachePathToContainer:
 
         assert (
             map_cache_path_to_container(host_path)
-            == "/root/.hermes/cache/images/generated.png"
+            == "/root/.qwerty/cache/images/generated.png"
         )
 
     def test_custom_container_base_for_remote_home(self, tmp_path, monkeypatch):
@@ -460,7 +460,7 @@ class TestMapCachePathToContainer:
 
         assert (
             map_cache_path_to_container(host_path, container_base="/home/agent/.qwerty")
-            == "/home/agent/.hermes/cache/images/remote.png"
+            == "/home/agent/.qwerty/cache/images/remote.png"
         )
 
     def test_returns_none_when_outside_cache_dirs(self, tmp_path, monkeypatch):
@@ -521,7 +521,7 @@ class TestIterCacheFiles:
 
         entries = iter_cache_files()
         assert len(entries) == 1
-        assert entries[0]["container_path"] == "/root/.hermes/cache/screenshots/session_abc/screen1.png"
+        assert entries[0]["container_path"] == "/root/.qwerty/cache/screenshots/session_abc/screen1.png"
 
     def test_empty_cache(self, tmp_path, monkeypatch):
         """No cache dirs → empty list."""
@@ -589,7 +589,7 @@ class TestMasterCredentialStoresAreNeverMountable:
             assert register_credential_file("google_token.json") is True
             mounts = get_credential_file_mounts()
         assert [m["container_path"] for m in mounts] == [
-            "/root/.hermes/google_token.json"
+            "/root/.qwerty/google_token.json"
         ]
 
     def test_refused_entry_does_not_block_the_rest_of_the_batch(self, tmp_path):
@@ -599,8 +599,8 @@ class TestMasterCredentialStoresAreNeverMountable:
             mounts = get_credential_file_mounts()
 
         paths = [m["container_path"] for m in mounts]
-        assert "/root/.hermes/google_token.json" in paths
-        assert "/root/.hermes/.env" not in paths
+        assert "/root/.qwerty/google_token.json" in paths
+        assert "/root/.qwerty/.env" not in paths
         assert ".env" in missing, "a refused store is reported back to the skill"
 
     def test_traversal_guard_still_applies(self, tmp_path):

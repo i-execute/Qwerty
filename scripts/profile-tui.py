@@ -42,7 +42,7 @@ try:
 except ImportError:
     def get_qwerty_home() -> Path:  # type: ignore[misc]
         val = (os.environ.get("QWERTY_HOME") or "").strip()
-        return Path(val) if val else Path.home() / ".hermes"
+        return Path(val) if val else Path.home() / ".qwerty"
 
 DEFAULT_TUI_DIR = Path(
     os.environ.get("QWERTY_TUI_DIR")

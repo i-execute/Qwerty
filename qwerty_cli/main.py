@@ -272,7 +272,7 @@ def _config_default_interface_early() -> str:
         if home:
             cfg_path = os.path.join(home, "config.yaml")
         else:
-            cfg_path = os.path.join(os.path.expanduser("~"), ".hermes", "config.yaml")
+            cfg_path = os.path.join(os.path.expanduser("~"), ".qwerty", "config.yaml")
         if os.path.exists(cfg_path):
             import yaml as _yaml_iface
 
@@ -546,7 +546,7 @@ def _apply_profile_override() -> None:
         except Exception:
             return None
 
-        candidate = home / ".hermes" / "profiles" / name
+        candidate = home / ".qwerty" / "profiles" / name
         try:
             if candidate.is_dir():
                 return str(candidate)
@@ -1816,7 +1816,7 @@ def _ensure_tui_node() -> None:
     if not helper.is_file():
         return
 
-    qwerty_home = os.environ.get("QWERTY_HOME") or str(Path.home() / ".hermes")
+    qwerty_home = os.environ.get("QWERTY_HOME") or str(Path.home() / ".qwerty")
     try:
         # Helper writes logs to stderr; we ask bash to print `command -v node`
         # on stdout once ensure_node succeeds. Subshell PATH edits don't leak
@@ -13884,7 +13884,7 @@ def cmd_profile(args):
         try:
             set_active_profile(name)
             if name == "default":
-                print("Switched to: default (~/.hermes)")
+                print("Switched to: default (~/.qwerty)")
             else:
                 print(f"Switched to: {name}")
         except (ValueError, FileNotFoundError) as e:
@@ -14560,7 +14560,7 @@ def _maybe_setup_dashboard_auth_interactively(args) -> None:
             "the dashboard again:\n"
             "    qwerty dashboard register\n"
             "  It provisions a Nous Portal OAuth client and writes "
-            "QWERTY_DASHBOARD_OAUTH_CLIENT_ID into ~/.hermes/.env for you.\n"
+            "QWERTY_DASHBOARD_OAUTH_CLIENT_ID into ~/.qwerty/.env for you.\n"
             "  Docs: https://qwerty-agent.nousresearch.com/docs/"
             "user-guide/features/web-dashboard#authentication-gated-mode"
         )
@@ -15756,7 +15756,7 @@ def main():
         help="Manage external secret sources (Bitwarden, 1Password)",
         description=(
             "Pull API keys from an external secret manager at process startup "
-            "instead of storing them in ~/.hermes/.env.  Supports Bitwarden "
+            "instead of storing them in ~/.qwerty/.env.  Supports Bitwarden "
             "Secrets Manager and 1Password.  See: "
             "https://qwerty-agent.nousresearch.com/docs/user-guide/secrets/"
         ),
@@ -16060,7 +16060,7 @@ def main():
     # =========================================================================
     checkpoints_parser = subparsers.add_parser(
         "checkpoints",
-        help="Inspect / prune / clear ~/.hermes/checkpoints/",
+        help="Inspect / prune / clear ~/.qwerty/checkpoints/",
         description="Manage the filesystem checkpoint store — the shadow git "
         "repo qwerty uses to snapshot working directories before "
         "write_file/patch/terminal calls. Lets you see how much "

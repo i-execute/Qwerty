@@ -434,7 +434,7 @@ def test_junk_root_is_dropped_from_the_discovered_tier():
 def test_non_git_cwd_can_group_inside_a_junk_repo_subtree():
     # Repo discovery rejects the full state subtree, but a selected non-git
     # descendant may be an intentional workspace carried over from the old UI.
-    workspace = _session("/home/test/.hermes/workspaces/notes")
+    workspace = _session("/home/test/.qwerty/workspaces/notes")
 
     tree = pt.build_tree(
         [],
@@ -446,7 +446,7 @@ def test_non_git_cwd_can_group_inside_a_junk_repo_subtree():
         is_junk_cwd=lambda path: path in {"/home/test", "/home/test/.qwerty"},
     )
 
-    assert [p["id"] for p in tree["projects"]] == ["/home/test/.hermes/workspaces/notes"]
+    assert [p["id"] for p in tree["projects"]] == ["/home/test/.qwerty/workspaces/notes"]
     assert tree["scoped_session_ids"] == [workspace["id"]]
 
 

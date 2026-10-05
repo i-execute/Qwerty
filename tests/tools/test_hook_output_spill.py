@@ -191,7 +191,7 @@ class SpillIfOversizedTests(unittest.TestCase):
             # ~/.qwerty/hook_outputs depending on get_qwerty_home behaviour.
             candidates = [
                 Path(test_home) / "hook_outputs" / "sess",
-                Path(os.path.expanduser("~/.hermes/hook_outputs/sess")),
+                Path(os.path.expanduser("~/.qwerty/hook_outputs/sess")),
             ]
             # At least one of the candidate dirs now exists and has a file.
             existing = [c for c in candidates if c.is_dir() and list(c.iterdir())]

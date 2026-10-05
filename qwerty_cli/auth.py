@@ -910,7 +910,7 @@ def _auth_file_path() -> Path:
     # hermetic conftest, or sandbox escapes via threads/subprocesses. In
     # production (no PYTEST_CURRENT_TEST) this is a single dict lookup.
     if os.environ.get("PYTEST_CURRENT_TEST"):
-        real_home_auth = (Path.home() / ".hermes" / "auth.json").resolve(strict=False)
+        real_home_auth = (Path.home() / ".qwerty" / "auth.json").resolve(strict=False)
         try:
             resolved = path.resolve(strict=False)
         except Exception:
@@ -977,7 +977,7 @@ def _load_global_auth_store() -> Dict[str, Any]:
     if os.environ.get("PYTEST_CURRENT_TEST"):
         real_home_env = os.environ.get("HOME", "")
         if real_home_env:
-            real_root = Path(real_home_env) / ".hermes" / "auth.json"
+            real_root = Path(real_home_env) / ".qwerty" / "auth.json"
             try:
                 if global_path.resolve(strict=False) == real_root.resolve(strict=False):
                     return {}
@@ -2053,7 +2053,7 @@ def resolve_provider(
     raise AuthError(
         "No inference provider configured. Run 'qwerty model' to choose a "
         "provider and model, or set an API key (OPENROUTER_API_KEY, "
-        "OPENAI_API_KEY, etc.) in ~/.hermes/.env.",
+        "OPENAI_API_KEY, etc.) in ~/.qwerty/.env.",
         code="no_provider_configured",
     )
 
@@ -3166,7 +3166,7 @@ def _spotify_interactive_setup(redirect_uri_hint: str) -> str:
         save_env_value("QWERTY_SPOTIFY_REDIRECT_URI", redirect_uri_hint)
 
     print()
-    print("Saved QWERTY_SPOTIFY_CLIENT_ID to ~/.hermes/.env")
+    print("Saved QWERTY_SPOTIFY_CLIENT_ID to ~/.qwerty/.env")
     print()
     return raw
 
@@ -3592,7 +3592,7 @@ def _sync_codex_pool_entries(
 
 
 def _save_codex_tokens(tokens: Dict[str, str], last_refresh: str = None, label: str = None) -> None:
-    """Save Codex OAuth tokens to Qwerty auth store (~/.hermes/auth.json)."""
+    """Save Codex OAuth tokens to Qwerty auth store (~/.qwerty/auth.json)."""
     if last_refresh is None:
         last_refresh = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     with _auth_store_lock():
@@ -4428,7 +4428,7 @@ def _write_through_xai_oauth_to_global_root(state: Dict[str, Any]) -> None:
     if os.environ.get("PYTEST_CURRENT_TEST"):
         real_home_env = os.environ.get("HOME", "")
         if real_home_env:
-            real_root = Path(real_home_env) / ".hermes" / "auth.json"
+            real_root = Path(real_home_env) / ".qwerty" / "auth.json"
             try:
                 if global_path.resolve(strict=False) == real_root.resolve(strict=False):
                     return
@@ -5575,7 +5575,7 @@ def _refresh_access_token(
             "Nous Portal detected refresh-token reuse and revoked this session.\n"
             "This usually means an external process (monitoring script, "
             "custom self-heal hook, or another Qwerty install sharing "
-            "~/.hermes/auth.json) called POST /api/oauth/token with Qwerty's "
+            "~/.qwerty/auth.json) called POST /api/oauth/token with Qwerty's "
             "refresh token without persisting the rotated token back.\n"
             "Nous refresh tokens are single-use — only Qwerty may call the "
             "refresh endpoint. For health checks, use `qwerty auth status` "
@@ -7459,7 +7459,7 @@ def _login_openai_codex(
     *,
     force_new_login: bool = False,
 ) -> None:
-    """OpenAI Codex login via device code flow. Tokens stored in ~/.hermes/auth.json."""
+    """OpenAI Codex login via device code flow. Tokens stored in ~/.qwerty/auth.json."""
 
     del args, pconfig  # kept for parity with other provider login helpers
 
@@ -8110,7 +8110,7 @@ def _minimax_poll_token(
 
 
 def _minimax_save_auth_state(auth_state: Dict[str, Any]) -> None:
-    """Persist MiniMax OAuth state to Qwerty auth store (~/.hermes/auth.json)."""
+    """Persist MiniMax OAuth state to Qwerty auth store (~/.qwerty/auth.json)."""
     with _auth_store_lock():
         auth_store = _load_auth_store()
         _save_provider_state(auth_store, "minimax-oauth", auth_state)

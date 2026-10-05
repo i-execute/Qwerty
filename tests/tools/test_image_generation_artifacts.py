@@ -33,7 +33,7 @@ def test_postprocess_adds_agent_visible_image_for_active_ssh_env(monkeypatch, tm
     assert result["image"] == str(image_path)
     assert result["host_image"] == str(image_path)
     assert result["agent_visible_image"] == (
-        "/home/remotesshuser/.hermes/cache/images/xai_grok-imagine-image_test.jpg"
+        "/home/remotesshuser/.qwerty/cache/images/xai_grok-imagine-image_test.jpg"
     )
     assert sync_calls == [True]
 
@@ -55,7 +55,7 @@ def test_postprocess_maps_docker_cache_path_without_active_env(monkeypatch, tmp_
     result = json.loads(image_generation_tool._postprocess_image_generate_result(raw))
 
     assert result["image"] == str(image_path)
-    assert result["agent_visible_image"] == "/root/.hermes/cache/images/generated.png"
+    assert result["agent_visible_image"] == "/root/.qwerty/cache/images/generated.png"
 
 
 def test_postprocess_maps_ssh_cache_path_without_active_env(monkeypatch, tmp_path):
@@ -75,7 +75,7 @@ def test_postprocess_maps_ssh_cache_path_without_active_env(monkeypatch, tmp_pat
     result = json.loads(image_generation_tool._postprocess_image_generate_result(raw))
 
     assert result["image"] == str(image_path)
-    assert result["agent_visible_image"] == "~/.hermes/cache/images/first-call.png"
+    assert result["agent_visible_image"] == "~/.qwerty/cache/images/first-call.png"
 
 
 def test_postprocess_leaves_remote_image_urls_unchanged(monkeypatch):
@@ -121,4 +121,4 @@ def test_handle_image_generate_postprocesses_plugin_result(monkeypatch, tmp_path
     )
 
     assert seen_task_ids == ["plugin-task"]
-    assert result["agent_visible_image"] == "/home/remote/.hermes/cache/images/plugin.png"
+    assert result["agent_visible_image"] == "/home/remote/.qwerty/cache/images/plugin.png"

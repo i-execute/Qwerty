@@ -1776,13 +1776,13 @@ class SlackAdapter(BasePlatformAdapter):
             logger.error(
                 "[Slack] SLACK_BOT_TOKEN not set — this is a permanent config "
                 "error; set SLACK_BOT_TOKEN via `qwerty gateway setup` "
-                "or in the active profile's ~/.hermes/.env file, then restart "
+                "or in the active profile's ~/.qwerty/.env file, then restart "
                 "the gateway.",
             )
             self._set_fatal_error(
                 "missing_slack_bot_token",
                 "SLACK_BOT_TOKEN not configured. Use `qwerty gateway setup` "
-                "or add it to your active profile's ~/.hermes/.env file, "
+                "or add it to your active profile's ~/.qwerty/.env file, "
                 "then restart the gateway.",
                 retryable=False,
             )
@@ -1791,13 +1791,13 @@ class SlackAdapter(BasePlatformAdapter):
             logger.error(
                 "[Slack] SLACK_APP_TOKEN not set — this is a permanent config "
                 "error; set SLACK_APP_TOKEN via `qwerty gateway setup` "
-                "or in the active profile's ~/.hermes/.env file, then restart "
+                "or in the active profile's ~/.qwerty/.env file, then restart "
                 "the gateway.",
             )
             self._set_fatal_error(
                 "missing_slack_app_token",
                 "SLACK_APP_TOKEN not configured. Use `qwerty gateway setup` "
-                "or add it to your active profile's ~/.hermes/.env file, "
+                "or add it to your active profile's ~/.qwerty/.env file, "
                 "then restart the gateway.",
                 retryable=False,
             )

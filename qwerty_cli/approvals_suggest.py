@@ -400,7 +400,7 @@ def _render_text(proposals: list[Proposal], days: int) -> None:
     print(
         "\nNothing has been changed. Apply selected entries with:\n"
         "  qwerty approvals suggest --apply 1,3\n"
-        "Entries are merged into command_allowlist in ~/.hermes/config.yaml."
+        "Entries are merged into command_allowlist in ~/.qwerty/config.yaml."
     )
 
 
@@ -439,7 +439,7 @@ def suggest_command(args) -> int:
             for pattern in applied:
                 print(f"  + {pattern}")
             print(f"\ncommand_allowlist now has {len(merged)} entries "
-                  "(~/.hermes/config.yaml).")
+                  "(~/.qwerty/config.yaml).")
         return 0
 
     if getattr(args, "json", False):

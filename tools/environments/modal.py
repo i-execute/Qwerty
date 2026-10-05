@@ -283,7 +283,7 @@ class ModalEnvironment(BaseEnvironment):
         logger.info("Modal: sandbox created (task=%s)", self._task_id)
 
         self._sync_manager = FileSyncManager(
-            get_files_fn=lambda: iter_sync_files("/root/.hermes"),
+            get_files_fn=lambda: iter_sync_files("/root/.qwerty"),
             upload_fn=self._modal_upload,
             delete_fn=self._modal_delete,
             bulk_upload_fn=self._modal_bulk_upload,
@@ -374,7 +374,7 @@ class ModalEnvironment(BaseEnvironment):
         """
         async def _download():
             proc = await self._sandbox.exec.aio(
-                "bash", "-c", "tar cf - -C / root/.hermes"
+                "bash", "-c", "tar cf - -C / root/.qwerty"
             )
             data = await proc.stdout.read.aio()
             exit_code = await proc.wait.aio()

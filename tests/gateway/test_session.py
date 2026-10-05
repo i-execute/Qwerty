@@ -507,10 +507,10 @@ class TestBuildSessionContextPrompt:
         )
         ctx = build_session_context(source, config)
 
-        with patch("qwerty_constants.display_qwerty_home", return_value="~/.hermes/profiles/coder"):
+        with patch("qwerty_constants.display_qwerty_home", return_value="~/.qwerty/profiles/coder"):
             prompt = build_session_context_prompt(ctx)
 
-        assert "~/.hermes/profiles/coder/cron/output/" in prompt
+        assert "~/.qwerty/profiles/coder/cron/output/" in prompt
 
     def test_whatsapp_prompt(self):
         config = GatewayConfig(

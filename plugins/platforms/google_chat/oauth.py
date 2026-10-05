@@ -82,7 +82,7 @@ except (ModuleNotFoundError, ImportError):
     # _qwerty_home.py shim).
     def get_qwerty_home() -> Path:
         val = os.environ.get("QWERTY_HOME", "").strip()
-        return Path(val) if val else Path.home() / ".hermes"
+        return Path(val) if val else Path.home() / ".qwerty"
 
     def display_qwerty_home() -> str:
         home = get_qwerty_home()

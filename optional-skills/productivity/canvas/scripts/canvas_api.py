@@ -29,7 +29,7 @@ def _check_config():
         missing.append("CANVAS_BASE_URL")
     if missing:
         qwerty_env = os.path.join(
-            os.environ.get("QWERTY_HOME", os.path.expanduser("~/.hermes")), ".env"
+            os.environ.get("QWERTY_HOME", os.path.expanduser("~/.qwerty")), ".env"
         )
         print(
             f"Missing required environment variables: {', '.join(missing)}\n"

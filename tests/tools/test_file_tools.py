@@ -640,7 +640,7 @@ class TestSensitivePathCheck:
 
     @patch("tools.file_tools._get_file_ops")
     def test_normal_file_not_blocked(self, mock_get, monkeypatch):
-        monkeypatch.setattr("tools.file_tools._qwerty_config_resolved", "/home/user/.hermes/config.yaml")
+        monkeypatch.setattr("tools.file_tools._qwerty_config_resolved", "/home/user/.qwerty/config.yaml")
         monkeypatch.setattr("tools.file_tools._qwerty_config_resolved_loaded", True)
         mock_ops = MagicMock()
         result_obj = MagicMock()

@@ -86,12 +86,12 @@ E164_RE = re.compile(r"^\+[1-9]\d{6,14}$")
 # auth.json helpers — share the file with the rest of qwerty-agent.
 
 def _auth_json_path() -> Path:
-    """Resolve ``~/.hermes/auth.json`` honouring the active Qwerty profile."""
+    """Resolve ``~/.qwerty/auth.json`` honouring the active Qwerty profile."""
     try:
         from qwerty_constants import get_qwerty_home
         return Path(get_qwerty_home()) / "auth.json"
     except Exception:
-        return Path(os.path.expanduser("~/.hermes")) / "auth.json"
+        return Path(os.path.expanduser("~/.qwerty")) / "auth.json"
 
 
 def _load_auth() -> Dict[str, Any]:

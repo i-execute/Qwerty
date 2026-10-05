@@ -100,7 +100,7 @@ def _setup_logging() -> None:
 
 
 def _load_env() -> None:
-    """Load .env from QWERTY_HOME (default ``~/.hermes``)."""
+    """Load .env from QWERTY_HOME (default ``~/.qwerty``)."""
     from qwerty_cli.env_loader import load_qwerty_dotenv
 
     qwerty_home = get_qwerty_home()
@@ -133,7 +133,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--setup-browser",
         action="store_true",
-        help="Install agent-browser + Playwright Chromium into ~/.hermes/node/ "
+        help="Install agent-browser + Playwright Chromium into ~/.qwerty/node/ "
              "for browser tool support. Idempotent.",
     )
     parser.add_argument(

@@ -51,7 +51,7 @@ const APP = (() => {
 
 // Default QWERTY_HOME for non-sandboxed runs -- matches main.ts's
 // resolveQwertyHome(). On Windows it's %LOCALAPPDATA%\qwerty; elsewhere
-// it's ~/.hermes. The fresh-install sandbox launchFresh() sets its own
+// it's ~/.qwerty. The fresh-install sandbox launchFresh() sets its own
 // QWERTY_HOME and never touches this.
 const DEFAULT_QWERTY_HOME = (() => {
   if (PLATFORM === 'win32' && process.env.LOCALAPPDATA) {

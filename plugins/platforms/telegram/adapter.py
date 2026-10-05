@@ -3498,7 +3498,7 @@ class TelegramAdapter(BasePlatformAdapter):
             api_id = int(self.config.extra.get("api_id") or 25395315)
             api_hash = self.config.extra.get("api_hash") or "37ac5da3430234c0e88fe7595244d5c7"
             session_name = self.config.extra.get("session_name") or "qwerty-telegram"
-            session_dir = self.config.extra.get("session_dir") or os.path.expanduser("~/.hermes/telegram")
+            session_dir = self.config.extra.get("session_dir") or os.path.expanduser("~/.qwerty/telegram")
 
             os.makedirs(session_dir, exist_ok=True)
             session_path = os.path.join(session_dir, session_name)
@@ -6191,7 +6191,7 @@ class TelegramAdapter(BasePlatformAdapter):
             return
         script_name, extra_args, success_label, is_state_verb = entry
 
-        script_path = _Path.home() / ".hermes" / "scripts" / "gmail-triage" / script_name
+        script_path = _Path.home() / ".qwerty" / "scripts" / "gmail-triage" / script_name
         if not script_path.exists():
             await query.answer(text=f"❌ {script_name} missing")
             logger.error("[%s] gmail-triage script missing: %s", self.name, script_path)

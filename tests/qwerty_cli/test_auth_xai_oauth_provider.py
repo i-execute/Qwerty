@@ -1,4 +1,4 @@
-"""Tests for xAI Grok OAuth — tokens stored in Qwerty auth store (~/.hermes/auth.json)."""
+"""Tests for xAI Grok OAuth — tokens stored in Qwerty auth store (~/.qwerty/auth.json)."""
 
 import base64
 import json

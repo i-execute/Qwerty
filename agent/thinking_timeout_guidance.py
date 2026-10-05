@@ -125,7 +125,7 @@ def build_thinking_timeout_guidance(
         "gateways (NVIDIA NIM, OpenAI, Anthropic, DeepSeek). Workarounds "
         "in priority order:\n"
         f"1. Set `providers.{provider}.models.{model}.stale_timeout_seconds: 900` "
-        "in `~/.hermes/config.yaml` to extend the per-call timeout. "
+        "in `~/.qwerty/config.yaml` to extend the per-call timeout. "
         "(Qwerty's built-in floor is 600s for known reasoning models — "
         "if you still see this after raising, the upstream cap is even "
         "shorter.)\n"

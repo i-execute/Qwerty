@@ -1,4 +1,4 @@
-"""Tests for Codex auth — tokens stored in Qwerty auth store (~/.hermes/auth.json)."""
+"""Tests for Codex auth — tokens stored in Qwerty auth store (~/.qwerty/auth.json)."""
 
 import json
 import time

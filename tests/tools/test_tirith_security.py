@@ -1160,7 +1160,7 @@ class TestDiskFailureMarker:
 
 class TestQwertyHomeIsolation:
     def test_qwerty_bin_dir_respects_qwerty_home(self):
-        """_qwerty_bin_dir must use QWERTY_HOME, not hardcoded ~/.hermes."""
+        """_qwerty_bin_dir must use QWERTY_HOME, not hardcoded ~/.qwerty."""
         from tools.tirith_security import _qwerty_bin_dir
         import tempfile
         tmpdir = tempfile.mkdtemp()
@@ -1170,7 +1170,7 @@ class TestQwertyHomeIsolation:
         assert os.path.isdir(result)
 
     def test_failure_marker_respects_qwerty_home(self):
-        """_failure_marker_path must use QWERTY_HOME, not hardcoded ~/.hermes."""
+        """_failure_marker_path must use QWERTY_HOME, not hardcoded ~/.qwerty."""
         from tools.tirith_security import _failure_marker_path
         with patch.dict(os.environ, {"QWERTY_HOME": "/custom/qwerty"}):
             result = _failure_marker_path()
@@ -1190,7 +1190,7 @@ class TestQwertyHomeIsolation:
             # falls back to the account database; compute expected under the
             # same environment instead of after patch.dict restores HOME.
             os.environ.pop("QWERTY_HOME", None)
-            expected = os.path.join(os.path.expanduser("~"), ".hermes")
+            expected = os.path.join(os.path.expanduser("~"), ".qwerty")
             result = _get_qwerty_home()
         assert result == expected
 

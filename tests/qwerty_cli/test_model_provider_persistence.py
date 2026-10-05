@@ -388,7 +388,7 @@ class TestBaseUrlValidation:
         # User types a shell command instead of a URL at the base URL prompt
         with patch("qwerty_cli.auth._prompt_model_selection", return_value="MiniMax-M2"), \
              patch("qwerty_cli.auth.deactivate_provider"), \
-             patch("builtins.input", return_value="nano ~/.hermes/.env"):
+             patch("builtins.input", return_value="nano ~/.qwerty/.env"):
             _model_flow_api_key_provider(load_config(), "minimax", "old-model")
 
         # The garbage value should NOT have been saved

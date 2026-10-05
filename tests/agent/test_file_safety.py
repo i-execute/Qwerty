@@ -85,7 +85,7 @@ class TestEnvFileReadBlocking:
         # Note: qwerty internal .env is in ~/.qwerty/.env which is NOT a project-local
         # path, but the basename check applies to ANY .env. This is intentional —
         # even ~/.qwerty/.env should not be readable via read_file.
-        error = get_read_block_error(os.path.expanduser("~/.hermes/.env"))
+        error = get_read_block_error(os.path.expanduser("~/.qwerty/.env"))
         assert error is not None
 
     def test_blocked_set_is_lowercase(self):

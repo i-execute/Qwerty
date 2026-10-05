@@ -901,12 +901,12 @@ def test_rebrand_text_preserves_filesystem_path_casing():
     """
     mod = load_module()
     assert mod.rebrand_text("config is at ~/.openclaw/config.yaml") == \
-        "config is at ~/.hermes/config.yaml"
+        "config is at ~/.qwerty/config.yaml"
     assert mod.rebrand_text("use .openclaw directory") == "use .qwerty directory"
     assert mod.rebrand_text("Path.home() / '.openclaw'") == "Path.home() / '.qwerty'"
     # Sentence with both lowercase path and capitalized prose.
     assert mod.rebrand_text("openclaw config path: ~/.openclaw/") == \
-        "qwerty config path: ~/.hermes/"
+        "qwerty config path: ~/.qwerty/"
 
 
 def test_migrate_memory_rebrands_entries(tmp_path):

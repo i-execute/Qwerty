@@ -36,7 +36,7 @@ def _qwerty_home():
         from qwerty_constants import get_qwerty_home
         return str(get_qwerty_home())
     except Exception:
-        return os.environ.get("QWERTY_HOME") or os.path.expanduser("~/.hermes")
+        return os.environ.get("QWERTY_HOME") or os.path.expanduser("~/.qwerty")
 
 
 def _tokens_dir():

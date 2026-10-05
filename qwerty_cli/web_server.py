@@ -19877,7 +19877,7 @@ def _mount_plugin_api_routes():
             _log.warning(
                 "Plugin %s: ignoring backend api=%s (project plugins may "
                 "not auto-import Python code; move the plugin to "
-                "~/.hermes/plugins/ if you trust it)",
+                "~/.qwerty/plugins/ if you trust it)",
                 plugin["name"], api_file_name,
             )
             continue

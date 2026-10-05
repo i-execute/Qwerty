@@ -141,7 +141,7 @@ def _get_token_dir(qwerty_home: str | Path | None = None) -> Path:
         from qwerty_constants import get_qwerty_home
         base = Path(qwerty_home) if qwerty_home is not None else Path(get_qwerty_home())
     except ImportError:
-        base = Path(os.environ.get("QWERTY_HOME", str(Path.home() / ".hermes")))
+        base = Path(os.environ.get("QWERTY_HOME", str(Path.home() / ".qwerty")))
     return base / "mcp-tokens"
 
 

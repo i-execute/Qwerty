@@ -824,7 +824,7 @@ class TestScopedLocks:
             "pid": 873,
             "start_time": None,
             "kind": "qwerty-gateway",
-            "argv": ["/Users/user/.hermes/qwerty-agent/qwerty_cli/main.py", "gateway", "run", "--replace"],
+            "argv": ["/Users/user/.qwerty/qwerty-agent/qwerty_cli/main.py", "gateway", "run", "--replace"],
         }))
 
         # Post-#21561 the liveness probe routes through
@@ -860,7 +860,7 @@ class TestScopedLocks:
             "pid": 873,
             "start_time": None,
             "kind": "qwerty-gateway",
-            "argv": ["/Users/user/.hermes/qwerty-agent/qwerty_cli/main.py", "gateway", "run", "--replace"],
+            "argv": ["/Users/user/.qwerty/qwerty-agent/qwerty_cli/main.py", "gateway", "run", "--replace"],
         }))
 
         monkeypatch.setattr(status, "_pid_exists", lambda pid: True)
@@ -1010,7 +1010,7 @@ class TestScopedLocks:
             "pid": 99999,
             "start_time": None,
             "kind": "qwerty-gateway",
-            "argv": ["/Users/user/.hermes/qwerty-agent/qwerty_cli/main.py", "gateway", "run", "--replace"],
+            "argv": ["/Users/user/.qwerty/qwerty-agent/qwerty_cli/main.py", "gateway", "run", "--replace"],
         }))
 
         monkeypatch.setattr(status, "_pid_exists", lambda pid: True)

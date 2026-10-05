@@ -126,7 +126,7 @@ def qwerty_lsp_bin_dir() -> Path:
     """Return the Qwerty-owned bin staging dir for LSP servers."""
     home = os.environ.get("QWERTY_HOME")
     if home is None:
-        home = os.path.join(os.path.expanduser("~"), ".hermes")
+        home = os.path.join(os.path.expanduser("~"), ".qwerty")
     p = Path(home) / "lsp" / "bin"
     p.mkdir(parents=True, exist_ok=True)
     return p

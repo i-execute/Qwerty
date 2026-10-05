@@ -221,7 +221,7 @@ class TestRmtreeWritableScopeGuard:
                 _rmtree_writable(Path("/"))
 
     def test_refuses_qwerty_home_itself(self, tmp_path):
-        """``~/.hermes/`` itself is what the #48200 wipe destroyed."""
+        """``~/.qwerty/`` itself is what the #48200 wipe destroyed."""
         from tools.skills_sync import _rmtree_writable
 
         qwerty = tmp_path / "home"

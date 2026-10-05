@@ -123,7 +123,7 @@ def _termux_install_all_fallback_notes() -> list[str]:
 
 
 def _has_provider_env_config(content: str) -> bool:
-    """Return True when ~/.hermes/.env contains provider auth/base URL settings."""
+    """Return True when ~/.qwerty/.env contains provider auth/base URL settings."""
     return any(key in content for key in _PROVIDER_ENV_HINTS)
 
 
@@ -729,7 +729,7 @@ def run_doctor(args):
         else:
             print(color(
                 f"  ✗ Failed to persist ack for {ack_target}. "
-                f"Check ~/.hermes/config.yaml is writable.",
+                f"Check ~/.qwerty/config.yaml is writable.",
                 Colors.RED,
             ))
             sys.exit(1)
@@ -1124,7 +1124,7 @@ def run_doctor(args):
                     if not configured:
                         _fail_and_issue(
                             f"model.provider '{runtime_provider}' is set but no API key is configured",
-                            "(check ~/.hermes/.env or run 'qwerty setup')",
+                            "(check ~/.qwerty/.env or run 'qwerty setup')",
                             (
                                 f"No credentials found for provider '{runtime_provider}'. "
                                 f"Run 'qwerty setup' or set the provider's API key in {_DHH}/.env, "
