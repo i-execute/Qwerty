@@ -468,6 +468,12 @@ def repair_message_sequence(agent, messages: List[Dict]) -> int:
             or m.get("finish_reason") == "incomplete"
         )
 
+    def _is_verification_candidate(m: Dict) -> bool:
+        return m.get("finish_reason") in (
+            "verification_required",
+            "verify_hook_continue",
+        )
+
     collapsed: List[Dict] = []
     for msg in messages:
         if (
@@ -479,6 +485,14 @@ def repair_message_sequence(agent, messages: List[Dict]) -> int:
             and not _is_codex_interim(msg)
             and not _is_codex_interim(collapsed[-1])
         ):
+            # Verification candidate (#65919): an assistant turn awaiting
+            # verification is superseded by the final assistant turn that
+            # follows it — drop the candidate instead of merging its text
+            # into the verified reply (the display lineage keeps it verbatim).
+            if _is_verification_candidate(collapsed[-1]) and not msg.get("tool_calls"):
+                collapsed[-1] = msg
+                repairs += 1
+                continue
             prev = collapsed[-1]
             # Union tool_calls (preserve order, both may carry them).
             prev_calls = list(prev.get("tool_calls") or [])
