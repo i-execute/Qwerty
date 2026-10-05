@@ -37,13 +37,13 @@ Use any model you want — [Nous Portal](https://portal.nousresearch.com), OpenR
 ### Linux, macOS, WSL2, Termux
 
 ```bash
-curl -fsSL https://qwerty-agent.nousresearch.com/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/i-execute/Qwerty/forget/scripts/install.sh | bash
 ```
 
-Installing a fork or a specific branch? Override the repo:
+Installing from a different fork or branch? Override the repo:
 
 ```bash
-curl -fsSL https://qwerty-agent.nousresearch.com/install.sh \
+curl -fsSL https://raw.githubusercontent.com/i-execute/Qwerty/forget/scripts/install.sh \
   | QWERTY_REPO_URL_SSH=git@github.com:i-execute/Qwerty.git \
     QWERTY_REPO_URL_HTTPS=https://github.com/i-execute/Qwerty.git \
     bash -s -- --branch forget
@@ -233,7 +233,7 @@ full git checkout it creates at `$QWERTY_HOME/qwerty-agent` (usually
 managed venv, lazy dependencies, gateway, and docs tooling.
 
 ```bash
-curl -fsSL https://qwerty-agent.nousresearch.com/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/i-execute/Qwerty/forget/scripts/install.sh | bash
 cd "${QWERTY_HOME:-$HOME/.qwerty}/qwerty-agent"
 uv pip install -e ".[all,dev]"
 scripts/run_tests.sh
