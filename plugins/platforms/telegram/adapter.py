@@ -11,6 +11,7 @@ import asyncio
 import html as _html
 import dataclasses
 import faulthandler
+import hashlib
 import inspect
 import io
 import json
@@ -3501,7 +3502,8 @@ class TelegramAdapter(BasePlatformAdapter):
             session_dir = self.config.extra.get("session_dir") or os.path.expanduser("~/.qwerty/telegram")
 
             os.makedirs(session_dir, exist_ok=True)
-            session_path = os.path.join(session_dir, session_name)
+            token_fingerprint = hashlib.sha256(self.config.token.encode()).hexdigest()
+            session_path = os.path.join(session_dir, f"{session_name}-{token_fingerprint}")
 
             app = GoyGram(
                 bot_token=self.config.token,
