@@ -43,8 +43,8 @@ NC='\033[0m' # No Color
 BOLD='\033[1m'
 
 # Configuration
-REPO_URL_SSH="${QWERTY_REPO_URL_SSH:-git@github.com:NousResearch/qwerty-agent.git}"
-REPO_URL_HTTPS="${QWERTY_REPO_URL_HTTPS:-https://github.com/NousResearch/qwerty-agent.git}"
+REPO_URL_SSH="${QWERTY_REPO_URL_SSH:-git@github.com:i-execute/Qwerty.git}"
+REPO_URL_HTTPS="${QWERTY_REPO_URL_HTTPS:-https://github.com/i-execute/Qwerty.git}"
 QWERTY_HOME="${QWERTY_HOME:-$HOME/.qwerty}"
 # INSTALL_DIR is resolved AFTER arg parsing and OS detection so we can pick an
 # FHS-style layout for root installs.  Track whether the user gave us an
@@ -71,7 +71,7 @@ USE_VENV=true
 RUN_SETUP=true
 SKIP_BROWSER=false
 NO_SKILLS=false
-BRANCH="main"
+BRANCH="${QWERTY_BRANCH:-forget}"
 INSTALL_COMMIT=""
 ENSURE_DEPS=""
 
@@ -163,7 +163,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --no-skills    Start with a blank slate — seed no bundled skills, and"
             echo "                   write \$QWERTY_HOME/.no-bundled-skills so future"
             echo "                   'qwerty update' runs never inject bundled skills either"
-            echo "  --branch NAME  Git branch to install (default: main)"
+            echo "  --branch NAME  Git branch to install (default: forget, override QWERTY_BRANCH)"
             echo "  --commit SHA   Pin checkout to a specific commit after clone/update"
             echo "  --manifest     Print desktop bootstrap stage manifest as JSON"
             echo "  --stage NAME   Run one desktop bootstrap stage"
