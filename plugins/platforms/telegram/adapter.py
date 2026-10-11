@@ -8569,6 +8569,8 @@ class TelegramAdapter(BasePlatformAdapter):
             elif media_type == "messageMediaVenue":
                 out.location = media.get("geo") if isinstance(media.get("geo"), dict) else media
                 out.venue = media
+        if out.caption is not None:
+            out.text = None
         return out
 
     def _mt_update_wrapper(self, ptb_msg: Any, update_id: int) -> Any:
