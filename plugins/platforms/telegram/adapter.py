@@ -8663,6 +8663,23 @@ class TelegramAdapter(BasePlatformAdapter):
             cq.message = None
             cq.inline_message_id = None
             cq.chat_id = raw.get("chat_id") or getattr(cbobj, "chat_id", None)
+
+            async def _cq_answer(text: str = "", show_alert: bool = False) -> None:
+                qid = cq.id
+                if qid is None:
+                    return
+                try:
+                    await self._app.mt_req(
+                        "messages.setBotCallbackAnswer",
+                        query_id=int(qid),
+                        message=text or None,
+                        alert=show_alert,
+                    )
+                except Exception:
+                    pass
+
+            cq.answer = _cq_answer
+
             msg_id = raw.get("msg_id")
             if msg_id is not None:
                 try:
@@ -8677,6 +8694,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 cq.message = m
             upd = SimpleNamespace()
             upd.callback_query = cq
+
             upd.effective_message = cq.message
             upd.update_id = cq.id or 0
             await self._handle_callback_query(upd)
