@@ -7113,6 +7113,10 @@ class TelegramAdapter(BasePlatformAdapter):
             )
             return {"name": str(chat_id), "type": "dm", "error": str(e)}
 
+    _EMOJI_ANY_RE = re.compile(
+        "[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\u2049\u203C\u2122\u2139\u2194-\u21AA\uFE0F]"
+    )
+
     _MDV2_TOKEN_RE = re.compile(
         r"```(?P<cblang>[^\n`]*)\n?(?P<cb>.*?)```"
         r"|`(?P<ci>[^`\n]+)`"
@@ -7221,7 +7225,40 @@ class TelegramAdapter(BasePlatformAdapter):
         unescaped = self._mdv2_unescape(stripped)
         if unescaped != stripped:
             entities = self._remap_entities_after_unescape(unescaped, stripped, entities)
+        entities = self._attach_custom_emoji_entities(unescaped, entities)
         return entities, self._has_uncollapsed_link_marker(unescaped)
+
+    def _attach_custom_emoji_entities(self, text: str, entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if not text:
+            return entities
+        glyph_ids: Dict[str, str] = {}
+        for _pack_name, _pack_desc, registry in self._PREMIUM_EMOJI_PACKS:
+            for emoji_id, glyph in registry:
+                glyph_ids.setdefault(glyph, emoji_id)
+        fallback_ids = [emoji_id for emoji_id, _glyph in self._GAME_EMOJI_PACK]
+        if not glyph_ids:
+            return entities
+        if entities:
+            spans = sorted((e["offset"], e["offset"] + e["length"]) for e in entities)
+        else:
+            spans = []
+        fb_pos = 0
+        for m in self._EMOJI_ANY_RE.finditer(text):
+            start, end = m.span()
+            if any(s <= start and end <= t for s, t in spans):
+                continue
+            glyph = m.group(0)
+            emoji_id = glyph_ids.get(glyph)
+            if emoji_id is None:
+                emoji_id = fallback_ids[fb_pos % len(fallback_ids)]
+                fb_pos += 1
+            entities.append({
+                "_": "messageEntityCustomEmoji",
+                "offset": start,
+                "length": end - start,
+                "document_id": int(emoji_id),
+            })
+        return entities
 
     def _mdv2_unescape(self, text: str) -> str:
         """Strip MarkdownV2 escape backslashes to recover the raw text."""
