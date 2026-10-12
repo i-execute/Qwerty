@@ -2053,7 +2053,7 @@ class TelegramAdapter(BasePlatformAdapter):
             "[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u2049\u203C\u2122\u2139\u2194-\u21AA]"
         )
         counters: Dict[str, int] = {}
-        fallback_pool = [emoji_id for emoji_id, _glyph in _GAME_EMOJI_PACK]
+        fallback_pool = [emoji_id for emoji_id, _glyph in cls._GAME_EMOJI_PACK]
         fallback_pos = 0
 
         def replace_emoji(match: re.Match[str]) -> str:
