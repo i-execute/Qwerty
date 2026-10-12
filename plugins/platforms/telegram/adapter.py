@@ -8689,6 +8689,27 @@ class TelegramAdapter(BasePlatformAdapter):
 
             cq.answer = _cq_answer
 
+            async def _cq_edit_message_text(
+                text: str = "",
+                parse_mode: Any = None,
+                reply_markup: Any = None,
+                **kwargs: Any,
+            ) -> Dict[str, Any]:
+                chat_id = cq.chat_id
+                mid = getattr(cq.message, "message_id", None) or getattr(cq.message, "id", None)
+                if chat_id is None or mid is None:
+                    raise RuntimeError("callback edit_message_text: no chat_id/message_id")
+                return await self._bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=mid,
+                    text=text,
+                    parse_mode=parse_mode,
+                    reply_markup=reply_markup,
+                    **kwargs,
+                )
+
+            cq.edit_message_text = _cq_edit_message_text
+
             msg_id = raw.get("msg_id")
             if msg_id is not None:
                 try:
