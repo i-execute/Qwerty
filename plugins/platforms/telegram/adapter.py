@@ -6118,8 +6118,11 @@ class TelegramAdapter(BasePlatformAdapter):
                             parse_mode=ParseMode.HTML,
                             reply_markup=None,
                         )
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        logger.warning(
+                            "[%s] clarify edit_message_text failed: %s",
+                            self.name, _redact_telegram_error_text(exc),
+                        )
                     logger.info(
                         "Telegram clarify button resolved (id=%s, choice=%r, user=%s)",
                         clarify_id, resolved_text, user_display,
@@ -8721,6 +8724,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 m.id = msg_id
                 m.message_id = msg_id
                 m.chat = None
+                m.text = None
                 cq.message = m
             upd = SimpleNamespace()
             upd.callback_query = cq
