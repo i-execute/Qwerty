@@ -8640,6 +8640,11 @@ class TelegramAdapter(BasePlatformAdapter):
             raw = cbobj.raw if hasattr(cbobj, "raw") else (cbobj if isinstance(cbobj, dict) else {})
             if not isinstance(raw, dict):
                 raw = {}
+            logger.info(
+                "[Telegram] MT callback received: qid=%s data=%r",
+                getattr(cbobj, "id", None) or raw.get("query_id"),
+                (getattr(cbobj, "data", None) or raw.get("data"))[:80] if isinstance(getattr(cbobj, "data", None) or raw.get("data"), str) else None,
+            )
             cq = SimpleNamespace()
             cq.id = cbobj.id if hasattr(cbobj, "id") else raw.get("query_id")
             data = self._mt_decode_callback_data(cbobj)
@@ -8675,8 +8680,11 @@ class TelegramAdapter(BasePlatformAdapter):
                         message=text or None,
                         alert=show_alert,
                     )
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.warning(
+                        "[Telegram] Callback answer failed (qid=%s): %s",
+                        qid, _redact_telegram_error_text(exc),
+                    )
 
             cq.answer = _cq_answer
 
