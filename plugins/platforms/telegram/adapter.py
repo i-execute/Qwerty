@@ -7226,7 +7226,22 @@ class TelegramAdapter(BasePlatformAdapter):
         if unescaped != stripped:
             entities = self._remap_entities_after_unescape(unescaped, stripped, entities)
         entities = self._attach_custom_emoji_entities(unescaped, entities)
+        entities = self._remap_entities_to_utf16(unescaped, entities)
         return entities, self._has_uncollapsed_link_marker(unescaped)
+
+    def _remap_entities_to_utf16(self, text: str, entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if not entities:
+            return entities
+        prefix_units: List[int] = [0]
+        for ch in text:
+            prefix_units.append(prefix_units[-1] + (2 if ord(ch) > 0xFFFF else 1))
+        for ent in entities:
+            off = ent.get("offset", 0)
+            ln = ent.get("length", 0)
+            if off < len(prefix_units) - 1 and (prefix_units[off + ln] - prefix_units[off]) != ln:
+                ent["offset"] = prefix_units[off]
+                ent["length"] = prefix_units[off + ln] - prefix_units[off]
+        return entities
 
     def _attach_custom_emoji_entities(self, text: str, entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if not text:
