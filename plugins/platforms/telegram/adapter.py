@@ -8679,6 +8679,7 @@ class TelegramAdapter(BasePlatformAdapter):
                         query_id=int(qid),
                         message=text or None,
                         alert=show_alert,
+                        cache_time=0,
                     )
                 except Exception as exc:
                     logger.warning(
