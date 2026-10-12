@@ -1989,6 +1989,14 @@ class TelegramAdapter(BasePlatformAdapter):
     # fallbacks within a pack cycle through that pack's IDs in upload order.
     _PREMIUM_EMOJI_PACKS = (
         (
+            "game-emoji",
+            "Game Emoji pack — user upload #3 (t.me/addemoji/GameEmoji): "
+            "game UI glyphs (hearts, weapons, coins, faces, status). "
+            "Highest priority: every emoji resolves into this pack; glyphs "
+            "missing from it fall back to a random pack ID.",
+            _GAME_EMOJI_PACK,
+        ),
+        (
             "md3-expressive",
             "Material Design 3 Expressive (Material You) — Google-style icons. "
             "Segment roles for the progress waves: #4 начало, #5 продление, "
@@ -2003,12 +2011,6 @@ class TelegramAdapter(BasePlatformAdapter):
             "adaptive pack (animals, objects, weapons, drinks, status icons) "
             "— 100 IDs in photo order.",
             _USER_UPLOADED_NATIVE_PREMIUM_EMOJI,
-        ),
-        (
-            "game-emoji",
-            "Game Emoji pack — user upload #3 (t.me/addemoji/GameEmoji): "
-            "game UI glyphs (hearts, weapons, coins, faces, status).",
-            _GAME_EMOJI_PACK,
         ),
         (
             "legacy",
@@ -2048,19 +2050,25 @@ class TelegramAdapter(BasePlatformAdapter):
                     uploaded_by_glyph.setdefault(alias, []).append(emoji_ids[target])
                     known_glyphs.add(alias)
         glyph_pattern = re.compile(
-            "|".join(re.escape(glyph) for glyph in sorted(known_glyphs, key=len, reverse=True))
+            "[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u2049\u203C\u2122\u2139\u2194-\u21AA]"
         )
         counters: Dict[str, int] = {}
+        fallback_pool = [emoji_id for emoji_id, _glyph in _GAME_EMOJI_PACK]
+        fallback_pos = 0
 
         def replace_emoji(match: re.Match[str]) -> str:
+            nonlocal fallback_pos
             glyph = match.group(0)
+            if glyph == "\ufe0f":
+                return glyph
             uploaded_ids = uploaded_by_glyph.get(glyph)
             if uploaded_ids:
                 occurrence = counters.get(glyph, 0)
                 counters[glyph] = occurrence + 1
                 emoji_id = uploaded_ids[occurrence % len(uploaded_ids)]
             else:
-                emoji_id = emoji_ids[glyph]
+                emoji_id = fallback_pool[fallback_pos % len(fallback_pool)]
+                fallback_pos += 1
             return f"![{glyph}](tg://emoji?id={emoji_id})"
 
         for index, part in enumerate(parts):
