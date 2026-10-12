@@ -6066,8 +6066,8 @@ class TelegramAdapter(BasePlatformAdapter):
                         await query.answer(text="✏️ Type your answer in the chat.")
                     try:
                         await query.edit_message_text(
-                            text=f"❓ {query.message.text or ''}\n\n<i>Awaiting typed response from {_html.escape(user_display)}…</i>",
-                            parse_mode=ParseMode.HTML,
+                            text=f"✏️ Ожидаю ответ текстом от {user_display}…",
+                            parse_mode=None,
                             reply_markup=None,
                         )
                     except Exception:
@@ -6114,8 +6114,8 @@ class TelegramAdapter(BasePlatformAdapter):
                         await query.answer(text=f"✓ {resolved_text[:60]}")
                     try:
                         await query.edit_message_text(
-                            text=f"❓ {_html.escape(query.message.text or '')}\n\n<b>{_html.escape(user_display)}:</b> {_html.escape(resolved_text)}",
-                            parse_mode=ParseMode.HTML,
+                            text=f"✓ {user_display}: {resolved_text}",
+                            parse_mode=None,
                             reply_markup=None,
                         )
                     except Exception as exc:
