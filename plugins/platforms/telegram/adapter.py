@@ -451,6 +451,16 @@ def _tl_photo_size_bytes(size: Any) -> int:
     return int(max(progressive)) if progressive else 0
 
 
+class _SentMessage(dict):
+    def __getattr__(self, name: str) -> Any:
+        if name == "message_id" and "id" in self:
+            return self["id"]
+        try:
+            return self[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
+
+
 def _mt_file_location(media: Any, thumb: Any = None) -> Dict[str, Any]:
     """Build an MTProto inputFileLocation for a raw TL media dict."""
     if not isinstance(media, dict):
@@ -1830,108 +1840,18 @@ class TelegramAdapter(BasePlatformAdapter):
     }
 
     # GameEmoji pack — user upload #3 (t.me/addemoji/GameEmoji), 100 emoji.
-    _GAME_EMOJI_PACK = (
-        ('5465465194056525619', '👍'),
-        ('5465262274031659421', '🥰'),
-        ('5462910521739063094', '👋'),
-        ('5465225015190367274', '👎'),
-        ('5463121572137022242', '😂'),
-        ('5463412289883353404', '🤟'),
-        ('5462990652943904884', '😴'),
-        ('5465198330558557107', '💩'),
-        ('5463256910851546817', '🤝'),
-        ('5463277406435422003', '🗡'),
-        ('5465154440287757794', '🛡'),
-        ('5463054218459884779', '🌡'),
-        ('5463274047771000031', '😵'),
-        ('5463392464314315076', '👉'),
-        ('5463156928307801722', '🤕'),
-        ('5463081281048818043', '💊'),
-        ('5465137208878969279', '😵'),
-        ('5462882007451185227', '🚫'),
-        ('5463186335948878489', '⚰️'),
-        ('5463071033256848094', '🔝'),
-        ('5463122435425448565', '⬆️'),
-        ('5463139580934892960', '❓'),
-        ('5463423955014529788', '👌'),
-        ('5465443379917629504', '🔓'),
-        ('5463046637842608206', '🪙'),
-        ('5463358164705489689', '⛔️'),
-        ('5463335865235288297', '🤬'),
-        ('5462921117423384478', '🛠'),
-        ('5463250708918711044', '💀'),
-        ('5463413771647069835', '💪'),
-        ('5463406036410969564', '🎣'),
-        ('5462995330163289902', '⏫'),
-        ('5465265370703080100', '😵'),
-        ('5463345378587849154', '🙈'),
-        ('5462957817918926146', '🖕'),
-        ('5463172695132745432', '📦'),
-        ('5463092727136661235', '🔮'),
-        ('5463137996091962323', '😭'),
-        ('5462956611033117422', '📀'),
-        ('5462990730253319917', '🔇'),
-        ('5454089058345042483', '🎂'),
-        ('5454415424319931791', '⌛️'),
-        ('5453958478454341679', '☝️'),
-        ('5454136337345037322', '🧙‍♀️'),
-        ('5453957997418004470', '👥'),
-        ('5454246314277619140', '🍽'),
-        ('5454014806950429357', '⚔️'),
-        ('5454092060527181056', '👏'),
-        ('5454350746407419714', '❌'),
-        ('5454125707300978880', '🔋'),
-        ('5454113432284446338', '✉️'),
-        ('5454177848203951217', '🔫'),
-        ('5454182632797521992', '😱'),
-        ('5453921696354419743', '🕹'),
-        ('5453966029006846697', '🥹'),
-        ('5453870826761765894', '🚑'),
-        ('5454168390685965478', '🪖'),
-        ('5454380420336466255', '✋'),
-        ('5453901475648390219', '🛍'),
-        ('5229045747130843073', '🎖'),
-        ('5226639745106330551', '🧠'),
-        ('5226813248900187912', '💣'),
-        ('5226662903569989373', '🌜'),
-        ('5228822494730797152', '👁'),
-        ('5226829990682707583', '💔'),
-        ('5226431245918942763', '🏆'),
-        ('5226893221191237996', '👾'),
-        ('5228878926306101271', '🙏'),
-        ('5226928895189598791', '⭐️'),
-        ('5229011542011299168', '👑'),
-        ('5226656353744862682', '🛒'),
-        ('5228962845672096235', '😈'),
-        ('5226618356169194833', '⁉️'),
-        ('5226929552319594190', '0️⃣'),
-        ('5226702984204797593', '🔄'),
-        ('5253997076169115797', '🔙'),
-        ('5256047523620995497', '🔥'),
-        ('5255738543673721267', '👎'),
-        ('5253922906378881072', '💋'),
-        ('5258160767789711124', '🙅‍♂️'),
-        ('5373236586760651455', '⏱'),
-        ('5375364347918827433', '👋'),
-        ('5373110220232870002', '🤙'),
-        ('5373342608028352831', '🗡'),
-        ('5373153324524650873', '😨'),
-        ('5373173798633752502', '🛡'),
-        ('5373268949339227455', '🔫'),
-        ('5372965329511139384', '😎'),
-        ('5375312095346704820', '💰'),
-        ('5375099322666859339', '🖥'),
-        ('5373304760776541441', '🚩'),
-        ('5373021138316186413', '☀️'),
-        ('5373239082136650704', '🔪'),
-        ('5372825386591732174', '🗑'),
-        ('5373174941095050893', '💸'),
-        ('5375331860786200544', '😧'),
-        ('5375161616872520280', '🤜'),
-        ('5373261050894370026', '😡'),
-        ('5373059848856421989', '❗️'),
-        ('5372957680174384345', '🤝'),
-    )
+    _EMOJI_PACK_FILE = _Path(__file__).resolve().parent.parent.parent.parent / "Gateway_emoji.json"
+
+    @classmethod
+    def _load_game_emoji_pack(cls) -> tuple:
+        try:
+            data = json.loads(cls._EMOJI_PACK_FILE.read_text(encoding="utf-8"))
+            return tuple((str(item["document_id"]), item["glyph"]) for item in data.get("emoji", []))
+        except Exception:
+            return ()
+
+    _GAME_EMOJI_PACK = _load_game_emoji_pack()
+
 
     _USER_UPLOADED_NATIVE_PREMIUM_EMOJI_MD3 = (
         # Material Design 3 Expressive (Material You) — user upload #2.
@@ -1979,6 +1899,14 @@ class TelegramAdapter(BasePlatformAdapter):
     # fallbacks within a pack cycle through that pack's IDs in upload order.
     _PREMIUM_EMOJI_PACKS = (
         (
+            "game-emoji",
+            "Game Emoji pack — user upload #3 (t.me/addemoji/GameEmoji): "
+            "game UI glyphs (hearts, weapons, coins, faces, status). "
+            "Highest priority: every emoji resolves into this pack; glyphs "
+            "missing from it fall back to a random pack ID.",
+            _GAME_EMOJI_PACK,
+        ),
+        (
             "md3-expressive",
             "Material Design 3 Expressive (Material You) — Google-style icons. "
             "Segment roles for the progress waves: #4 начало, #5 продление, "
@@ -1993,12 +1921,6 @@ class TelegramAdapter(BasePlatformAdapter):
             "adaptive pack (animals, objects, weapons, drinks, status icons) "
             "— 100 IDs in photo order.",
             _USER_UPLOADED_NATIVE_PREMIUM_EMOJI,
-        ),
-        (
-            "game-emoji",
-            "Game Emoji pack — user upload #3 (t.me/addemoji/GameEmoji): "
-            "game UI glyphs (hearts, weapons, coins, faces, status).",
-            _GAME_EMOJI_PACK,
         ),
         (
             "legacy",
@@ -2038,19 +1960,25 @@ class TelegramAdapter(BasePlatformAdapter):
                     uploaded_by_glyph.setdefault(alias, []).append(emoji_ids[target])
                     known_glyphs.add(alias)
         glyph_pattern = re.compile(
-            "|".join(re.escape(glyph) for glyph in sorted(known_glyphs, key=len, reverse=True))
+            "[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u2049\u203C\u2122\u2139\u2194-\u21AA]"
         )
         counters: Dict[str, int] = {}
+        fallback_pool = [emoji_id for emoji_id, _glyph in cls._GAME_EMOJI_PACK]
+        fallback_pos = 0
 
         def replace_emoji(match: re.Match[str]) -> str:
+            nonlocal fallback_pos
             glyph = match.group(0)
+            if glyph == "\ufe0f":
+                return glyph
             uploaded_ids = uploaded_by_glyph.get(glyph)
             if uploaded_ids:
                 occurrence = counters.get(glyph, 0)
                 counters[glyph] = occurrence + 1
                 emoji_id = uploaded_ids[occurrence % len(uploaded_ids)]
             else:
-                emoji_id = emoji_ids[glyph]
+                emoji_id = fallback_pool[fallback_pos % len(fallback_pool)]
+                fallback_pos += 1
             return f"![{glyph}](tg://emoji?id={emoji_id})"
 
         for index, part in enumerate(parts):
@@ -2228,8 +2156,8 @@ class TelegramAdapter(BasePlatformAdapter):
                 payload["silent"] = True
             result = await self._app.mt_req("messages.sendMessage", **payload)
             msg = self._adapter._extract_sent_message(result) or {"id": None}
-            msg["message_id"] = msg.get("id")
-            return msg
+            return _SentMessage(msg)
+
 
         async def edit_message_text(
             self,
@@ -2254,7 +2182,7 @@ class TelegramAdapter(BasePlatformAdapter):
             if kbd is not None:
                 payload["reply_markup"] = kbd
             await self._app.mt_req("messages.editMessage", **payload)
-            return {"id": int(message_id), "message_id": int(message_id)}
+            return _SentMessage({"id": int(message_id), "message_id": int(message_id)})
 
         async def delete_message(self, chat_id: Any, message_id: Any, **kwargs: Any) -> bool:
             await self._app.mt_req(
@@ -2397,10 +2325,17 @@ class TelegramAdapter(BasePlatformAdapter):
                 payload["reply_markup"] = kbd
             if kwargs.get("disable_notification"):
                 payload["silent"] = True
-            result = await self._app.mt_req("messages.sendMedia", **payload)
+            for attempt in range(3):
+                try:
+                    result = await self._app.mt_req("messages.sendMedia", **payload)
+                    break
+                except Exception as exc:
+                    if attempt == 2 or "connection" not in str(exc).lower():
+                        raise
+                    await adapter._wait_mt_ready(10.0)
             msg = adapter._extract_sent_message(result) or {"id": None}
-            msg["message_id"] = msg.get("id")
-            return msg
+            return _SentMessage(msg)
+
 
         async def set_message_reaction(
             self,
@@ -2486,6 +2421,7 @@ class TelegramAdapter(BasePlatformAdapter):
             file_payload = await adapter._mt_upload_media(
                 handle, force_document=True, kind="photo",
             )
+            kbd = self._kbd(kwargs.get("reply_markup"))
             inline_msg_id = kwargs.get("inline_message_id")
             if inline_msg_id:
                 await self._app.mt_req(
@@ -2493,6 +2429,7 @@ class TelegramAdapter(BasePlatformAdapter):
                     id=str(inline_msg_id),
                     media=file_payload,
                     message=caption,
+                    **({"reply_markup": kbd} if kbd is not None else {}),
                 )
                 return {"inline_message_id": str(inline_msg_id)}
             await self._app.mt_req(
@@ -2501,8 +2438,9 @@ class TelegramAdapter(BasePlatformAdapter):
                 id=int(message_id),
                 media=file_payload,
                 message=caption,
+                **({"reply_markup": kbd} if kbd is not None else {}),
             )
-            return {"id": int(message_id), "message_id": int(message_id)}
+            return _SentMessage({"id": int(message_id), "message_id": int(message_id)})
 
         async def send_message_draft(
             self,
@@ -2570,9 +2508,23 @@ class TelegramAdapter(BasePlatformAdapter):
                     first_payload = payload
                 result = await self._app.mt_req("messages.sendMedia", **payload)
                 msg = adapter._extract_sent_message(result) or {"id": None}
-                msg["message_id"] = msg.get("id")
-                sent.append(msg)
+                sent.append(_SentMessage(msg))
             return sent
+
+    async def _wait_mt_ready(self, timeout: float) -> bool:
+        mt = getattr(self._app, "mt", None)
+        if mt is None:
+            return False
+        async def _probe() -> bool:
+            while True:
+                rd = getattr(mt, "rd", None)
+                if rd is not None and not rd.at_eof():
+                    return True
+                await asyncio.sleep(0.5)
+        try:
+            return await asyncio.wait_for(_probe(), timeout)
+        except asyncio.TimeoutError:
+            return False
 
     async def _mt_upload_media(self, media: Any, *, force_document: bool, kind: str) -> Dict[str, Any]:
         """Upload a local file handle or path via MTProto and wrap it in InputMedia.
@@ -2607,7 +2559,7 @@ class TelegramAdapter(BasePlatformAdapter):
             # Charged upload: parallel parts over several connections, streamed
             # from disk (the old hand-rolled saveFilePart loop read the whole
             # file into memory and sent hex-encoded parts).
-            up = await self._app.charged_upload(path, file_name=file_name)
+            up = await self._app.charged_upload(path, file_name=file_name, connections=8)
             file_name = str(up.get("name") or file_name)
             file_ref: Dict[str, Any] = {
                 "_": "inputFileBig" if up.get("big") else "inputFile",
@@ -2615,6 +2567,8 @@ class TelegramAdapter(BasePlatformAdapter):
                 "parts": up["parts"],
                 "name": file_name,
             }
+            if not up.get("big") and up.get("md5"):
+                file_ref["md5_checksum"] = up["md5"]
             if force_document or kind == "document":
                 return {
                     "_": "inputMediaUploadedDocument",
@@ -6030,8 +5984,8 @@ class TelegramAdapter(BasePlatformAdapter):
                         await query.answer(text="✏️ Type your answer in the chat.")
                     try:
                         await query.edit_message_text(
-                            text=f"❓ {query.message.text or ''}\n\n<i>Awaiting typed response from {_html.escape(user_display)}…</i>",
-                            parse_mode=ParseMode.HTML,
+                            text=f"✏️ Ожидаю ответ текстом от {user_display}…",
+                            parse_mode=None,
                             reply_markup=None,
                         )
                     except Exception:
@@ -6078,12 +6032,15 @@ class TelegramAdapter(BasePlatformAdapter):
                         await query.answer(text=f"✓ {resolved_text[:60]}")
                     try:
                         await query.edit_message_text(
-                            text=f"❓ {_html.escape(query.message.text or '')}\n\n<b>{_html.escape(user_display)}:</b> {_html.escape(resolved_text)}",
-                            parse_mode=ParseMode.HTML,
+                            text=f"✓ {user_display}: {resolved_text}",
+                            parse_mode=None,
                             reply_markup=None,
                         )
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        logger.warning(
+                            "[%s] clarify edit_message_text failed: %s",
+                            self.name, _redact_telegram_error_text(exc),
+                        )
                     logger.info(
                         "Telegram clarify button resolved (id=%s, choice=%r, user=%s)",
                         clarify_id, resolved_text, user_display,
@@ -7066,6 +7023,10 @@ class TelegramAdapter(BasePlatformAdapter):
             )
             return {"name": str(chat_id), "type": "dm", "error": str(e)}
 
+    _EMOJI_ANY_RE = re.compile(
+        "[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\u2049\u203C\u2122\u2139\u2194-\u21AA\uFE0F]"
+    )
+
     _MDV2_TOKEN_RE = re.compile(
         r"```(?P<cblang>[^\n`]*)\n?(?P<cb>.*?)```"
         r"|`(?P<ci>[^`\n]+)`"
@@ -7174,7 +7135,55 @@ class TelegramAdapter(BasePlatformAdapter):
         unescaped = self._mdv2_unescape(stripped)
         if unescaped != stripped:
             entities = self._remap_entities_after_unescape(unescaped, stripped, entities)
+        entities = self._attach_custom_emoji_entities(unescaped, entities)
+        entities = self._remap_entities_to_utf16(unescaped, entities)
         return entities, self._has_uncollapsed_link_marker(unescaped)
+
+    def _remap_entities_to_utf16(self, text: str, entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if not entities:
+            return entities
+        prefix_units: List[int] = [0]
+        for ch in text:
+            prefix_units.append(prefix_units[-1] + (2 if ord(ch) > 0xFFFF else 1))
+        for ent in entities:
+            off = ent.get("offset", 0)
+            ln = ent.get("length", 0)
+            if off < len(prefix_units) - 1 and (prefix_units[off + ln] - prefix_units[off]) != ln:
+                ent["offset"] = prefix_units[off]
+                ent["length"] = prefix_units[off + ln] - prefix_units[off]
+        return entities
+
+    def _attach_custom_emoji_entities(self, text: str, entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if not text:
+            return entities
+        glyph_ids: Dict[str, str] = {}
+        for _pack_name, _pack_desc, registry in self._PREMIUM_EMOJI_PACKS:
+            for emoji_id, glyph in registry:
+                glyph_ids.setdefault(glyph, emoji_id)
+        fallback_ids = [emoji_id for emoji_id, _glyph in self._GAME_EMOJI_PACK]
+        if not glyph_ids:
+            return entities
+        if entities:
+            spans = sorted((e["offset"], e["offset"] + e["length"]) for e in entities)
+        else:
+            spans = []
+        fb_pos = 0
+        for m in self._EMOJI_ANY_RE.finditer(text):
+            start, end = m.span()
+            if any(s <= start and end <= t for s, t in spans):
+                continue
+            glyph = m.group(0)
+            emoji_id = glyph_ids.get(glyph)
+            if emoji_id is None:
+                emoji_id = fallback_ids[fb_pos % len(fallback_ids)]
+                fb_pos += 1
+            entities.append({
+                "_": "messageEntityCustomEmoji",
+                "offset": start,
+                "length": end - start,
+                "document_id": int(emoji_id),
+            })
+        return entities
 
     def _mdv2_unescape(self, text: str) -> str:
         """Strip MarkdownV2 escape backslashes to recover the raw text."""
@@ -8604,6 +8613,11 @@ class TelegramAdapter(BasePlatformAdapter):
             raw = cbobj.raw if hasattr(cbobj, "raw") else (cbobj if isinstance(cbobj, dict) else {})
             if not isinstance(raw, dict):
                 raw = {}
+            logger.info(
+                "[Telegram] MT callback received: qid=%s data=%r",
+                getattr(cbobj, "id", None) or raw.get("query_id"),
+                (getattr(cbobj, "data", None) or raw.get("data"))[:80] if isinstance(getattr(cbobj, "data", None) or raw.get("data"), str) else None,
+            )
             cq = SimpleNamespace()
             cq.id = cbobj.id if hasattr(cbobj, "id") else raw.get("query_id")
             data = self._mt_decode_callback_data(cbobj)
@@ -8627,6 +8641,48 @@ class TelegramAdapter(BasePlatformAdapter):
             cq.message = None
             cq.inline_message_id = None
             cq.chat_id = raw.get("chat_id") or getattr(cbobj, "chat_id", None)
+
+            async def _cq_answer(text: str = "", show_alert: bool = False) -> None:
+                qid = cq.id
+                if qid is None:
+                    return
+                try:
+                    await self._app.mt_req(
+                        "messages.setBotCallbackAnswer",
+                        query_id=int(qid),
+                        message=text or None,
+                        alert=show_alert,
+                        cache_time=0,
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "[Telegram] Callback answer failed (qid=%s): %s",
+                        qid, _redact_telegram_error_text(exc),
+                    )
+
+            cq.answer = _cq_answer
+
+            async def _cq_edit_message_text(
+                text: str = "",
+                parse_mode: Any = None,
+                reply_markup: Any = None,
+                **kwargs: Any,
+            ) -> Dict[str, Any]:
+                chat_id = cq.chat_id
+                mid = getattr(cq.message, "message_id", None) or getattr(cq.message, "id", None)
+                if chat_id is None or mid is None:
+                    raise RuntimeError("callback edit_message_text: no chat_id/message_id")
+                return await self._bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=mid,
+                    text=text,
+                    parse_mode=parse_mode,
+                    reply_markup=reply_markup,
+                    **kwargs,
+                )
+
+            cq.edit_message_text = _cq_edit_message_text
+
             msg_id = raw.get("msg_id")
             if msg_id is not None:
                 try:
@@ -8638,9 +8694,11 @@ class TelegramAdapter(BasePlatformAdapter):
                 m.id = msg_id
                 m.message_id = msg_id
                 m.chat = None
+                m.text = None
                 cq.message = m
             upd = SimpleNamespace()
             upd.callback_query = cq
+
             upd.effective_message = cq.message
             upd.update_id = cq.id or 0
             await self._handle_callback_query(upd)
@@ -9784,7 +9842,7 @@ class TelegramAdapter(BasePlatformAdapter):
             else:
                 reply_to_text = (
                     message.reply_to_message.text
-                    or message.reply_to_message.caption
+                    or getattr(message.reply_to_message, "caption", None)
                     or None
                 )
                 if not reply_to_text:

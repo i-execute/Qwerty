@@ -1,0 +1,407 @@
+{
+  "pack_name": "GameEmoji",
+  "pack_url": "t.me/addemoji/GameEmoji",
+  "description": "Game UI glyphs: hearts, weapons, coins, faces, status. Default pack for the Telegram adapter.",
+  "emoji": [
+    {
+      "document_id": 5465465194056525619,
+      "glyph": "👍"
+    },
+    {
+      "document_id": 5465262274031659421,
+      "glyph": "🥰"
+    },
+    {
+      "document_id": 5462910521739063094,
+      "glyph": "👋"
+    },
+    {
+      "document_id": 5465225015190367274,
+      "glyph": "👎"
+    },
+    {
+      "document_id": 5463121572137022242,
+      "glyph": "😂"
+    },
+    {
+      "document_id": 5463412289883353404,
+      "glyph": "🤟"
+    },
+    {
+      "document_id": 5462990652943904884,
+      "glyph": "😴"
+    },
+    {
+      "document_id": 5465198330558557107,
+      "glyph": "💩"
+    },
+    {
+      "document_id": 5463256910851546817,
+      "glyph": "🤝"
+    },
+    {
+      "document_id": 5463277406435422003,
+      "glyph": "🗡"
+    },
+    {
+      "document_id": 5465154440287757794,
+      "glyph": "🛡"
+    },
+    {
+      "document_id": 5463054218459884779,
+      "glyph": "🌡"
+    },
+    {
+      "document_id": 5463274047771000031,
+      "glyph": "😵"
+    },
+    {
+      "document_id": 5463392464314315076,
+      "glyph": "👉"
+    },
+    {
+      "document_id": 5463156928307801722,
+      "glyph": "🤕"
+    },
+    {
+      "document_id": 5463081281048818043,
+      "glyph": "💊"
+    },
+    {
+      "document_id": 5465137208878969279,
+      "glyph": "😵"
+    },
+    {
+      "document_id": 5462882007451185227,
+      "glyph": "🚫"
+    },
+    {
+      "document_id": 5463186335948878489,
+      "glyph": "⚰️"
+    },
+    {
+      "document_id": 5463071033256848094,
+      "glyph": "🔝"
+    },
+    {
+      "document_id": 5463122435425448565,
+      "glyph": "⬆️"
+    },
+    {
+      "document_id": 5463139580934892960,
+      "glyph": "❓"
+    },
+    {
+      "document_id": 5463423955014529788,
+      "glyph": "👌"
+    },
+    {
+      "document_id": 5465443379917629504,
+      "glyph": "🔓"
+    },
+    {
+      "document_id": 5463046637842608206,
+      "glyph": "🪙"
+    },
+    {
+      "document_id": 5463358164705489689,
+      "glyph": "⛔️"
+    },
+    {
+      "document_id": 5463335865235288297,
+      "glyph": "🤬"
+    },
+    {
+      "document_id": 5462921117423384478,
+      "glyph": "🛠"
+    },
+    {
+      "document_id": 5463250708918711044,
+      "glyph": "💀"
+    },
+    {
+      "document_id": 5463413771647069835,
+      "glyph": "💪"
+    },
+    {
+      "document_id": 5463406036410969564,
+      "glyph": "🎣"
+    },
+    {
+      "document_id": 5462995330163289902,
+      "glyph": "⏫"
+    },
+    {
+      "document_id": 5465265370703080100,
+      "glyph": "😵"
+    },
+    {
+      "document_id": 5463345378587849154,
+      "glyph": "🙈"
+    },
+    {
+      "document_id": 5462957817918926146,
+      "glyph": "🖕"
+    },
+    {
+      "document_id": 5463172695132745432,
+      "glyph": "📦"
+    },
+    {
+      "document_id": 5463092727136661235,
+      "glyph": "🔮"
+    },
+    {
+      "document_id": 5463137996091962323,
+      "glyph": "😭"
+    },
+    {
+      "document_id": 5462956611033117422,
+      "glyph": "📀"
+    },
+    {
+      "document_id": 5462990730253319917,
+      "glyph": "🔇"
+    },
+    {
+      "document_id": 5454089058345042483,
+      "glyph": "🎂"
+    },
+    {
+      "document_id": 5454415424319931791,
+      "glyph": "⌛️"
+    },
+    {
+      "document_id": 5453958478454341679,
+      "glyph": "☝️"
+    },
+    {
+      "document_id": 5454136337345037322,
+      "glyph": "🧙‍♀️"
+    },
+    {
+      "document_id": 5453957997418004470,
+      "glyph": "👥"
+    },
+    {
+      "document_id": 5454246314277619140,
+      "glyph": "🍽"
+    },
+    {
+      "document_id": 5454014806950429357,
+      "glyph": "⚔️"
+    },
+    {
+      "document_id": 5454092060527181056,
+      "glyph": "👏"
+    },
+    {
+      "document_id": 5454350746407419714,
+      "glyph": "❌"
+    },
+    {
+      "document_id": 5454125707300978880,
+      "glyph": "🔋"
+    },
+    {
+      "document_id": 5454113432284446338,
+      "glyph": "✉️"
+    },
+    {
+      "document_id": 5454177848203951217,
+      "glyph": "🔫"
+    },
+    {
+      "document_id": 5454182632797521992,
+      "glyph": "😱"
+    },
+    {
+      "document_id": 5453921696354419743,
+      "glyph": "🕹"
+    },
+    {
+      "document_id": 5453966029006846697,
+      "glyph": "🥹"
+    },
+    {
+      "document_id": 5453870826761765894,
+      "glyph": "🚑"
+    },
+    {
+      "document_id": 5454168390685965478,
+      "glyph": "🪖"
+    },
+    {
+      "document_id": 5454380420336466255,
+      "glyph": "✋"
+    },
+    {
+      "document_id": 5453901475648390219,
+      "glyph": "🛍"
+    },
+    {
+      "document_id": 5229045747130843073,
+      "glyph": "🎖"
+    },
+    {
+      "document_id": 5226639745106330551,
+      "glyph": "🧠"
+    },
+    {
+      "document_id": 5226813248900187912,
+      "glyph": "💣"
+    },
+    {
+      "document_id": 5226662903569989373,
+      "glyph": "🌜"
+    },
+    {
+      "document_id": 5228822494730797152,
+      "glyph": "👁"
+    },
+    {
+      "document_id": 5226829990682707583,
+      "glyph": "💔"
+    },
+    {
+      "document_id": 5226431245918942763,
+      "glyph": "🏆"
+    },
+    {
+      "document_id": 5226893221191237996,
+      "glyph": "👾"
+    },
+    {
+      "document_id": 5228878926306101271,
+      "glyph": "🙏"
+    },
+    {
+      "document_id": 5226928895189598791,
+      "glyph": "⭐️"
+    },
+    {
+      "document_id": 5229011542011299168,
+      "glyph": "👑"
+    },
+    {
+      "document_id": 5226656353744862682,
+      "glyph": "🛒"
+    },
+    {
+      "document_id": 5228962845672096235,
+      "glyph": "😈"
+    },
+    {
+      "document_id": 5226618356169194833,
+      "glyph": "⁉️"
+    },
+    {
+      "document_id": 5226929552319594190,
+      "glyph": "0️⃣"
+    },
+    {
+      "document_id": 5226702984204797593,
+      "glyph": "🔄"
+    },
+    {
+      "document_id": 5253997076169115797,
+      "glyph": "🔙"
+    },
+    {
+      "document_id": 5256047523620995497,
+      "glyph": "🔥"
+    },
+    {
+      "document_id": 5255738543673721267,
+      "glyph": "👎"
+    },
+    {
+      "document_id": 5253922906378881072,
+      "glyph": "💋"
+    },
+    {
+      "document_id": 5258160767789711124,
+      "glyph": "🙅‍♂️"
+    },
+    {
+      "document_id": 5373236586760651455,
+      "glyph": "⏱"
+    },
+    {
+      "document_id": 5375364347918827433,
+      "glyph": "👋"
+    },
+    {
+      "document_id": 5373110220232870002,
+      "glyph": "🤙"
+    },
+    {
+      "document_id": 5373342608028352831,
+      "glyph": "🗡"
+    },
+    {
+      "document_id": 5373153324524650873,
+      "glyph": "😨"
+    },
+    {
+      "document_id": 5373173798633752502,
+      "glyph": "🛡"
+    },
+    {
+      "document_id": 5373268949339227455,
+      "glyph": "🔫"
+    },
+    {
+      "document_id": 5372965329511139384,
+      "glyph": "😎"
+    },
+    {
+      "document_id": 5375312095346704820,
+      "glyph": "💰"
+    },
+    {
+      "document_id": 5375099322666859339,
+      "glyph": "🖥"
+    },
+    {
+      "document_id": 5373304760776541441,
+      "glyph": "🚩"
+    },
+    {
+      "document_id": 5373021138316186413,
+      "glyph": "☀️"
+    },
+    {
+      "document_id": 5373239082136650704,
+      "glyph": "🔪"
+    },
+    {
+      "document_id": 5372825386591732174,
+      "glyph": "🗑"
+    },
+    {
+      "document_id": 5373174941095050893,
+      "glyph": "💸"
+    },
+    {
+      "document_id": 5375331860786200544,
+      "glyph": "😧"
+    },
+    {
+      "document_id": 5375161616872520280,
+      "glyph": "🤜"
+    },
+    {
+      "document_id": 5373261050894370026,
+      "glyph": "😡"
+    },
+    {
+      "document_id": 5373059848856421989,
+      "glyph": "❗️"
+    },
+    {
+      "document_id": 5372957680174384345,
+      "glyph": "🤝"
+    }
+  ]
+}
