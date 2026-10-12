@@ -8,7 +8,7 @@ instances via ``PluginContext.register_video_gen_provider()``; the active one
 ``video_generate`` tool call.
 
 Providers live in ``<repo>/plugins/video_gen/<name>/`` (built-in, auto-loaded
-as ``kind: backend``) or ``~/.hermes/plugins/video_gen/<name>/`` (user, opt-in
+as ``kind: backend``) or ``~/.qwerty/plugins/video_gen/<name>/`` (user, opt-in
 via ``plugins.enabled``).
 
 Mirrors the ``image_gen`` provider design (``agent/image_gen_provider.py``) so
@@ -89,7 +89,7 @@ class VideoGenProvider(abc.ABC):
 
     @property
     def display_name(self) -> str:
-        """Human-readable label shown in ``hermes tools``. Defaults to ``name.title()``."""
+        """Human-readable label shown in ``qwerty tools``. Defaults to ``name.title()``."""
         return self.name.title()
 
     def is_available(self) -> bool:
@@ -101,7 +101,7 @@ class VideoGenProvider(abc.ABC):
         return True
 
     def list_models(self) -> List[Dict[str, Any]]:
-        """Return catalog entries for ``hermes tools`` model picker.
+        """Return catalog entries for ``qwerty tools`` model picker.
 
         Each entry represents a **model family** that supports text-to-video
         and/or image-to-video routing internally::
@@ -120,7 +120,7 @@ class VideoGenProvider(abc.ABC):
         return []
 
     def get_setup_schema(self) -> Dict[str, Any]:
-        """Return provider metadata for the ``hermes tools`` picker."""
+        """Return provider metadata for the ``qwerty tools`` picker."""
         return {
             "name": self.display_name,
             "badge": "",
@@ -151,7 +151,7 @@ class VideoGenProvider(abc.ABC):
                 "max_reference_images": 7,
             }
 
-        Used by the tool layer for soft validation and by ``hermes tools``
+        Used by the tool layer for soft validation and by ``qwerty tools``
         for the picker. Default: text-only.
         """
         return {
@@ -202,10 +202,10 @@ class VideoGenProvider(abc.ABC):
 
 
 def _videos_cache_dir() -> Path:
-    """Return ``$HERMES_HOME/cache/videos/``, creating parents as needed."""
-    from hermes_constants import get_hermes_home
+    """Return ``$QWERTY_HOME/cache/videos/``, creating parents as needed."""
+    from qwerty_constants import get_qwerty_home
 
-    path = get_hermes_home() / "cache" / "videos"
+    path = get_qwerty_home() / "cache" / "videos"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -216,7 +216,7 @@ def save_b64_video(
     prefix: str = "video",
     extension: str = "mp4",
 ) -> Path:
-    """Decode base64 video data and write under ``$HERMES_HOME/cache/videos/``.
+    """Decode base64 video data and write under ``$QWERTY_HOME/cache/videos/``.
 
     Returns the absolute :class:`Path` to the saved file.
 
@@ -259,7 +259,7 @@ def save_url_video(
     timeout: float = 180.0,
     max_bytes: int = 200 * 1024 * 1024,
 ) -> Path:
-    """Download a video URL and write it under ``$HERMES_HOME/cache/videos/``.
+    """Download a video URL and write it under ``$QWERTY_HOME/cache/videos/``.
 
     The video twin of :func:`agent.image_gen_provider.save_url_image`: several
     backends (DeepInfra, FAL) return an *ephemeral* delivery URL that expires

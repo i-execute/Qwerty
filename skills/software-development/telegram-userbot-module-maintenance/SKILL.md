@@ -2,7 +2,7 @@
 name: telegram-userbot-module-maintenance
 description: Repair and validate Python Telegram userbot modules that use inline UI, external APIs, and persistent state.
 version: 1.0.0
-author: Hermes Agent
+author: Qwerty Agent
 created_by: agent
 ---
 

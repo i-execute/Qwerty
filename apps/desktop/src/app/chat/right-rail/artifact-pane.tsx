@@ -30,7 +30,7 @@ const HEADER_BUTTON_CLASS =
  *  buffer-save IPC, then hand it to the OS browser. A blob/data URL can't
  *  cross into the OS default browser, so a file on disk is the honest path. */
 async function openHtmlInBrowser(content: string): Promise<void> {
-  const bridge = window.hermesDesktop
+  const bridge = window.qwertyDesktop
 
   if (!bridge?.saveImageBuffer || !bridge.openExternal) {
     throw new Error('Desktop bridge unavailable')
@@ -194,7 +194,7 @@ export function ArtifactPane({ artifactId }: { artifactId: string }) {
               <Download className="size-3" />
             </button>
           </Tip>
-          {record.kind === 'html' && window.hermesDesktop && (
+          {record.kind === 'html' && window.qwertyDesktop && (
             <Tip label={copy.openInBrowser}>
               <button
                 aria-label={copy.openInBrowser}

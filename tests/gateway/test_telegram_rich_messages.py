@@ -139,7 +139,8 @@ def test_rich_payload_promotes_only_user_verified_premium_emoji_entities():
     payload = adapter._rich_message_payload("📝 Готово: 🤩")
 
     assert payload["markdown"] == (
-        "📝 Готово: ![🤩](tg://emoji?id=5346270183621171895)"
+        "![📝](tg://emoji?id=5454014806950429357) "
+        "Готово: ![🤩](tg://emoji?id=5346270183621171895)"
     )
 
 
@@ -200,7 +201,7 @@ def test_rich_payload_preserves_existing_custom_emoji_entity():
 
     assert payload["markdown"] == (
         "![🤩](tg://emoji?id=5190683945351535076) и "
-        "![🧠](tg://emoji?id=5447595110743168717)"
+        "![🧠](tg://emoji?id=5226639745106330551)"
     )
 
 
@@ -384,7 +385,7 @@ async def test_expect_edits_metadata_keeps_preview_on_legacy_path():
 
     assert result.success is True
     # Streaming preview sends will be edited later, so they must not be born as
-    # rich messages until Hermes wires rich_message edits directly.
+    # rich messages until Qwerty wires rich_message edits directly.
     bot = adapter._bot
     assert bot is not None
     adapter._app.mt_req.assert_not_called()
@@ -1149,7 +1150,7 @@ def _reply_message_with_rich_blocks(
 @pytest.mark.asyncio
 async def test_rich_reply_records_and_recovers_text(monkeypatch, tmp_path):
     """A reply to a rich-sent message resolves the original text via the index."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     from gateway.platforms.base import MessageType
     from gateway import rich_sent_store
 
@@ -1179,7 +1180,7 @@ async def test_rich_reply_records_and_recovers_text(monkeypatch, tmp_path):
 @pytest.mark.asyncio
 async def test_rich_reply_lookup_miss_leaves_text_none(monkeypatch, tmp_path):
     """No recorded entry -> reply_to_text stays None, no crash."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     from gateway.platforms.base import MessageType
 
     adapter = _make_adapter()
@@ -1193,7 +1194,7 @@ async def test_rich_reply_lookup_miss_leaves_text_none(monkeypatch, tmp_path):
 @pytest.mark.asyncio
 async def test_rich_reply_native_quote_wins_over_lookup(monkeypatch, tmp_path):
     """A native partial quote takes precedence over the send-time index."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     from gateway.platforms.base import MessageType
     from gateway import rich_sent_store
 
@@ -1208,7 +1209,7 @@ async def test_rich_reply_native_quote_wins_over_lookup(monkeypatch, tmp_path):
 @pytest.mark.asyncio
 async def test_rich_reply_caption_wins_over_lookup(monkeypatch, tmp_path):
     """When Telegram DOES echo a caption, it wins over the index fallback."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     from gateway.platforms.base import MessageType
     from gateway import rich_sent_store
 
@@ -1223,7 +1224,7 @@ async def test_rich_reply_caption_wins_over_lookup(monkeypatch, tmp_path):
 @pytest.mark.asyncio
 async def test_rich_reply_native_blocks_fill_reply_text_without_index(monkeypatch, tmp_path):
     """Echoed rich_message blocks should recover reply text natively."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     from gateway.platforms.base import MessageType
 
     adapter = _make_adapter()
@@ -1243,7 +1244,7 @@ async def test_rich_reply_native_blocks_fill_reply_text_without_index(monkeypatc
 @pytest.mark.asyncio
 async def test_rich_reply_native_blocks_win_over_index(monkeypatch, tmp_path):
     """Native rich echo should beat the local send-time index fallback."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     from gateway.platforms.base import MessageType
     from gateway import rich_sent_store
 
@@ -1262,7 +1263,7 @@ async def test_rich_reply_native_blocks_win_over_index(monkeypatch, tmp_path):
 @pytest.mark.asyncio
 async def test_rich_reply_native_blocks_support_mappingproxy_like_api_kwargs(monkeypatch, tmp_path):
     """Duck-type api_kwargs via .get() so mappingproxy-like objects also work."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     from gateway.platforms.base import MessageType
 
     class MappingProxyLike(dict):
@@ -1291,7 +1292,7 @@ async def test_try_edit_rich_records_streamed_final_for_reply_recovery(monkeypat
     bot's first rich send have no echo — so editMessageText must mirror the
     fresh-send index the same way _try_send_rich does.
     """
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     from gateway import rich_sent_store
 
     adapter = _make_adapter()

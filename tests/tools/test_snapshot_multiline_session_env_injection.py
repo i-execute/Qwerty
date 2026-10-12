@@ -67,12 +67,12 @@ fi
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX bash snapshot path")
 def test_multiline_session_chat_name_not_executed_via_snapshot(tmp_path: Path):
-    """Continuation lines of HERMES_SESSION_CHAT_NAME must not run on source."""
+    """Continuation lines of QWERTY_SESSION_CHAT_NAME must not run on source."""
     marker = tmp_path / "pwned"
     chat_name = f"demo\ntouch {marker} #"
     proc = _run_dump_and_source(
         tmp_path=tmp_path,
-        env_name="HERMES_SESSION_CHAT_NAME",
+        env_name="QWERTY_SESSION_CHAT_NAME",
         env_value=chat_name,
         marker=marker,
     )
@@ -84,12 +84,12 @@ def test_multiline_session_chat_name_not_executed_via_snapshot(tmp_path: Path):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX bash snapshot path")
 def test_multiline_session_user_name_not_executed_via_snapshot(tmp_path: Path):
-    """Same hole via HERMES_SESSION_USER_NAME (display-name path)."""
+    """Same hole via QWERTY_SESSION_USER_NAME (display-name path)."""
     marker = tmp_path / "pwned_user"
     user_name = f"alice\ntouch {marker} #"
     proc = _run_dump_and_source(
         tmp_path=tmp_path,
-        env_name="HERMES_SESSION_USER_NAME",
+        env_name="QWERTY_SESSION_USER_NAME",
         env_value=user_name,
         marker=marker,
     )

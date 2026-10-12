@@ -1,4 +1,4 @@
-# Extended Fork / Sync / PR Workflow for Hermes Agent
+# Extended Fork / Sync / PR Workflow for Qwerty Agent
 
 Detailed recipes for common fork operations.
 
@@ -6,16 +6,16 @@ Detailed recipes for common fork operations.
 
 ```bash
 # Using gh CLI (recommended)
-cd ~/.hermes
-gh repo fork NousResearch/hermes-agent --clone --remote-name origin
-cd hermes-agent
-git remote add upstream https://github.com/NousResearch/hermes-agent.git
+cd ~/.qwerty
+gh repo fork NousResearch/qwerty-agent --clone --remote-name origin
+cd qwerty-agent
+git remote add upstream https://github.com/NousResearch/qwerty-agent.git
 
 # Verify
 git remote -v
-# origin    https://github.com/YOUR-USER/hermes-agent.git (fetch)
-# origin    https://github.com/YOUR-USER/hermes-agent.git (push)
-# upstream  https://github.com/NousResearch/hermes-agent.git (fetch)
+# origin    https://github.com/YOUR-USER/qwerty-agent.git (fetch)
+# origin    https://github.com/YOUR-USER/qwerty-agent.git (push)
+# upstream  https://github.com/NousResearch/qwerty-agent.git (fetch)
 ```
 
 ## Daily Development: Sync → Branch → Work → PR
@@ -55,7 +55,7 @@ Adds amazing new skill that does X, Y, Z.
 
 ## Testing
 - [ ] Unit tests pass
-- [ ] Manual verification: \`hermes skill load amazing-skill\`
+- [ ] Manual verification: \`qwerty skill load amazing-skill\`
 
 ## Checklist
 - [ ] Lint passes
@@ -151,12 +151,12 @@ gh variable set NODE_VERSION --body "20"
 
 ```bash
 # Install in development mode
-cd ~/.hermes/hermes-agent
+cd ~/.qwerty/qwerty-agent
 uv pip install -e .[dev]  # or: pip install -e .[dev]
 
-# Run Hermes from source
-hermes --help
-hermes "test message"
+# Run Qwerty from source
+qwerty --help
+qwerty "test message"
 
 # Run specific test file
 pytest tests/test_agent.py -xvs -k "test_memory"

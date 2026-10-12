@@ -13,7 +13,7 @@ If unset, :func:`get_active_provider` applies fallback logic:
 
 1. If exactly one *available* provider is registered, use it.
 2. Otherwise return ``None`` (the tool surfaces a helpful error pointing
-   the user at ``hermes tools``).
+   the user at ``qwerty tools``).
 
 Mirrors ``agent/image_gen_registry.py`` so the two surfaces behave the
 same: the unconfigured fallback is filtered by ``is_available()`` so a box
@@ -84,7 +84,7 @@ def get_active_provider() -> Optional[VideoGenProvider]:
     """
     configured: Optional[str] = None
     try:
-        from hermes_cli.config import load_config
+        from qwerty_cli.config import load_config
 
         cfg = load_config()
         section = cfg.get("video_gen") if isinstance(cfg, dict) else None

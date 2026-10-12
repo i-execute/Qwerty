@@ -176,8 +176,8 @@ async def test_monitor_to_drain_transcribes_and_echoes_pending_voice_once(
     monkeypatch,
     tmp_path,
 ):
-    monkeypatch.setenv("HERMES_TOOL_PROGRESS_MODE", "off")
-    monkeypatch.setenv("HERMES_GATEWAY_NOTIFY_INTERVAL", "0")
+    monkeypatch.setenv("QWERTY_TOOL_PROGRESS_MODE", "off")
+    monkeypatch.setenv("QWERTY_GATEWAY_NOTIFY_INTERVAL", "0")
     monkeypatch.setitem(sys.modules, "dotenv", types.SimpleNamespace(load_dotenv=lambda: None))
     monkeypatch.setitem(sys.modules, "run_agent", types.SimpleNamespace(AIAgent=_PendingVoiceAgent))
 
@@ -198,7 +198,7 @@ async def test_monitor_to_drain_transcribes_and_echoes_pending_voice_once(
     _PendingVoiceAgent.messages = []
 
     with (
-        patch("gateway.run._hermes_home", tmp_path),
+        patch("gateway.run._qwerty_home", tmp_path),
         patch("gateway.run._resolve_runtime_agent_kwargs", return_value={"api_key": "fake"}),
         patch(
             "tools.transcription_tools.transcribe_audio",
@@ -243,7 +243,7 @@ async def test_busy_voice_interrupt_transcribes_before_pending_drain(monkeypatch
         media_urls=["/tmp/telegram-busy-voice.ogg"],
         media_types=["audio/ogg"],
     )
-    monkeypatch.setenv("HERMES_GATEWAY_BUSY_ACK_ENABLED", "false")
+    monkeypatch.setenv("QWERTY_GATEWAY_BUSY_ACK_ENABLED", "false")
 
     with (
         patch("tools.approval.has_blocking_approval", return_value=False),

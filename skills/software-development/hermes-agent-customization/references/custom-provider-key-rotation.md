@@ -1,6 +1,6 @@
 # Custom OpenAI-Compatible Provider: API-Key Rotation
 
-Use this when a Hermes `custom_providers` endpoint needs a primary API key plus backup keys that rotate after quota/auth/provider failures.
+Use this when a Qwerty `custom_providers` endpoint needs a primary API key plus backup keys that rotate after quota/auth/provider failures.
 
 ## Expected live shape
 

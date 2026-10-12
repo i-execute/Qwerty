@@ -2,10 +2,10 @@
 name: telegram-auth-tgs-animation
 description: "Build a web page (React/HTML) that (1) authenticates a user by Telegram id via Mini App and (2) plays a .tgs animation (Telegram sticker)."
 version: 1.0.0
-author: Hermes Agent
+author: Qwerty Agent
 license: MIT
 metadata:
-  hermes:
+  qwerty:
     tags: [telegram, mini-app, tgs, lottie, auth, web]
 ---
 

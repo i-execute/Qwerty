@@ -1,73 +1,73 @@
 ---
-title: "Hermes Agent — 配置、扩展或贡献 Hermes Agent"
-sidebar_label: "Hermes Agent"
-description: "配置、扩展或贡献 Hermes Agent"
+title: "Qwerty Agent — 配置、扩展或贡献 Qwerty Agent"
+sidebar_label: "Qwerty Agent"
+description: "配置、扩展或贡献 Qwerty Agent"
 ---
 
 {/* This page is auto-generated from the skill's SKILL.md by website/scripts/generate-skill-docs.py. Edit the source SKILL.md, not this page. */}
 
-# Hermes Agent
+# Qwerty Agent
 
-配置、扩展或贡献 Hermes Agent。
+配置、扩展或贡献 Qwerty Agent。
 
 ## Skill 元数据
 
 | | |
 |---|---|
 | 来源 | 内置（默认安装） |
-| 路径 | `skills/autonomous-ai-agents/hermes-agent` |
+| 路径 | `skills/autonomous-ai-agents/qwerty-agent` |
 | 版本 | `2.1.0` |
-| 作者 | Hermes Agent + Teknium |
+| 作者 | Qwerty Agent + Teknium |
 | 许可证 | MIT |
 | 平台 | linux, macos, windows |
-| 标签 | `hermes`, `setup`, `configuration`, `multi-agent`, `spawning`, `cli`, `gateway`, `development` |
+| 标签 | `qwerty`, `setup`, `configuration`, `multi-agent`, `spawning`, `cli`, `gateway`, `development` |
 | 相关 skill | [`claude-code`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-claude-code), [`codex`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-codex), [`opencode`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-opencode) |
 
 ## 参考：完整 SKILL.md
 
 :::info
-以下是 Hermes 在触发此 skill 时加载的完整 skill 定义。这是 agent 在 skill 激活时看到的指令内容。
+以下是 Qwerty 在触发此 skill 时加载的完整 skill 定义。这是 agent 在 skill 激活时看到的指令内容。
 :::
 
-# Hermes Agent
+# Qwerty Agent
 
-Hermes Agent 是 Nous Research 开发的开源 AI agent 框架，可在终端、消息平台和 IDE 中运行。它与 Claude Code（Anthropic）、Codex（OpenAI）和 OpenClaw 同属一类——使用工具调用（tool calling）与系统交互的自主编码和任务执行 agent。Hermes 支持任意 LLM 提供商（OpenRouter、Anthropic、OpenAI、DeepSeek、本地模型及 15+ 其他提供商），可在 Linux、macOS 和 WSL 上运行。
+Qwerty Agent 是 Nous Research 开发的开源 AI agent 框架，可在终端、消息平台和 IDE 中运行。它与 Claude Code（Anthropic）、Codex（OpenAI）和 OpenClaw 同属一类——使用工具调用（tool calling）与系统交互的自主编码和任务执行 agent。Qwerty 支持任意 LLM 提供商（OpenRouter、Anthropic、OpenAI、DeepSeek、本地模型及 15+ 其他提供商），可在 Linux、macOS 和 WSL 上运行。
 
-Hermes 的差异化特性：
+Qwerty 的差异化特性：
 
-- **通过 skill 自我提升** — Hermes 通过将可复用流程保存为 skill 来从经验中学习。当它解决复杂问题、发现工作流或被纠正时，可以将该知识持久化为 skill 文档，加载到未来的会话中。skill 随时间积累，使 agent 在你的特定任务和环境中表现越来越好。
+- **通过 skill 自我提升** — Qwerty 通过将可复用流程保存为 skill 来从经验中学习。当它解决复杂问题、发现工作流或被纠正时，可以将该知识持久化为 skill 文档，加载到未来的会话中。skill 随时间积累，使 agent 在你的特定任务和环境中表现越来越好。
 - **跨会话持久记忆** — 记住你是谁、你的偏好、环境细节和经验教训。可插拔的记忆后端（内置、Honcho、Mem0 等）让你选择记忆的工作方式。
 - **多平台 gateway** — 同一个 agent 在 Telegram、Discord、Slack、WhatsApp、Signal、Matrix、Email 及 10+ 其他平台上运行，具备完整工具访问权限，而不仅仅是聊天。
 - **提供商无关** — 在工作流中途切换模型和提供商，无需更改其他任何内容。凭证池自动轮换多个 API key。
-- **Profiles（配置文件）** — 运行多个独立的 Hermes 实例，各自拥有隔离的配置、会话、skill 和记忆。
+- **Profiles（配置文件）** — 运行多个独立的 Qwerty 实例，各自拥有隔离的配置、会话、skill 和记忆。
 - **可扩展** — 插件、MCP 服务器、自定义工具、webhook 触发器、cron 调度以及完整的 Python 生态系统。
 
-人们将 Hermes 用于软件开发、研究、系统管理、数据分析、内容创作、家庭自动化，以及任何受益于具有持久上下文和完整系统访问权限的 AI agent 的场景。
+人们将 Qwerty 用于软件开发、研究、系统管理、数据分析、内容创作、家庭自动化，以及任何受益于具有持久上下文和完整系统访问权限的 AI agent 的场景。
 
-**此 skill 帮助你高效使用 Hermes Agent** — 包括设置、配置功能、生成额外的 agent 实例、排查问题、找到正确的命令和设置，以及在需要扩展或贡献时理解系统的工作原理。
+**此 skill 帮助你高效使用 Qwerty Agent** — 包括设置、配置功能、生成额外的 agent 实例、排查问题、找到正确的命令和设置，以及在需要扩展或贡献时理解系统的工作原理。
 
-**文档：** https://hermes-agent.nousresearch.com/docs/
+**文档：** https://qwerty-agent.nousresearch.com/docs/
 
 ## 快速开始
 
 ```bash
 # 安装
-curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+curl -fsSL https://qwerty-agent.nousresearch.com/install.sh | bash
 
 # 交互式聊天（默认）
-hermes
+qwerty
 
 # 单次查询
-hermes chat -q "What is the capital of France?"
+qwerty chat -q "What is the capital of France?"
 
 # 设置向导
-hermes setup
+qwerty setup
 
 # 更改模型/提供商
-hermes model
+qwerty model
 
 # 健康检查
-hermes doctor
+qwerty doctor
 ```
 
 ---
@@ -77,7 +77,7 @@ hermes doctor
 ### 全局标志
 
 ```
-hermes [flags] [command]
+qwerty [flags] [command]
 
   --version, -V             Show version
   --resume, -r SESSION      Resume session by ID or title
@@ -94,7 +94,7 @@ hermes [flags] [command]
 ### Chat
 
 ```
-hermes chat [flags]
+qwerty chat [flags]
   -q, --query TEXT          Single query, non-interactive
   -m, --model MODEL         Model (e.g. anthropic/claude-sonnet-4)
   -t, --toolsets LIST       Comma-separated toolsets
@@ -108,146 +108,146 @@ hermes chat [flags]
 ### 配置
 
 ```
-hermes setup [section]      Interactive wizard (model|terminal|gateway|tools|agent)
-hermes model                Interactive model/provider picker
-hermes config               View current config
-hermes config edit          Open config.yaml in $EDITOR
-hermes config set KEY VAL   Set a config value
-hermes config path          Print config.yaml path
-hermes config env-path      Print .env path
-hermes config check         Check for missing/outdated config
-hermes config migrate       Update config with new options
-hermes auth                 交互式凭据管理器
-hermes auth add PROVIDER    添加 OAuth 或 API key 凭据（例如 nous、openai-codex、qwen-oauth）
-hermes auth list            列出已存储的凭据
-hermes auth remove PROVIDER 移除已存储的凭据
-hermes doctor [--fix]       Check dependencies and config
-hermes status [--all]       Show component status
+qwerty setup [section]      Interactive wizard (model|terminal|gateway|tools|agent)
+qwerty model                Interactive model/provider picker
+qwerty config               View current config
+qwerty config edit          Open config.yaml in $EDITOR
+qwerty config set KEY VAL   Set a config value
+qwerty config path          Print config.yaml path
+qwerty config env-path      Print .env path
+qwerty config check         Check for missing/outdated config
+qwerty config migrate       Update config with new options
+qwerty auth                 交互式凭据管理器
+qwerty auth add PROVIDER    添加 OAuth 或 API key 凭据（例如 nous、openai-codex、qwen-oauth）
+qwerty auth list            列出已存储的凭据
+qwerty auth remove PROVIDER 移除已存储的凭据
+qwerty doctor [--fix]       Check dependencies and config
+qwerty status [--all]       Show component status
 ```
 
 ### 工具与 Skill
 
 ```
-hermes tools                Interactive tool enable/disable (curses UI)
-hermes tools list           Show all tools and status
-hermes tools enable NAME    Enable a toolset
-hermes tools disable NAME   Disable a toolset
+qwerty tools                Interactive tool enable/disable (curses UI)
+qwerty tools list           Show all tools and status
+qwerty tools enable NAME    Enable a toolset
+qwerty tools disable NAME   Disable a toolset
 
-hermes skills list          List installed skills
-hermes skills search QUERY  Search the skills hub
-hermes skills install ID    Install a skill (ID can be a hub identifier OR a direct https://…/SKILL.md URL; pass --name to override when frontmatter has no name)
-hermes skills inspect ID    Preview without installing
-hermes skills config        Enable/disable skills per platform
-hermes skills check         Check for updates
-hermes skills update        Update outdated skills
-hermes skills uninstall N   Remove a hub skill
-hermes skills publish PATH  Publish to registry
-hermes skills browse        Browse all available skills
-hermes skills tap add REPO  Add a GitHub repo as skill source
+qwerty skills list          List installed skills
+qwerty skills search QUERY  Search the skills hub
+qwerty skills install ID    Install a skill (ID can be a hub identifier OR a direct https://…/SKILL.md URL; pass --name to override when frontmatter has no name)
+qwerty skills inspect ID    Preview without installing
+qwerty skills config        Enable/disable skills per platform
+qwerty skills check         Check for updates
+qwerty skills update        Update outdated skills
+qwerty skills uninstall N   Remove a hub skill
+qwerty skills publish PATH  Publish to registry
+qwerty skills browse        Browse all available skills
+qwerty skills tap add REPO  Add a GitHub repo as skill source
 ```
 
 ### MCP 服务器
 
 ```
-hermes mcp serve            Run Hermes as an MCP server
-hermes mcp add NAME         Add an MCP server (--url or --command)
-hermes mcp remove NAME      Remove an MCP server
-hermes mcp list             List configured servers
-hermes mcp test NAME        Test connection
-hermes mcp configure NAME   Toggle tool selection
+qwerty mcp serve            Run Qwerty as an MCP server
+qwerty mcp add NAME         Add an MCP server (--url or --command)
+qwerty mcp remove NAME      Remove an MCP server
+qwerty mcp list             List configured servers
+qwerty mcp test NAME        Test connection
+qwerty mcp configure NAME   Toggle tool selection
 ```
 
 ### Gateway（消息平台）
 
 ```
-hermes gateway run          Start gateway foreground
-hermes gateway install      Install as background service
-hermes gateway start/stop   Control the service
-hermes gateway restart      Restart the service
-hermes gateway status       Check status
-hermes gateway setup        Configure platforms
+qwerty gateway run          Start gateway foreground
+qwerty gateway install      Install as background service
+qwerty gateway start/stop   Control the service
+qwerty gateway restart      Restart the service
+qwerty gateway status       Check status
+qwerty gateway setup        Configure platforms
 ```
 
 支持的平台：Telegram、Discord、Slack、WhatsApp、Signal、Email、SMS、Matrix、Mattermost、Home Assistant、DingTalk、Feishu、WeCom、BlueBubbles（iMessage）、Weixin（WeChat）、API Server、Webhooks。Open WebUI 通过 API Server 适配器连接。
 
-平台文档：https://hermes-agent.nousresearch.com/docs/user-guide/messaging/
+平台文档：https://qwerty-agent.nousresearch.com/docs/user-guide/messaging/
 
 ### 会话
 
 ```
-hermes sessions list        List recent sessions
-hermes sessions browse      Interactive picker
-hermes sessions export OUT  Export to JSONL
-hermes sessions rename ID T Rename a session
-hermes sessions delete ID   Delete a session
-hermes sessions prune       Clean up old sessions (--older-than N days)
-hermes sessions stats       Session store statistics
+qwerty sessions list        List recent sessions
+qwerty sessions browse      Interactive picker
+qwerty sessions export OUT  Export to JSONL
+qwerty sessions rename ID T Rename a session
+qwerty sessions delete ID   Delete a session
+qwerty sessions prune       Clean up old sessions (--older-than N days)
+qwerty sessions stats       Session store statistics
 ```
 
 ### Cron 任务
 
 ```
-hermes cron list            List jobs (--all for disabled)
-hermes cron create SCHED    Create: '30m', 'every 2h', '0 9 * * *'
-hermes cron edit ID         Edit schedule, prompt, delivery
-hermes cron pause/resume ID Control job state
-hermes cron run ID          Trigger on next tick
-hermes cron remove ID       Delete a job
-hermes cron status          Scheduler status
+qwerty cron list            List jobs (--all for disabled)
+qwerty cron create SCHED    Create: '30m', 'every 2h', '0 9 * * *'
+qwerty cron edit ID         Edit schedule, prompt, delivery
+qwerty cron pause/resume ID Control job state
+qwerty cron run ID          Trigger on next tick
+qwerty cron remove ID       Delete a job
+qwerty cron status          Scheduler status
 ```
 
 ### Webhook
 
 ```
-hermes webhook subscribe N  Create route at /webhooks/<name>
-hermes webhook list         List subscriptions
-hermes webhook remove NAME  Remove a subscription
-hermes webhook test NAME    Send a test POST
+qwerty webhook subscribe N  Create route at /webhooks/<name>
+qwerty webhook list         List subscriptions
+qwerty webhook remove NAME  Remove a subscription
+qwerty webhook test NAME    Send a test POST
 ```
 
 ### Profiles
 
 ```
-hermes profile list         List all profiles
-hermes profile create NAME  Create (--clone, --clone-all, --clone-from)
-hermes profile use NAME     Set sticky default
-hermes profile delete NAME  Delete a profile
-hermes profile show NAME    Show details
-hermes profile alias NAME   Manage wrapper scripts
-hermes profile rename A B   Rename a profile
-hermes profile export NAME  Export to tar.gz
-hermes profile import FILE  Import from archive
+qwerty profile list         List all profiles
+qwerty profile create NAME  Create (--clone, --clone-all, --clone-from)
+qwerty profile use NAME     Set sticky default
+qwerty profile delete NAME  Delete a profile
+qwerty profile show NAME    Show details
+qwerty profile alias NAME   Manage wrapper scripts
+qwerty profile rename A B   Rename a profile
+qwerty profile export NAME  Export to tar.gz
+qwerty profile import FILE  Import from archive
 ```
 
 ### 凭证池
 
 ```
-hermes auth add             Interactive credential wizard
-hermes auth list [PROVIDER] List pooled credentials
-hermes auth remove P INDEX  Remove by provider + index
-hermes auth reset PROVIDER  Clear exhaustion status
+qwerty auth add             Interactive credential wizard
+qwerty auth list [PROVIDER] List pooled credentials
+qwerty auth remove P INDEX  Remove by provider + index
+qwerty auth reset PROVIDER  Clear exhaustion status
 ```
 
 ### 其他
 
 ```
-hermes insights [--days N]  Usage analytics
-hermes update               Update to latest version
-hermes pairing list/approve/revoke  DM authorization
-hermes plugins list/install/remove  Plugin management
-hermes honcho setup/status  Honcho memory integration (requires honcho plugin)
-hermes memory setup/status/off  Memory provider config
-hermes completion bash|zsh  Shell completions
-hermes acp                  ACP server (IDE integration)
-hermes claw migrate         Migrate from OpenClaw
-hermes uninstall            Uninstall Hermes
+qwerty insights [--days N]  Usage analytics
+qwerty update               Update to latest version
+qwerty pairing list/approve/revoke  DM authorization
+qwerty plugins list/install/remove  Plugin management
+qwerty honcho setup/status  Honcho memory integration (requires honcho plugin)
+qwerty memory setup/status/off  Memory provider config
+qwerty completion bash|zsh  Shell completions
+qwerty acp                  ACP server (IDE integration)
+qwerty claw migrate         Migrate from OpenClaw
+qwerty uninstall            Uninstall Qwerty
 ```
 
 ---
 
 ## 斜杠命令（会话内）
 
-在交互式聊天会话中输入这些命令。新命令会不定期上线；如果以下内容看起来过时，请在会话内运行 `/help` 获取权威列表，或查看[实时斜杠命令参考](https://hermes-agent.nousresearch.com/docs/reference/slash-commands)。命令注册表的权威来源是 `hermes_cli/commands.py` — 每个消费方（自动补全、Telegram 菜单、Slack 映射、`/help`）均从中派生。
+在交互式聊天会话中输入这些命令。新命令会不定期上线；如果以下内容看起来过时，请在会话内运行 `/help` 获取权威列表，或查看[实时斜杠命令参考](https://qwerty-agent.nousresearch.com/docs/reference/slash-commands)。命令注册表的权威来源是 `qwerty_cli/commands.py` — 每个消费方（自动补全、Telegram 菜单、Slack 映射、`/help`）均从中派生。
 
 ### 会话控制
 ```
@@ -259,13 +259,13 @@ hermes uninstall            Uninstall Hermes
 /compress            Manually compress context
 /stop                Kill background processes
 /rollback [N]        Restore filesystem checkpoint
-/snapshot [sub]      Create or restore state snapshots of Hermes config/state (CLI)
+/snapshot [sub]      Create or restore state snapshots of Qwerty config/state (CLI)
 /background <prompt> Run prompt in background
 /queue <prompt>      Queue for next turn
 /steer <prompt>      Inject a message after the next tool call without interrupting
 /agents (/tasks)     Show active agents and running tasks
 /resume [name]       Resume a named session
-/goal [text|sub]     Set a standing goal Hermes works on across turns until achieved
+/goal [text|sub]     Set a standing goal Qwerty works on across turns until achieved
                      (subcommands: status, pause, resume, clear)
 /redraw              Force a full UI repaint (CLI)
 ```
@@ -279,7 +279,7 @@ hermes uninstall            Uninstall Hermes
 /verbose             Cycle: off → new → all → verbose
 /voice [on|off|tts]  Voice mode
 /yolo                Toggle approval bypass
-/busy [sub]          Control what Enter does while Hermes is working (CLI)
+/busy [sub]          Control what Enter does while Qwerty is working (CLI)
                      (subcommands: queue, steer, interrupt, status)
 /indicator [style]   Pick the TUI busy-indicator style (CLI)
                      (styles: kaomoji, emoji, unicode, ascii)
@@ -294,7 +294,7 @@ hermes uninstall            Uninstall Hermes
 /toolsets            List toolsets (CLI)
 /skills              Search/install skills (CLI)
 /skill <name>        Load a skill into session
-/reload-skills       Re-scan ~/.hermes/skills/ for added/removed skills
+/reload-skills       Re-scan ~/.qwerty/skills/ for added/removed skills
 /reload              Reload .env variables into the running session (CLI)
 /reload-mcp          Reload MCP servers
 /cron                Manage cron jobs (CLI)
@@ -309,7 +309,7 @@ hermes uninstall            Uninstall Hermes
 /deny                Deny a pending command (gateway)
 /restart             Restart gateway (gateway)
 /sethome             Set current chat as home channel (gateway)
-/update              Update Hermes to latest (gateway)
+/update              Update Qwerty to latest (gateway)
 /topic [sub]         Enable or inspect Telegram DM topic sessions (gateway)
 /platforms (/gateway) Show platform connection status (gateway)
 ```
@@ -347,20 +347,20 @@ hermes uninstall            Uninstall Hermes
 ## 关键路径与配置
 
 ```
-~/.hermes/config.yaml       Main configuration
-~/.hermes/.env              API keys and secrets
-$HERMES_HOME/skills/        Installed skills
-~/.hermes/sessions/         Session transcripts
-~/.hermes/logs/             Gateway and error logs
-~/.hermes/auth.json         OAuth tokens and credential pools
-~/.hermes/hermes-agent/     Source code (if git-installed)
+~/.qwerty/config.yaml       Main configuration
+~/.qwerty/.env              API keys and secrets
+$QWERTY_HOME/skills/        Installed skills
+~/.qwerty/sessions/         Session transcripts
+~/.qwerty/logs/             Gateway and error logs
+~/.qwerty/auth.json         OAuth tokens and credential pools
+~/.qwerty/qwerty-agent/     Source code (if git-installed)
 ```
 
-Profiles 使用 `~/.hermes/profiles/<name>/`，布局相同。
+Profiles 使用 `~/.qwerty/profiles/<name>/`，布局相同。
 
 ### 配置节
 
-使用 `hermes config edit` 或 `hermes config set section.key value` 编辑。
+使用 `qwerty config edit` 或 `qwerty config set section.key value` 编辑。
 
 | 节 | 键选项 |
 |---------|-------------|
@@ -376,18 +376,18 @@ Profiles 使用 `~/.hermes/profiles/<name>/`，布局相同。
 | `delegation` | `model`, `provider`, `base_url`, `api_key`, `max_iterations` (50), `reasoning_effort` |
 | `checkpoints` | `enabled`, `max_snapshots` (50) |
 
-完整配置参考：https://hermes-agent.nousresearch.com/docs/user-guide/configuration
+完整配置参考：https://qwerty-agent.nousresearch.com/docs/user-guide/configuration
 
 ### 提供商
 
-支持 20+ 个提供商。通过 `hermes model` 或 `hermes setup` 设置。
+支持 20+ 个提供商。通过 `qwerty model` 或 `qwerty setup` 设置。
 
 | 提供商 | 认证方式 | Key 环境变量 |
 |----------|------|-------------|
 | OpenRouter | API key | `OPENROUTER_API_KEY` |
 | Anthropic | API key | `ANTHROPIC_API_KEY` |
-| Nous Portal | OAuth | `hermes auth` |
-| OpenAI Codex | OAuth | `hermes auth` |
+| Nous Portal | OAuth | `qwerty auth` |
+| OpenAI Codex | OAuth | `qwerty auth` |
 | GitHub Copilot | Token | `COPILOT_GITHUB_TOKEN` |
 | Google Gemini | API key | `GOOGLE_API_KEY` 或 `GEMINI_API_KEY` |
 | DeepSeek | API key | `DEEPSEEK_API_KEY` |
@@ -402,15 +402,15 @@ Profiles 使用 `~/.hermes/profiles/<name>/`，布局相同。
 | Kilo Code | API key | `KILOCODE_API_KEY` |
 | OpenCode Zen | API key | `OPENCODE_ZEN_API_KEY` |
 | OpenCode Go | API key | `OPENCODE_GO_API_KEY` |
-| Qwen OAuth | OAuth | `hermes auth add qwen-oauth` |
+| Qwen OAuth | OAuth | `qwerty auth add qwen-oauth` |
 | 自定义端点 | 配置 | `config.yaml` 中的 `model.base_url` + `model.api_key` |
 | GitHub Copilot ACP | 外部 | `COPILOT_CLI_PATH` 或 Copilot CLI |
 
-完整提供商文档：https://hermes-agent.nousresearch.com/docs/integrations/providers
+完整提供商文档：https://qwerty-agent.nousresearch.com/docs/integrations/providers
 
 ### Toolset
 
-通过 `hermes tools`（交互式）或 `hermes tools enable/disable NAME` 启用/禁用。
+通过 `qwerty tools`（交互式）或 `qwerty tools enable/disable NAME` 启用/禁用。
 
 | Toolset | 提供的功能 |
 |---------|-----------------|
@@ -445,7 +445,7 @@ Profiles 使用 `~/.hermes/profiles/<name>/`，布局相同。
 | `rl` | 强化学习工具（默认关闭） |
 | `moa` | Mixture of Agents（默认关闭） |
 
-完整枚举位于 `toolsets.py` 的 `TOOLSETS` 字典中；`_HERMES_CORE_TOOLS` 是大多数平台继承的默认工具包。
+完整枚举位于 `toolsets.py` 的 `TOOLSETS` 字典中；`_QWERTY_CORE_TOOLS` 是大多数平台继承的默认工具包。
 
 工具变更在 `/reset`（新会话）后生效。为保留 prompt 缓存，变更**不会**在对话中途生效。
 
@@ -453,21 +453,21 @@ Profiles 使用 `~/.hermes/profiles/<name>/`，布局相同。
 
 ## 安全与隐私开关
 
-常见的"为什么 Hermes 对我的输出/工具调用/命令做了 X？"开关——以及更改它们的确切命令。其中大多数需要新会话（聊天中的 `/reset`，或启动新的 `hermes` 调用），因为它们在启动时只读取一次。
+常见的"为什么 Qwerty 对我的输出/工具调用/命令做了 X？"开关——以及更改它们的确切命令。其中大多数需要新会话（聊天中的 `/reset`，或启动新的 `qwerty` 调用），因为它们在启动时只读取一次。
 
 ### 工具输出中的密钥脱敏
 
-密钥脱敏**默认关闭** — 工具输出（终端 stdout、`read_file`、网页内容、子 agent 摘要等）不经修改直接传递。如果用户希望 Hermes 在 API key、token 和密钥进入对话上下文和日志之前自动屏蔽它们：
+密钥脱敏**默认关闭** — 工具输出（终端 stdout、`read_file`、网页内容、子 agent 摘要等）不经修改直接传递。如果用户希望 Qwerty 在 API key、token 和密钥进入对话上下文和日志之前自动屏蔽它们：
 
 ```bash
-hermes config set security.redact_secrets true       # 全局启用
+qwerty config set security.redact_secrets true       # 全局启用
 ```
 
-**需要重启。** `security.redact_secrets` 在导入时快照 — 在会话中途切换（例如通过工具调用执行 `export HERMES_REDACT_SECRETS=true`）对正在运行的进程**不会**生效。告知用户在终端运行 `hermes config set security.redact_secrets true`，然后启动新会话。这是有意为之——防止 LLM 在任务中途自行切换该开关。
+**需要重启。** `security.redact_secrets` 在导入时快照 — 在会话中途切换（例如通过工具调用执行 `export QWERTY_REDACT_SECRETS=true`）对正在运行的进程**不会**生效。告知用户在终端运行 `qwerty config set security.redact_secrets true`，然后启动新会话。这是有意为之——防止 LLM 在任务中途自行切换该开关。
 
 再次禁用：
 ```bash
-hermes config set security.redact_secrets false
+qwerty config set security.redact_secrets false
 ```
 
 ### Gateway 消息中的 PII 脱敏
@@ -475,36 +475,36 @@ hermes config set security.redact_secrets false
 与密钥脱敏分开。启用后，gateway 在上下文到达模型之前对用户 ID 进行哈希处理并从会话上下文中去除电话号码：
 
 ```bash
-hermes config set privacy.redact_pii true    # 启用
-hermes config set privacy.redact_pii false   # 禁用（默认）
+qwerty config set privacy.redact_pii true    # 启用
+qwerty config set privacy.redact_pii false   # 禁用（默认）
 ```
 
 ### 命令审批提示
 
-默认情况下（`approvals.mode: smart`），Hermes 会让辅助 LLM 评估被标记为破坏性的 shell 命令（`rm -rf`、`git reset --hard` 等）。模式如下：
+默认情况下（`approvals.mode: smart`），Qwerty 会让辅助 LLM 评估被标记为破坏性的 shell 命令（`rm -rf`、`git reset --hard` 等）。模式如下：
 
 - `smart` — 低风险命令仅批准一次，高风险命令拒绝，不确定时提示（默认）
 - `manual` — 始终提示
 - `off` — 跳过所有审批提示（等同于 `--yolo`）
 
 ```bash
-hermes config set approvals.mode smart       # 推荐的折中方案
-hermes config set approvals.mode off         # 绕过一切（不推荐）
+qwerty config set approvals.mode smart       # 推荐的折中方案
+qwerty config set approvals.mode off         # 绕过一切（不推荐）
 ```
 
 单次调用绕过（不更改配置）：
-- `hermes --yolo …`
-- `export HERMES_YOLO_MODE=1`
+- `qwerty --yolo …`
+- `export QWERTY_YOLO_MODE=1`
 
 注意：YOLO / `approvals.mode: off` **不会**关闭密钥脱敏。两者相互独立。
 
 ### Shell hook 允许列表
 
-某些 shell hook 集成在触发前需要明确加入允许列表。通过 `~/.hermes/shell-hooks-allowlist.json` 管理——在 hook 首次尝试运行时以交互方式提示。
+某些 shell hook 集成在触发前需要明确加入允许列表。通过 `~/.qwerty/shell-hooks-allowlist.json` 管理——在 hook 首次尝试运行时以交互方式提示。
 
 ### 禁用 web/browser/image-gen 工具
 
-要完全阻止模型访问网络或媒体工具，打开 `hermes tools` 并按平台切换。在下次会话（`/reset`）后生效。参见上方的工具与 Skill 部分。
+要完全阻止模型访问网络或媒体工具，打开 `qwerty tools` 并按平台切换。在下次会话（`/reset`）后生效。参见上方的工具与 Skill 部分。
 
 ---
 
@@ -544,13 +544,13 @@ stt:
 
 ---
 
-## 生成额外的 Hermes 实例
+## 生成额外的 Qwerty 实例
 
-将额外的 Hermes 进程作为完全独立的子进程运行——拥有独立的会话、工具和环境。
+将额外的 Qwerty 进程作为完全独立的子进程运行——拥有独立的会话、工具和环境。
 
 ### 何时使用此方式 vs delegate_task
 
-| | `delegate_task` | 生成 `hermes` 进程 |
+| | `delegate_task` | 生成 `qwerty` 进程 |
 |-|-----------------|--------------------------|
 | 隔离性 | 独立对话，共享进程 | 完全独立进程 |
 | 持续时间 | 分钟级（受父循环限制） | 小时/天 |
@@ -561,19 +561,19 @@ stt:
 ### 单次模式
 
 ```
-terminal(command="hermes chat -q 'Research GRPO papers and write summary to ~/research/grpo.md'", timeout=300)
+terminal(command="qwerty chat -q 'Research GRPO papers and write summary to ~/research/grpo.md'", timeout=300)
 
 # 长任务后台运行：
-terminal(command="hermes chat -q 'Set up CI/CD for ~/myapp'", background=true)
+terminal(command="qwerty chat -q 'Set up CI/CD for ~/myapp'", background=true)
 ```
 
 ### 交互式 PTY 模式（通过 tmux）
 
-Hermes 使用 prompt_toolkit，需要真实终端。使用 tmux 进行交互式生成：
+Qwerty 使用 prompt_toolkit，需要真实终端。使用 tmux 进行交互式生成：
 
 ```
 # 启动
-terminal(command="tmux new-session -d -s agent1 -x 120 -y 40 'hermes'", timeout=10)
+terminal(command="tmux new-session -d -s agent1 -x 120 -y 40 'qwerty'", timeout=10)
 
 # 等待启动，然后发送消息
 terminal(command="sleep 8 && tmux send-keys -t agent1 'Build a FastAPI auth service' Enter", timeout=15)
@@ -592,11 +592,11 @@ terminal(command="tmux send-keys -t agent1 '/exit' Enter && sleep 2 && tmux kill
 
 ```
 # Agent A：后端
-terminal(command="tmux new-session -d -s backend -x 120 -y 40 'hermes -w'", timeout=10)
+terminal(command="tmux new-session -d -s backend -x 120 -y 40 'qwerty -w'", timeout=10)
 terminal(command="sleep 8 && tmux send-keys -t backend 'Build REST API for user management' Enter", timeout=15)
 
 # Agent B：前端
-terminal(command="tmux new-session -d -s frontend -x 120 -y 40 'hermes -w'", timeout=10)
+terminal(command="tmux new-session -d -s frontend -x 120 -y 40 'qwerty -w'", timeout=10)
 terminal(command="sleep 8 && tmux send-keys -t frontend 'Build React dashboard for user management' Enter", timeout=15)
 
 # 检查进度，在两者之间传递上下文
@@ -608,10 +608,10 @@ terminal(command="tmux send-keys -t frontend 'Here is the API schema from the ba
 
 ```
 # 恢复最近的会话
-terminal(command="tmux new-session -d -s resumed 'hermes --continue'", timeout=10)
+terminal(command="tmux new-session -d -s resumed 'qwerty --continue'", timeout=10)
 
 # 恢复特定会话
-terminal(command="tmux new-session -d -s resumed 'hermes --resume 20260225_143052_a1b2c3'", timeout=10)
+terminal(command="tmux new-session -d -s resumed 'qwerty --resume 20260225_143052_a1b2c3'", timeout=10)
 ```
 
 ### 提示
@@ -619,7 +619,7 @@ terminal(command="tmux new-session -d -s resumed 'hermes --resume 20260225_14305
 - **快速子任务优先使用 `delegate_task`** — 比生成完整进程开销更小
 - **生成编辑代码的 agent 时使用 `-w`（worktree 模式）** — 防止 git 冲突
 - **为单次模式设置超时** — 复杂任务可能需要 5-10 分钟
-- **fire-and-forget 使用 `hermes chat -q`** — 无需 PTY
+- **fire-and-forget 使用 `qwerty chat -q`** — 无需 PTY
 - **交互式会话使用 tmux** — 原始 PTY 模式与 prompt_toolkit 存在 `\r` vs `\n` 问题
 - **定时任务使用 `cronjob` 工具而非生成进程** — 处理投递和重试
 
@@ -642,42 +642,42 @@ terminal(command="tmux new-session -d -s resumed 'hermes --resume 20260225_14305
 
 ### Cron（定时任务）
 
-持久化调度器——`cron/jobs.py` + `cron/scheduler.py`。通过 `cronjob` 工具、`hermes cron` CLI（`list`、`add`、`edit`、`pause`、`resume`、`run`、`remove`）或 `/cron` 斜杠命令驱动。
+持久化调度器——`cron/jobs.py` + `cron/scheduler.py`。通过 `cronjob` 工具、`qwerty cron` CLI（`list`、`add`、`edit`、`pause`、`resume`、`run`、`remove`）或 `/cron` 斜杠命令驱动。
 
 - **调度格式：** 持续时间（`"30m"`、`"2h"`）、"every" 短语（`"every monday 9am"`）、5 字段 cron（`"0 9 * * *"`）或 ISO 时间戳。
 - **每任务选项：** `skills`、`model`/`provider` 覆盖、`script`（预运行数据收集；`no_agent=True` 使脚本成为整个任务）、`context_from`（将任务 A 的输出链接到任务 B）、`workdir`（在特定目录中运行，加载其 `AGENTS.md` / `CLAUDE.md`）、多平台投递。
 - **不变量：** 每次运行 3 分钟硬中断，`.tick.lock` 文件防止跨进程重复 tick，cron 会话默认传递 `skip_memory=True`，cron 投递使用页眉/页脚框架而非镜像到目标 gateway 会话（保持角色交替完整）。
 
-用户文档：https://hermes-agent.nousresearch.com/docs/user-guide/features/cron
+用户文档：https://qwerty-agent.nousresearch.com/docs/user-guide/features/cron
 
 ### Curator（skill 生命周期）
 
 agent 创建的 skill 的后台维护。跟踪使用情况，将闲置 skill 标记为过时，归档过时的 skill，保留运行前的 tar.gz 备份以防数据丢失。
 
-- **CLI：** `hermes curator <verb>` — `status`、`run`、`pause`、`resume`、`pin`、`unpin`、`archive`、`restore`、`prune`、`backup`、`rollback`。
+- **CLI：** `qwerty curator <verb>` — `status`、`run`、`pause`、`resume`、`pin`、`unpin`、`archive`、`restore`、`prune`、`backup`、`rollback`。
 - **斜杠命令：** `/curator <subcommand>` 与 CLI 对应。
 - **范围：** 仅处理 `created_by: "agent"` 来源的 skill。内置和 hub 安装的 skill 不在范围内。**从不删除** — 最具破坏性的操作是归档。已固定的 skill 不受任何自动转换和任何 LLM 审查的影响。
-- **遥测：** `~/.hermes/skills/.usage.json` 中的 sidecar 保存每个 skill 的 `use_count`、`view_count`、`patch_count`、`last_activity_at`、`state`、`pinned`。
+- **遥测：** `~/.qwerty/skills/.usage.json` 中的 sidecar 保存每个 skill 的 `use_count`、`view_count`、`patch_count`、`last_activity_at`、`state`、`pinned`。
 
 配置：`curator.*`（`enabled`、`interval_hours`、`min_idle_hours`、`stale_after_days`、`archive_after_days`、`backup.*`）。
-用户文档：https://hermes-agent.nousresearch.com/docs/user-guide/features/curator
+用户文档：https://qwerty-agent.nousresearch.com/docs/user-guide/features/curator
 
 ### Kanban（多 agent 工作队列）
 
-用于多 profile/多 worker 协作的持久化 SQLite 看板（kanban）。用户通过 `hermes kanban <verb>` 驱动；调度器生成的 worker 看到由 `HERMES_KANBAN_TASK` 控制的专注 `kanban_*` toolset，orchestrator profile 可以选择加入更广泛的 `kanban` toolset。普通会话除非配置，否则没有任何 `kanban_*` schema 占用。
+用于多 profile/多 worker 协作的持久化 SQLite 看板（kanban）。用户通过 `qwerty kanban <verb>` 驱动；调度器生成的 worker 看到由 `QWERTY_KANBAN_TASK` 控制的专注 `kanban_*` toolset，orchestrator profile 可以选择加入更广泛的 `kanban` toolset。普通会话除非配置，否则没有任何 `kanban_*` schema 占用。
 
 - **CLI 动词（常用）：** `init`、`create`、`list`（别名 `ls`）、`show`、`assign`、`link`、`unlink`、`comment`、`complete`、`block`、`unblock`、`archive`、`tail`。不常用：`watch`、`stats`、`runs`、`log`、`dispatch`、`daemon`、`gc`。
 - **Worker/orchestrator toolset：** `kanban_show`、`kanban_complete`、`kanban_block`、`kanban_heartbeat`、`kanban_comment`、`kanban_create`、`kanban_link`；在调度器生成的任务之外显式启用 `kanban` toolset 的 profile 还可获得 `kanban_list` 和 `kanban_unblock` 用于看板路由。
 - **调度器** 默认在 gateway 内运行（`kanban.dispatch_in_gateway: true`）——回收过期认领、推进就绪任务、原子认领、生成已分配的 profile。在配置的 `kanban.failure_limit` 次连续非成功尝试后自动阻塞任务（默认：2）。
-- **隔离：** 看板是硬边界（worker 在环境中固定 `HERMES_KANBAN_BOARD`）；租户是看板内用于工作区路径和记忆键隔离的软命名空间。
+- **隔离：** 看板是硬边界（worker 在环境中固定 `QWERTY_KANBAN_BOARD`）；租户是看板内用于工作区路径和记忆键隔离的软命名空间。
 
-用户文档：https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban
+用户文档：https://qwerty-agent.nousresearch.com/docs/user-guide/features/kanban
 
 ---
 
 ## Windows 特有问题
 
-Hermes 在 Windows 上原生运行（PowerShell、cmd、Windows Terminal、git-bash mintty、VS Code 集成终端）。大多数功能开箱即用，但 Win32 和 POSIX 之间有一些差异曾给我们带来麻烦——遇到新问题时请在此记录，以免下一个人（或下一个会话）重新踩坑。
+Qwerty 在 Windows 上原生运行（PowerShell、cmd、Windows Terminal、git-bash mintty、VS Code 集成终端）。大多数功能开箱即用，但 Win32 和 POSIX 之间有一些差异曾给我们带来麻烦——遇到新问题时请在此记录，以免下一个人（或下一个会话）重新踩坑。
 
 ### 输入/键绑定
 
@@ -689,15 +689,15 @@ mintty / git-bash 行为相同（Alt+Enter 全屏），除非你在选项 → �
 
 ### 配置/文件
 
-**首次运行时 HTTP 400 "No models provided"。** `config.yaml` 保存时带有 UTF-8 BOM（Windows 应用写入时常见）。重新保存为不带 BOM 的 UTF-8。`hermes config edit` 写入时不带 BOM；手动在记事本中编辑是常见原因。
+**首次运行时 HTTP 400 "No models provided"。** `config.yaml` 保存时带有 UTF-8 BOM（Windows 应用写入时常见）。重新保存为不带 BOM 的 UTF-8。`qwerty config edit` 写入时不带 BOM；手动在记事本中编辑是常见原因。
 
 ### `execute_code` / 沙箱
 
-**WinError 10106**（"无法加载或初始化请求的服务提供商"）来自沙箱子进程——它无法创建 `AF_INET` socket，因此回退的 loopback-TCP RPC 在 `connect()` 之前失败。根本原因通常**不是**损坏的 Winsock LSP；而是 Hermes 自身的环境清理器从子进程环境中删除了 `SYSTEMROOT` / `WINDIR` / `COMSPEC`。Python 的 `socket` 模块需要 `SYSTEMROOT` 来定位 `mswsock.dll`。通过 `tools/code_execution_tool.py` 中的 `_WINDOWS_ESSENTIAL_ENV_VARS` 允许列表修复。如果仍然遇到此问题，在 `execute_code` 块内 echo `os.environ` 以确认 `SYSTEMROOT` 已设置。完整诊断方案见 `references/execute-code-sandbox-env-windows.md`。
+**WinError 10106**（"无法加载或初始化请求的服务提供商"）来自沙箱子进程——它无法创建 `AF_INET` socket，因此回退的 loopback-TCP RPC 在 `connect()` 之前失败。根本原因通常**不是**损坏的 Winsock LSP；而是 Qwerty 自身的环境清理器从子进程环境中删除了 `SYSTEMROOT` / `WINDIR` / `COMSPEC`。Python 的 `socket` 模块需要 `SYSTEMROOT` 来定位 `mswsock.dll`。通过 `tools/code_execution_tool.py` 中的 `_WINDOWS_ESSENTIAL_ENV_VARS` 允许列表修复。如果仍然遇到此问题，在 `execute_code` 块内 echo `os.environ` 以确认 `SYSTEMROOT` 已设置。完整诊断方案见 `references/execute-code-sandbox-env-windows.md`。
 
 ### 测试/贡献
 
-**`scripts/run_tests.sh` 在 Windows 上无法直接使用** — 它查找 POSIX venv 布局（`.venv/bin/activate`）。Hermes 安装的 venv 位于 `venv/Scripts/`，也没有 pip 或 pytest（为减小安装体积而精简）。解决方案：将 `pytest + pytest-xdist + pyyaml` 安装到系统 Python 3.11 用户站点，然后设置 `PYTHONPATH` 直接调用 pytest：
+**`scripts/run_tests.sh` 在 Windows 上无法直接使用** — 它查找 POSIX venv 布局（`.venv/bin/activate`）。Qwerty 安装的 venv 位于 `venv/Scripts/`，也没有 pip 或 pytest（为减小安装体积而精简）。解决方案：将 `pytest + pytest-xdist + pyyaml` 安装到系统 Python 3.11 用户站点，然后设置 `PYTHONPATH` 直接调用 pytest：
 
 ```bash
 "/c/Program Files/Python311/python" -m pip install --user pytest pytest-xdist pyyaml
@@ -719,7 +719,7 @@ export PYTHONPATH="$(pwd)"
 
 **行尾。** Git 可能警告 `LF will be replaced by CRLF the next time Git touches it`。这是外观问题——仓库的 `.gitattributes` 会规范化。不要让编辑器自动将已提交的 POSIX 换行文件转换为 CRLF。
 
-**正斜杠几乎在所有地方都有效。** `C:/Users/...` 被每个 Hermes 工具和大多数 Windows API 接受。在代码和日志中优先使用正斜杠——避免在 bash 中转义反斜杠。
+**正斜杠几乎在所有地方都有效。** `C:/Users/...` 被每个 Qwerty 工具和大多数 Windows API 接受。在代码和日志中优先使用正斜杠——避免在 bash 中转义反斜杠。
 
 ---
 
@@ -731,15 +731,15 @@ export PYTHONPATH="$(pwd)"
 3. 在 gateway 中：`/restart`。在 CLI 中：退出并重新启动。
 
 ### 工具不可用
-1. `hermes tools` — 检查 toolset 是否为你的平台启用
+1. `qwerty tools` — 检查 toolset 是否为你的平台启用
 2. 某些工具需要环境变量（检查 `.env`）
 3. 启用工具后执行 `/reset`
 
 ### 模型/提供商问题
-1. `hermes doctor` — 检查配置和依赖
-2. `hermes auth` — 重新认证 OAuth 提供商（或 `hermes auth add <provider>`）
+1. `qwerty doctor` — 检查配置和依赖
+2. `qwerty auth` — 重新认证 OAuth 提供商（或 `qwerty auth add <provider>`）
 3. 检查 `.env` 中是否有正确的 API key
-4. **Copilot 403**：`gh auth login` 的 token **不适用于** Copilot API。必须通过 `hermes model` → GitHub Copilot 使用 Copilot 专用 OAuth 设备码流程。
+4. **Copilot 403**：`gh auth login` 的 token **不适用于** Copilot API。必须通过 `qwerty model` → GitHub Copilot 使用 Copilot 专用 OAuth 设备码流程。
 
 ### 变更未生效
 - **工具/skill：** `/reset` 以更新后的 toolset 启动新会话
@@ -747,20 +747,20 @@ export PYTHONPATH="$(pwd)"
 - **代码变更：** 重启 CLI 或 gateway 进程
 
 ### Skill 未显示
-1. `hermes skills list` — 验证已安装
-2. `hermes skills config` — 检查平台启用状态
-3. 显式加载：`/skill name` 或 `hermes -s name`
+1. `qwerty skills list` — 验证已安装
+2. `qwerty skills config` — 检查平台启用状态
+3. 显式加载：`/skill name` 或 `qwerty -s name`
 
 ### Gateway 问题
 首先检查日志：
 ```bash
-grep -i "failed to send\|error" ~/.hermes/logs/gateway.log | tail -20
+grep -i "failed to send\|error" ~/.qwerty/logs/gateway.log | tail -20
 ```
 
 常见 gateway 问题：
 - **SSH 注销后 gateway 停止**：启用 linger：`sudo loginctl enable-linger $USER`
 - **WSL2 关闭后 gateway 停止**：WSL2 需要 `/etc/wsl.conf` 中的 `systemd=true` 才能使 systemd 服务工作。没有它，gateway 回退到 `nohup`（会话关闭时停止）。
-- **Gateway 崩溃循环**：重置失败状态：`systemctl --user reset-failed hermes-gateway`
+- **Gateway 崩溃循环**：重置失败状态：`systemctl --user reset-failed qwerty-gateway`
 
 ### 平台特定问题
 - **Discord bot 静默**：必须在 Bot → Privileged Gateway Intents 中启用 **Message Content Intent**。
@@ -770,8 +770,8 @@ grep -i "failed to send\|error" ~/.hermes/logs/gateway.log | tail -20
 ### 辅助模型不工作
 如果 `auxiliary` 任务（视觉、压缩）静默失败，`auto` 提供商找不到后端。请设置 `OPENROUTER_API_KEY` 或 `GOOGLE_API_KEY`，或显式配置每个辅助任务的提供商：
 ```bash
-hermes config set auxiliary.vision.provider <your_provider>
-hermes config set auxiliary.vision.model <model_name>
+qwerty config set auxiliary.vision.provider <your_provider>
+qwerty config set auxiliary.vision.model <model_name>
 ```
 
 ---
@@ -780,40 +780,40 @@ hermes config set auxiliary.vision.model <model_name>
 
 | 查找内容... | 位置 |
 |----------------|----------|
-| 配置选项 | `hermes config edit` 或[配置文档](https://hermes-agent.nousresearch.com/docs/user-guide/configuration) |
-| 可用工具 | `hermes tools list` 或[工具参考](https://hermes-agent.nousresearch.com/docs/reference/tools-reference) |
-| 斜杠命令 | 会话内 `/help` 或[斜杠命令参考](https://hermes-agent.nousresearch.com/docs/reference/slash-commands) |
-| Skill 目录 | `hermes skills browse` 或[Skill 目录](https://hermes-agent.nousresearch.com/docs/reference/skills-catalog) |
-| 提供商设置 | `hermes model` 或[提供商指南](https://hermes-agent.nousresearch.com/docs/integrations/providers) |
-| 平台设置 | `hermes gateway setup` 或[消息文档](https://hermes-agent.nousresearch.com/docs/user-guide/messaging/) |
-| MCP 服务器 | `hermes mcp list` 或[MCP 指南](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp) |
-| Profiles | `hermes profile list` 或[Profiles 文档](https://hermes-agent.nousresearch.com/docs/user-guide/profiles) |
-| Cron 任务 | `hermes cron list` 或[Cron 文档](https://hermes-agent.nousresearch.com/docs/user-guide/features/cron) |
-| 记忆 | `hermes memory status` 或[记忆文档](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory) |
-| 环境变量 | `hermes config env-path` 或[环境变量参考](https://hermes-agent.nousresearch.com/docs/reference/environment-variables) |
-| CLI 命令 | `hermes --help` 或[CLI 参考](https://hermes-agent.nousresearch.com/docs/reference/cli-commands) |
-| Gateway 日志 | `~/.hermes/logs/gateway.log` |
-| 会话文件 | `~/.hermes/sessions/` 或 `hermes sessions browse` |
-| 源代码 | `~/.hermes/hermes-agent/` |
+| 配置选项 | `qwerty config edit` 或[配置文档](https://qwerty-agent.nousresearch.com/docs/user-guide/configuration) |
+| 可用工具 | `qwerty tools list` 或[工具参考](https://qwerty-agent.nousresearch.com/docs/reference/tools-reference) |
+| 斜杠命令 | 会话内 `/help` 或[斜杠命令参考](https://qwerty-agent.nousresearch.com/docs/reference/slash-commands) |
+| Skill 目录 | `qwerty skills browse` 或[Skill 目录](https://qwerty-agent.nousresearch.com/docs/reference/skills-catalog) |
+| 提供商设置 | `qwerty model` 或[提供商指南](https://qwerty-agent.nousresearch.com/docs/integrations/providers) |
+| 平台设置 | `qwerty gateway setup` 或[消息文档](https://qwerty-agent.nousresearch.com/docs/user-guide/messaging/) |
+| MCP 服务器 | `qwerty mcp list` 或[MCP 指南](https://qwerty-agent.nousresearch.com/docs/user-guide/features/mcp) |
+| Profiles | `qwerty profile list` 或[Profiles 文档](https://qwerty-agent.nousresearch.com/docs/user-guide/profiles) |
+| Cron 任务 | `qwerty cron list` 或[Cron 文档](https://qwerty-agent.nousresearch.com/docs/user-guide/features/cron) |
+| 记忆 | `qwerty memory status` 或[记忆文档](https://qwerty-agent.nousresearch.com/docs/user-guide/features/memory) |
+| 环境变量 | `qwerty config env-path` 或[环境变量参考](https://qwerty-agent.nousresearch.com/docs/reference/environment-variables) |
+| CLI 命令 | `qwerty --help` 或[CLI 参考](https://qwerty-agent.nousresearch.com/docs/reference/cli-commands) |
+| Gateway 日志 | `~/.qwerty/logs/gateway.log` |
+| 会话文件 | `~/.qwerty/sessions/` 或 `qwerty sessions browse` |
+| 源代码 | `~/.qwerty/qwerty-agent/` |
 
 ---
 
 ## 贡献者快速参考
 
-面向偶尔贡献者和 PR 作者。完整开发者文档：https://hermes-agent.nousresearch.com/docs/developer-guide/
+面向偶尔贡献者和 PR 作者。完整开发者文档：https://qwerty-agent.nousresearch.com/docs/developer-guide/
 
 ### 项目结构
 
 <!-- ascii-guard-ignore -->
 ```
-hermes-agent/
+qwerty-agent/
 ├── run_agent.py          # AIAgent — core conversation loop
 ├── model_tools.py        # Tool discovery and dispatch
 ├── toolsets.py           # Toolset definitions
-├── cli.py                # Interactive CLI (HermesCLI)
-├── hermes_state.py       # SQLite session store
+├── cli.py                # Interactive CLI (QwertyCLI)
+├── qwerty_state.py       # SQLite session store
 ├── agent/                # Prompt builder, context compression, memory, model routing, credential pooling, skill dispatch
-├── hermes_cli/           # CLI subcommands, config, setup, commands
+├── qwerty_cli/           # CLI subcommands, config, setup, commands
 │   ├── commands.py       # Slash command registry (CommandDef)
 │   ├── config.py         # DEFAULT_CONFIG, env var definitions
 │   └── main.py           # CLI entry point and argparse
@@ -827,7 +827,7 @@ hermes-agent/
 ```
 <!-- ascii-guard-ignore-end -->
 
-配置：`~/.hermes/config.yaml`（设置）、`~/.hermes/.env`（API key）。
+配置：`~/.qwerty/config.yaml`（设置）、`~/.qwerty/.env`（API key）。
 
 ### 添加工具（3 个文件）
 
@@ -853,15 +853,15 @@ registry.register(
 )
 ```
 
-**2. 添加到 `toolsets.py`** → `_HERMES_CORE_TOOLS` 列表。
+**2. 添加到 `toolsets.py`** → `_QWERTY_CORE_TOOLS` 列表。
 
 自动发现：任何包含顶层 `registry.register()` 调用的 `tools/*.py` 文件都会自动导入——无需手动列出。
 
-所有处理器必须返回 JSON 字符串。路径使用 `get_hermes_home()`，永远不要硬编码 `~/.hermes`。
+所有处理器必须返回 JSON 字符串。路径使用 `get_qwerty_home()`，永远不要硬编码 `~/.qwerty`。
 
 ### 添加斜杠命令
 
-1. 在 `hermes_cli/commands.py` 的 `COMMAND_REGISTRY` 中添加 `CommandDef`
+1. 在 `qwerty_cli/commands.py` 的 `COMMAND_REGISTRY` 中添加 `CommandDef`
 2. 在 `cli.py` → `process_command()` 中添加处理器
 3. （可选）在 `gateway/run.py` 中添加 gateway 处理器
 
@@ -886,11 +886,11 @@ python -m pytest tests/ -o 'addopts=' -q   # 完整套件
 python -m pytest tests/tools/ -q            # 特定区域
 ```
 
-- 测试自动将 `HERMES_HOME` 重定向到临时目录——永远不会触及真实的 `~/.hermes/`
+- 测试自动将 `QWERTY_HOME` 重定向到临时目录——永远不会触及真实的 `~/.qwerty/`
 - 推送任何变更前运行完整套件
 - 使用 `-o 'addopts='` 清除任何内置的 pytest 标志
 
-**Windows 贡献者：** `scripts/run_tests.sh` 目前查找 POSIX venv（`.venv/bin/activate` / `venv/bin/activate`），在 Windows 上会报错，因为布局是 `venv/Scripts/activate` + `python.exe`。Hermes 安装的 venv 位于 `venv/Scripts/`，也没有 `pip` 或 `pytest`——为终端用户安装体积而精简。解决方案：将 pytest + pytest-xdist + pyyaml 安装到系统 Python 3.11 用户站点（`/c/Program Files/Python311/python -m pip install --user pytest pytest-xdist pyyaml`），然后直接运行测试：
+**Windows 贡献者：** `scripts/run_tests.sh` 目前查找 POSIX venv（`.venv/bin/activate` / `venv/bin/activate`），在 Windows 上会报错，因为布局是 `venv/Scripts/activate` + `python.exe`。Qwerty 安装的 venv 位于 `venv/Scripts/`，也没有 `pip` 或 `pytest`——为终端用户安装体积而精简。解决方案：将 pytest + pytest-xdist + pyyaml 安装到系统 Python 3.11 用户站点（`/c/Program Files/Python311/python -m pip install --user pytest pytest-xdist pyyaml`），然后直接运行测试：
 
 ```bash
 export PYTHONPATH="$(pwd)"
@@ -901,7 +901,7 @@ export PYTHONPATH="$(pwd)"
 
 **跨平台测试守卫：** 使用仅 POSIX 系统调用的测试需要跳过标记。代码库中已有的常见标记：
 - 符号链接创建 → `@pytest.mark.skipif(sys.platform == "win32", reason="Symlinks require elevated privileges on Windows")`（参见 `tests/cron/test_cron_script.py`）
-- POSIX 文件模式（0o600 等）→ `@pytest.mark.skipif(sys.platform.startswith("win"), reason="POSIX mode bits not enforced on Windows")`（参见 `tests/hermes_cli/test_auth_toctou_file_modes.py`）
+- POSIX 文件模式（0o600 等）→ `@pytest.mark.skipif(sys.platform.startswith("win"), reason="POSIX mode bits not enforced on Windows")`（参见 `tests/qwerty_cli/test_auth_toctou_file_modes.py`）
 - `signal.SIGALRM` → 仅 Unix（参见 `tests/conftest.py::_enforce_test_timeout`）
 - 实时 Winsock / Windows 特有回归测试 → `@pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific regression")`
 
@@ -941,6 +941,6 @@ Optional body.
 
 - **永远不要破坏 prompt 缓存** — 不要在对话中途更改上下文、工具或系统 prompt
 - **消息角色交替** — 永远不要连续出现两条 assistant 或两条 user 消息
-- 所有路径使用 `hermes_constants` 中的 `get_hermes_home()`（profile 安全）
+- 所有路径使用 `qwerty_constants` 中的 `get_qwerty_home()`（profile 安全）
 - 配置值放入 `config.yaml`，密钥放入 `.env`
 - 新工具需要 `check_fn`，以便仅在满足要求时才显示

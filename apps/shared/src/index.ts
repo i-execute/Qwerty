@@ -45,7 +45,7 @@ export {
   type WebSocketLike
 } from './json-rpc-gateway'
 export {
-  type HermesSkin,
+  type QwertySkin,
   SKIN_BRANDING_TOKENS,
   SKIN_COLOR_TOKENS,
   type SkinBranding,
@@ -54,12 +54,12 @@ export {
   type SkinColorToken
 } from './skin'
 export {
-  buildHermesWebSocketUrl,
+  buildQwertyWebSocketUrl,
   type GatewayAuthMode,
   GatewayReauthRequiredError,
   type GatewayWsConnection,
   type GatewayWsUrlResult,
-  type HermesWebSocketUrlOptions,
+  type QwertyWebSocketUrlOptions,
   isGatewayReauthRequired,
   resolveGatewayWsUrl,
   type ResolveGatewayWsUrlDeps,

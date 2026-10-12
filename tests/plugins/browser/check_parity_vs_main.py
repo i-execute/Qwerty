@@ -13,7 +13,7 @@ which would be a real regression for users on the existing config keys.
 
 Run from the PR worktree:
 
-    cd ~/.hermes/hermes-agent/.worktrees/browser-providers-plugin
+    cd ~/.qwerty/qwerty-agent/.worktrees/browser-providers-plugin
     python tests/plugins/browser/check_parity_vs_main.py
 """
 from __future__ import annotations
@@ -29,14 +29,14 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 # Pin one path to current main, one to the PR worktree.
 # ``REPO_ROOT`` is ``.../.worktrees/browser-providers-plugin``; the main
-# checkout lives two levels up at ``~/.hermes/hermes-agent``.
-MAIN_DIR = REPO_ROOT.parent.parent  # ~/.hermes/hermes-agent
+# checkout lives two levels up at ``~/.qwerty/qwerty-agent``.
+MAIN_DIR = REPO_ROOT.parent.parent  # ~/.qwerty/qwerty-agent
 PR_DIR = REPO_ROOT  # the worktree we're in
 assert (MAIN_DIR / "tools" / "browser_tool.py").exists(), (
-    f"MAIN_DIR={MAIN_DIR} doesn't look like a hermes-agent checkout"
+    f"MAIN_DIR={MAIN_DIR} doesn't look like a qwerty-agent checkout"
 )
 assert (PR_DIR / "tools" / "browser_tool.py").exists(), (
-    f"PR_DIR={PR_DIR} doesn't look like a hermes-agent checkout"
+    f"PR_DIR={PR_DIR} doesn't look like a qwerty-agent checkout"
 )
 
 
@@ -46,9 +46,9 @@ SUBPROCESS_SCRIPT = r"""
 import json, os, sys, tempfile
 sys.path.insert(0, sys.argv[1])
 
-# Isolated HERMES_HOME for the config write.
+# Isolated QWERTY_HOME for the config write.
 home = tempfile.mkdtemp()
-os.environ["HERMES_HOME"] = home
+os.environ["QWERTY_HOME"] = home
 
 # Clear every browser-related env var so is_available() is deterministic.
 for k in (

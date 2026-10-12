@@ -1,6 +1,6 @@
 # Slash Commands (In-Session)
 
-Registry of record: `hermes_cli/commands.py` (`COMMAND_REGISTRY`) — every
+Registry of record: `qwerty_cli/commands.py` (`COMMAND_REGISTRY`) — every
 consumer (autocomplete, `/help`, Telegram menu, Slack mapping) derives from
 it. New commands land often; `/help` in-session is always authoritative.
 (CLI) = interactive CLI/TUI only. (GW) = gateway platforms only.
@@ -17,7 +17,7 @@ it. New commands land often; `/help` in-session is always authoritative.
 /stop                    Kill background processes
 /rollback [N]            List/restore filesystem checkpoints
 /diff [mode] [--stat]    Git changes in cwd (staged|all|session modes)
-/snapshot [sub]          Create/restore Hermes config+state snapshots (CLI)
+/snapshot [sub]          Create/restore Qwerty config+state snapshots (CLI)
 /background (/bg) <p>    Run prompt in background
 /queue (/q) <prompt>     Queue prompt for next turn
 /steer <prompt>          Inject a message after the next tool call
@@ -100,7 +100,7 @@ it. New commands land often; `/help` in-session is always authoritative.
 /copy [N]                Copy last response to clipboard (CLI)
 /paste                   Attach clipboard image (CLI)
 /image <path>            Attach a local image file (CLI)
-/update                  Update Hermes to latest
+/update                  Update Qwerty to latest
 /version (/v)            Show version
 /debug [nous|local]      Upload debug report, get shareable links
 ```

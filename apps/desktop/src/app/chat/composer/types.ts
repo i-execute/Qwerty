@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 import type { SubmitTextOptions } from '@/app/session/hooks/use-prompt-actions/utils'
-import type { HermesGateway } from '@/hermes'
+import type { QwertyGateway } from '@/qwerty'
 
 import type { DroppedFile } from '../hooks/use-composer-actions'
 
@@ -37,7 +37,7 @@ export interface ChatBarProps {
   focusKey?: string | null
   maxRecordingSeconds?: number
   state: ChatBarState
-  gateway?: HermesGateway | null
+  gateway?: QwertyGateway | null
   queueSessionKey?: string | null
   sessionId?: string | null
   cwd?: string | null
