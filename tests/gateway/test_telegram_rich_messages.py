@@ -139,8 +139,8 @@ def test_rich_payload_promotes_only_user_verified_premium_emoji_entities():
     payload = adapter._rich_message_payload("📝 Готово: 🤩")
 
     assert payload["markdown"] == (
-        "![📝](tg://emoji?id=5465465194056525619) "
-        "Готово: ![🤩](tg://emoji?id=5346270183621171895)"
+        "![📝](tg://emoji?id=5454014806950429357) "
+        "Готово: ![🤩](tg://emoji?id=5465465194056525619)"
     )
 
 
@@ -150,14 +150,14 @@ def test_rich_payload_uses_uploaded_native_ids_in_order_for_duplicate_fallbacks(
     payload = adapter._rich_message_payload("🖤 🌟 🌟 ❤️ 💔 💔 👻 👻")
 
     assert payload["markdown"] == (
-        "![🖤](tg://emoji?id=5361635124179906093) "
-        "![🌟](tg://emoji?id=5429168219279603879) "
-        "![🌟](tg://emoji?id=5449860740351539454) "
-        "![❤](tg://emoji?id=5465465194056525619)️ "
-        "![💔](tg://emoji?id=5287395828489532868) "
-        "![💔](tg://emoji?id=5208787155194761088) "
-        "![👻](tg://emoji?id=5208664366374733420) "
-        "![👻](tg://emoji?id=5208653938194136885)"
+        "![🖤](tg://emoji?id=5465465194056525619) "
+        "![🌟](tg://emoji?id=5465262274031659421) "
+        "![🌟](tg://emoji?id=5462910521739063094) "
+        "![❤](tg://emoji?id=5465225015190367274)️ "
+        "![💔](tg://emoji?id=5226829990682707583) "
+        "![💔](tg://emoji?id=5226829990682707583) "
+        "![👻](tg://emoji?id=5463121572137022242) "
+        "![👻](tg://emoji?id=5463412289883353404)"
     )
 
 
@@ -167,10 +167,10 @@ def test_rich_payload_promotes_md3_pack_with_precedence_over_pack1():
     payload = adapter._rich_message_payload("😭 🤔 🌊 🙂")
 
     assert payload["markdown"] == (
-        "![😭](tg://emoji?id=5345778951031658558) "
-        "![🤔](tg://emoji?id=5345988476716226868) "
-        "![🌊](tg://emoji?id=5346107885396991553) "
-        "![🙂](tg://emoji?id=5418384076090420168)"
+        "![😭](tg://emoji?id=5463137996091962323) "
+        "![🤔](tg://emoji?id=5465465194056525619) "
+        "![🌊](tg://emoji?id=5465262274031659421) "
+        "![🙂](tg://emoji?id=5462910521739063094)"
     )
 
 
@@ -201,7 +201,7 @@ def test_rich_payload_preserves_existing_custom_emoji_entity():
 
     assert payload["markdown"] == (
         "![🤩](tg://emoji?id=5190683945351535076) и "
-        "![🧠](tg://emoji?id=5447595110743168717)"
+        "![🧠](tg://emoji?id=5226639745106330551)"
     )
 
 

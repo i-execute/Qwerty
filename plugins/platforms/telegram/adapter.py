@@ -1945,10 +1945,9 @@ class TelegramAdapter(BasePlatformAdapter):
         # own IDs in upload order.
         uploaded_by_glyph: Dict[str, List[str]] = {}
         emoji_ids: Dict[str, str] = {}
-        for _pack_name, _pack_desc, registry in cls._PREMIUM_EMOJI_PACKS:
-            for emoji_id, glyph in registry:
-                uploaded_by_glyph.setdefault(glyph, []).append(emoji_id)
-                emoji_ids.setdefault(glyph, emoji_id)
+        for emoji_id, glyph in cls._GAME_EMOJI_PACK:
+            uploaded_by_glyph.setdefault(glyph, []).append(emoji_id)
+            emoji_ids.setdefault(glyph, emoji_id)
         known_glyphs = set(emoji_ids)
         aliases = getattr(cls, "_GAME_EMOJI_ALIASES", {})
         if aliases:
