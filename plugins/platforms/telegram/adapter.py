@@ -1841,16 +1841,14 @@ class TelegramAdapter(BasePlatformAdapter):
 
     # GameEmoji pack — user upload #3 (t.me/addemoji/GameEmoji), 100 emoji.
     _EMOJI_PACK_FILE = _Path(__file__).resolve().parent.parent.parent.parent / "Gateway_emoji.json"
+    _GAME_EMOJI_PACK: tuple = ()
 
-    @classmethod
-    def _load_game_emoji_pack(cls) -> tuple:
+    def _load_game_emoji_pack():
         try:
-            data = json.loads(cls._EMOJI_PACK_FILE.read_text(encoding="utf-8"))
+            data = json.loads(TelegramAdapter._EMOJI_PACK_FILE.read_text(encoding="utf-8"))
             return tuple((str(item["document_id"]), item["glyph"]) for item in data.get("emoji", []))
         except Exception:
             return ()
-
-    _GAME_EMOJI_PACK = _load_game_emoji_pack()
 
 
     _USER_UPLOADED_NATIVE_PREMIUM_EMOJI_MD3 = (
@@ -1947,10 +1945,9 @@ class TelegramAdapter(BasePlatformAdapter):
         # own IDs in upload order.
         uploaded_by_glyph: Dict[str, List[str]] = {}
         emoji_ids: Dict[str, str] = {}
-        for _pack_name, _pack_desc, registry in cls._PREMIUM_EMOJI_PACKS:
-            for emoji_id, glyph in registry:
-                uploaded_by_glyph.setdefault(glyph, []).append(emoji_id)
-                emoji_ids.setdefault(glyph, emoji_id)
+        for emoji_id, glyph in cls._GAME_EMOJI_PACK:
+            uploaded_by_glyph.setdefault(glyph, []).append(emoji_id)
+            emoji_ids.setdefault(glyph, emoji_id)
         known_glyphs = set(emoji_ids)
         aliases = getattr(cls, "_GAME_EMOJI_ALIASES", {})
         if aliases:
@@ -7036,7 +7033,8 @@ class TelegramAdapter(BasePlatformAdapter):
         r"|_(?P<em>[^\n_]+?)_"
         r"|~(?P<s>[^~\n]+?)~"
         r"|\|\|(?P<sp>[^|\n]+?)\|\|"
-        r"|\[(?P<lt>[^\]\n]+)\]\((?P<lu>[^\s)]+)\)"
+        r"|\[(?P<lt>[^\]\n]+)\]\((?P<lu>[^\s)]+)\)",
+        re.DOTALL,
     )
 
     def _entities_for_markdown(self, text: str) -> tuple:
@@ -7157,9 +7155,8 @@ class TelegramAdapter(BasePlatformAdapter):
         if not text:
             return entities
         glyph_ids: Dict[str, str] = {}
-        for _pack_name, _pack_desc, registry in self._PREMIUM_EMOJI_PACKS:
-            for emoji_id, glyph in registry:
-                glyph_ids.setdefault(glyph, emoji_id)
+        for emoji_id, glyph in self._GAME_EMOJI_PACK:
+            glyph_ids.setdefault(glyph, emoji_id)
         fallback_ids = [emoji_id for emoji_id, _glyph in self._GAME_EMOJI_PACK]
         if not glyph_ids:
             return entities
@@ -10174,6 +10171,9 @@ def _apply_yaml_config(yaml_cfg: dict, telegram_cfg: dict) -> dict | None:
             extras.setdefault(_k, _v)
 
     return extras or None
+
+
+TelegramAdapter._GAME_EMOJI_PACK = TelegramAdapter._load_game_emoji_pack()
 
 
 def register(ctx) -> None:
