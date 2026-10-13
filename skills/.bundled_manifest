@@ -26,8 +26,8 @@ github-issues:14370e636ac58355d25066265b0919db
 github-pr-workflow:9639ca779b6cb6c5944ddfd86727ee87
 github-repo-management:878bd6f1e536fc6f8209fa13955922d8
 google-workspace:082f4e182f54053a98ef34ddbd3b94c5
-hermes-agent:19697f395c6021a08a0af7907e151c5b
-hermes-agent-skill-authoring:f72afd1a1aeda62d9ec78f9b48d8d476
+qwerty-agent:19697f395c6021a08a0af7907e151c5b
+qwerty-agent-skill-authoring:f72afd1a1aeda62d9ec78f9b48d8d476
 himalaya:d215ffaa3c1aecbc68a326e45d6927c8
 huggingface-hub:1e5932fb1742a0424d04a29a4c4e09d0
 humanizer:b3fa12781b41b4008fba21073632e3d0

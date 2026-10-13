@@ -92,7 +92,7 @@ class TestRichMessageNewlineNormalization:
         payload = adapter._rich_message_payload(content)
         md = payload["markdown"]
         # Header paragraph break preserved
-        assert "📊 Commands (24 total, page 1/2)\n\n" in md
+        assert "Commands (24 total, page 1/2)\n\n" in md
         # List items have hard breaks
         assert "`/new` -- Start a new session  \n" in md
         assert "`/model` -- Switch model  \n" in md

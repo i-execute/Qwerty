@@ -119,9 +119,9 @@ def _install_fake_llm(monkeypatch):
 
 
 def _run_facade(monkeypatch, tmp_path, privacy_filter):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     _privacy_config(home, privacy_filter)
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
     _install_fake_llm(monkeypatch)
 
     from agent.moa_loop import MoAChatCompletions
@@ -186,9 +186,9 @@ def test_cache_keeps_raw_text_redaction_applied_per_surface(monkeypatch, tmp_pat
 
 def test_full_mode_covers_one_shot_aggregate_moa_context(monkeypatch, tmp_path):
     """The /moa one-shot synthesis path also honors full mode."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     _privacy_config(home, "full")
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
     calls = _install_fake_llm(monkeypatch)
 
     from agent.moa_loop import aggregate_moa_context

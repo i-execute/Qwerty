@@ -1,7 +1,7 @@
 """Unit tests for the generic-OIDC / Nous-Portal caller-identity token resolver.
 
 Covers gateway.relay._resolve_relay_identity_token() — the canonical resolver
-shared by the runtime self-provision path and the `hermes gateway enroll` CLI.
+shared by the runtime self-provision path and the `qwerty gateway enroll` CLI.
 
 Two modes:
   1. Generic OAuth2 client_credentials when gateway.idp.token_url (or
@@ -43,7 +43,7 @@ def test_defaults_to_nous_portal_when_no_idp_configured(monkeypatch):
         return "nous-portal-token"
 
     monkeypatch.setattr(
-        "hermes_cli.auth.resolve_nous_access_token", fake_resolve, raising=False
+        "qwerty_cli.auth.resolve_nous_access_token", fake_resolve, raising=False
     )
     assert relay._resolve_relay_identity_token() == "nous-portal-token"
     assert called == {"yes": True}

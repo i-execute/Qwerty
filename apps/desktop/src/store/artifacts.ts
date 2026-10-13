@@ -41,7 +41,7 @@ export interface ArtifactRecord {
 
 type ArtifactRegistry = Record<string, ArtifactRecord[]>
 
-const STORAGE_KEY = 'hermes.desktop.artifacts.v1'
+const STORAGE_KEY = 'qwerty.desktop.artifacts.v1'
 const MAX_ARTIFACTS_PER_SESSION = 24
 const MAX_VERSIONS_PER_ARTIFACT = 20
 const MAX_SESSIONS = 40

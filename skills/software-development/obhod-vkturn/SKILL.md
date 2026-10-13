@@ -2,11 +2,11 @@
 name: obhod-vkturn
 description: "OBHOD: Telegram bot for WireGuard + VK Calls proxy management. Architecture, installer flow, freeturn:// URI scheme, WireGuard peer management, and VK API integration."
 version: 1.0.0
-author: Hermes Agent
+author: Qwerty Agent
 license: MIT
 platforms: [linux]
 metadata:
-  hermes:
+  qwerty:
     tags: [Telegram, WireGuard, VK, proxy, bash, python, telethon]
     related_skills: []
 ---

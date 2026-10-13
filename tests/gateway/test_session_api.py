@@ -8,7 +8,7 @@ from aiohttp.test_utils import TestClient, TestServer
 
 from gateway.config import PlatformConfig
 from gateway.platforms.api_server import APIServerAdapter
-from hermes_state import SessionDB
+from qwerty_state import SessionDB
 
 
 @pytest.fixture
@@ -78,7 +78,7 @@ async def test_capabilities_advertises_session_control_surface(adapter):
 @pytest.mark.asyncio
 async def test_run_agent_binds_api_session_context_for_tool_env(adapter, monkeypatch):
     """API-server request sessions should reach tools and terminal subprocess env."""
-    monkeypatch.setenv("HERMES_SESSION_ID", "stale-session")
+    monkeypatch.setenv("QWERTY_SESSION_ID", "stale-session")
     observed = {}
 
     class FakeAgent:
@@ -94,10 +94,10 @@ async def test_run_agent_binds_api_session_context_for_tool_env(adapter, monkeyp
             from tools.environments.local import _make_run_env
 
             observed["task_id"] = task_id
-            observed["context_session_id"] = get_session_env("HERMES_SESSION_ID")
-            observed["context_platform"] = get_session_env("HERMES_SESSION_PLATFORM")
-            observed["context_session_key"] = get_session_env("HERMES_SESSION_KEY")
-            observed["child_session_id"] = _make_run_env({}).get("HERMES_SESSION_ID")
+            observed["context_session_id"] = get_session_env("QWERTY_SESSION_ID")
+            observed["context_platform"] = get_session_env("QWERTY_SESSION_PLATFORM")
+            observed["context_session_key"] = get_session_env("QWERTY_SESSION_KEY")
+            observed["child_session_id"] = _make_run_env({}).get("QWERTY_SESSION_ID")
             return {"final_response": "ok"}
 
     def fake_create_agent(**kwargs):
@@ -134,11 +134,11 @@ async def test_session_crud_and_message_history(adapter, session_db):
         assert create_resp.status == 201
         created = await create_resp.json()
         session_id = created["session"]["id"]
-        assert created["object"] == "hermes.session"
+        assert created["object"] == "qwerty.session"
         assert created["session"]["title"] == "Mobile chat"
 
         session_db.append_message(session_id, "user", "hello from phone")
-        session_db.append_message(session_id, "assistant", "hello from hermes")
+        session_db.append_message(session_id, "assistant", "hello from qwerty")
 
         list_resp = await cli.get("/api/sessions?limit=10&offset=0")
         assert list_resp.status == 200
@@ -168,7 +168,7 @@ async def test_session_crud_and_message_history(adapter, session_db):
         delete_resp = await cli.delete(f"/api/sessions/{session_id}")
         assert delete_resp.status == 200
         deleted = await delete_resp.json()
-        assert deleted == {"object": "hermes.session.deleted", "id": session_id, "deleted": True}
+        assert deleted == {"object": "qwerty.session.deleted", "id": session_id, "deleted": True}
         assert session_db.get_session(session_id) is None
 
 
@@ -209,7 +209,7 @@ async def test_session_fork_uses_current_sessiondb_branch_primitives(adapter, se
         payload = await resp.json()
 
     fork = payload["session"]
-    assert payload["object"] == "hermes.session"
+    assert payload["object"] == "qwerty.session"
     assert fork["id"] != source_id
     assert fork["parent_session_id"] == source_id
     assert fork["title"] == "Alternative"
@@ -231,14 +231,14 @@ async def test_session_chat_loads_history_and_preserves_session_headers(auth_ada
             resp = await cli.post(
                 f"/api/sessions/{session_id}/chat",
                 json={"message": "next", "system_message": "stay focused"},
-                headers={"Authorization": "Bearer sk-test", "X-Hermes-Session-Key": "client-42"},
+                headers={"Authorization": "Bearer sk-test", "X-Qwerty-Session-Key": "client-42"},
             )
             assert resp.status == 200
             payload = await resp.json()
 
-    assert resp.headers["X-Hermes-Session-Id"] == session_id
-    assert resp.headers["X-Hermes-Session-Key"] == "client-42"
-    assert payload["object"] == "hermes.session.chat.completion"
+    assert resp.headers["X-Qwerty-Session-Id"] == session_id
+    assert resp.headers["X-Qwerty-Session-Key"] == "client-42"
+    assert payload["object"] == "qwerty.session.chat.completion"
     assert payload["session_id"] == session_id
     assert payload["message"]["role"] == "assistant"
     assert payload["message"]["content"] == "fresh answer"
@@ -439,11 +439,11 @@ async def test_session_header_rejected_without_api_key(adapter, session_db):
         resp = await cli.post(
             f"/api/sessions/{session_id}/chat",
             json={"message": "hello"},
-            headers={"X-Hermes-Session-Key": "client-42"},
+            headers={"X-Qwerty-Session-Key": "client-42"},
         )
         assert resp.status == 403
         data = await resp.json()
-        assert "X-Hermes-Session-Key requires API key" in data["error"]["message"]
+        assert "X-Qwerty-Session-Key requires API key" in data["error"]["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -537,7 +537,7 @@ async def test_run_agent_returns_controlled_response_on_provider_auth_failure(ad
     monkeypatch.setattr(
         "gateway.run._resolve_runtime_agent_kwargs",
         lambda: (_ for _ in ()).throw(
-            RuntimeError("No credentials found for provider 'nous' — run `hermes auth add nous`")
+            RuntimeError("No credentials found for provider 'nous' — run `qwerty auth add nous`")
         ),
     )
 
@@ -548,7 +548,7 @@ async def test_run_agent_returns_controlled_response_on_provider_auth_failure(ad
     )
 
     assert result == {
-        "final_response": "⚠️ Provider authentication failed: No credentials found for provider 'nous' — run `hermes auth add nous`",
+        "final_response": "⚠️ Provider authentication failed: No credentials found for provider 'nous' — run `qwerty auth add nous`",
         "messages": [],
         "api_calls": 0,
         "tools": [],
@@ -648,7 +648,7 @@ def _patch_api_server_runtime(monkeypatch):
         staticmethod(lambda: None),
     )
     monkeypatch.setattr("gateway.run._current_max_iterations", lambda: 90)
-    monkeypatch.setattr("hermes_cli.tools_config._get_platform_tools", lambda *_: set())
+    monkeypatch.setattr("qwerty_cli.tools_config._get_platform_tools", lambda *_: set())
     monkeypatch.setattr(
         "gateway.run._resolve_runtime_agent_kwargs_for_provider",
         lambda provider: {
@@ -788,7 +788,7 @@ async def test_create_session_respects_browser_source_and_model_lock(adapter, se
             "/api/sessions",
             json={
                 "id": "browser-lock-session",
-                "source": "hermes_browser",
+                "source": "qwerty_browser",
                 "provider": "nous",
                 "model": "x-ai/grok-4.5",
                 "require_model_lock": True,
@@ -799,10 +799,10 @@ async def test_create_session_respects_browser_source_and_model_lock(adapter, se
         assert resp.status == 201, await resp.text()
         payload = await resp.json()
 
-    assert payload["session"]["source"] == "hermes_browser"
+    assert payload["session"]["source"] == "qwerty_browser"
     assert payload["session"]["model"] == "x-ai/grok-4.5"
     row = session_db.get_session("browser-lock-session")
-    assert row["source"] == "hermes_browser"
+    assert row["source"] == "qwerty_browser"
     assert row["model"] == "x-ai/grok-4.5"
     import json as _json
     model_config = row.get("model_config")
@@ -838,7 +838,7 @@ async def test_session_model_lock_endpoint_persists_and_invalidates_prompt(adapt
             assert resp.status == 200, await resp.text()
             payload = await resp.json()
 
-    assert payload["object"] == "hermes.session.model_lock"
+    assert payload["object"] == "qwerty.session.model_lock"
     assert payload["runtime"]["requested"]["provider"] == "nous"
     assert payload["runtime"]["model"] == "x-ai/grok-4.5"
     assert payload["runtime"]["model_lock"] in {"accepted", "confirmed"}
@@ -1005,7 +1005,7 @@ async def test_run_agent_reports_actual_agent_runtime_not_requested_metadata(ada
             self.session_id = "runtime-session"
             self.provider = "actual-provider"
             self.model = "actual-model"
-            self._hermes_api_runtime = {
+            self._qwerty_api_runtime = {
                 "provider": "requested-provider",
                 "model": "requested-model",
                 "route_source": "raw_request",
@@ -1071,7 +1071,7 @@ def test_confirmed_runtime_lock_fails_closed_on_provider_resolution_error(adapte
     # gateway fallback) — a confirmed lock must propagate the failure
     # instead of constructing an agent on the previous global credentials.
     monkeypatch.setattr(
-        "hermes_cli.runtime_provider.resolve_runtime_provider",
+        "qwerty_cli.runtime_provider.resolve_runtime_provider",
         lambda **_kwargs: (_ for _ in ()).throw(RuntimeError("provider unavailable")),
     )
     monkeypatch.setattr(

@@ -16,7 +16,7 @@ class _FatalAdapter(BasePlatformAdapter):
     async def connect(self, *, is_reconnect: bool = False) -> bool:
         self._set_fatal_error(
             "telegram_token_lock",
-            "Another local Hermes gateway is already using this Telegram bot token.",
+            "Another local Qwerty gateway is already using this Telegram bot token.",
             retryable=False,
         )
         return False
@@ -135,7 +135,7 @@ async def test_retryable_fatal_queues_reconnect_after_cancellation_swallowing_di
     monkeypatch, tmp_path
 ):
     """A wedged old adapter cannot block runner-owned reconnect recovery."""
-    monkeypatch.setenv("HERMES_GATEWAY_ADAPTER_DISCONNECT_TIMEOUT", "0.01")
+    monkeypatch.setenv("QWERTY_GATEWAY_ADAPTER_DISCONNECT_TIMEOUT", "0.01")
     config = GatewayConfig(
         platforms={Platform.WHATSAPP: PlatformConfig(enabled=True, token="token")},
         sessions_dir=tmp_path / "sessions",

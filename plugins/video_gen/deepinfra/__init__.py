@@ -5,7 +5,7 @@ endpoint (async job: ``create`` → poll → ``download_content``), so all the
 SDK plumbing lives in
 :class:`agent.video_gen_provider.OpenAICompatibleVideoGenProvider`. This
 plugin only declares DeepInfra's identity, credentials, and live model
-discovery — no hardcoded model ids, so retired models drop out of hermes the
+discovery — no hardcoded model ids, so retired models drop out of qwerty the
 next time the catalog is fetched without a patch.
 
 Mirrors ``plugins/image_gen/deepinfra`` (which does the same for
@@ -40,7 +40,7 @@ class DeepInfraVideoGenProvider(OpenAICompatibleVideoGenProvider):
         options rather than routing to a possibly-retired model.
         """
         try:
-            from hermes_cli.models import _fetch_deepinfra_models_by_tag
+            from qwerty_cli.models import _fetch_deepinfra_models_by_tag
         except Exception as exc:  # noqa: BLE001 — never break the picker
             logger.debug("Cannot import _fetch_deepinfra_models_by_tag: %s", exc)
             return []

@@ -42,7 +42,7 @@ async def test_gateway_handler_uses_shared_persistent_logic_without_cache_evicti
     result = SimpleNamespace(message="Approval mode: manual (persistent profile setting).")
     runner._evict_cached_agent = MagicMock()
 
-    with patch("hermes_cli.approval_mode.run_approval_mode_command", return_value=result) as run:
+    with patch("qwerty_cli.approval_mode.run_approval_mode_command", return_value=result) as run:
         output = await runner._handle_approvals_command(_event("/approvals manual"))
 
     assert output == result.message
@@ -64,7 +64,7 @@ async def test_gateway_rejects_non_admin_persistent_approval_change():
         }
     )
 
-    with patch("hermes_cli.approval_mode.run_approval_mode_command") as run:
+    with patch("qwerty_cli.approval_mode.run_approval_mode_command") as run:
         output = await runner._handle_approvals_command(_event("/approvals off"))
 
     assert "admin" in output.lower()
@@ -76,10 +76,10 @@ async def test_gateway_live_dispatch_routes_and_persists_approvals_command(tmp_p
     runner = _runner()
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
-    monkeypatch.setenv("HERMES_MANAGED_DIR", str(tmp_path / "missing-managed"))
-    from hermes_cli import managed_scope
-    from hermes_cli.config import _LOAD_CONFIG_CACHE, _RAW_CONFIG_CACHE
+    monkeypatch.setenv("QWERTY_HOME", str(home))
+    monkeypatch.setenv("QWERTY_MANAGED_DIR", str(tmp_path / "missing-managed"))
+    from qwerty_cli import managed_scope
+    from qwerty_cli.config import _LOAD_CONFIG_CACHE, _RAW_CONFIG_CACHE
 
     _LOAD_CONFIG_CACHE.clear()
     _RAW_CONFIG_CACHE.clear()

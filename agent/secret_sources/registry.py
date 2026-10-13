@@ -14,7 +14,7 @@ so no individual source can get it wrong:
 * provenance: which source supplied every applied var
 
 The single entry point for startup is :func:`apply_all`, called from
-``hermes_cli.env_loader._apply_external_secret_sources()``.
+``qwerty_cli.env_loader._apply_external_secret_sources()``.
 
 Plugins register additional sources via
 ``PluginContext.register_secret_source()`` which lands in
@@ -114,7 +114,7 @@ def register_source(source: SecretSource, *, replace: bool = False) -> bool:
     if getattr(source, "api_version", None) != SECRET_SOURCE_API_VERSION:
         logger.warning(
             "Ignoring secret source '%s': built against secret-source API v%s, "
-            "this Hermes speaks v%s",
+            "this Qwerty speaks v%s",
             name, getattr(source, "api_version", "?"), SECRET_SOURCE_API_VERSION,
         )
         return False
@@ -204,7 +204,7 @@ def _fetch_with_timeout(
     blows its budget is reported as ``TIMEOUT`` and its (eventual)
     result is discarded.  The thread itself may linger until process
     exit — acceptable for a startup-only path, and strictly better than
-    an unbounded hang on every ``hermes`` invocation.
+    an unbounded hang on every ``qwerty`` invocation.
     """
     timeout = source.fetch_timeout_seconds(cfg)
     executor = concurrent.futures.ThreadPoolExecutor(
@@ -286,14 +286,14 @@ def _ordered_enabled_sources(secrets_cfg: dict) -> List[SecretSource]:
 def _active_profile_name(home_path: Optional[Path]) -> str:
     """Best-effort active profile name for profile-scoped secret aliases.
 
-    A named profile's HERMES_HOME is ``~/.hermes/profiles/<name>``; the
-    default profile (``~/.hermes``) returns "".
+    A named profile's QWERTY_HOME is ``~/.qwerty/profiles/<name>``; the
+    default profile (``~/.qwerty``) returns "".
     """
     if home_path is not None:
         resolved = Path(home_path)
         if resolved.parent.name == "profiles" and resolved.name:
             return resolved.name
-    for env_name in ("HERMES_PROFILE_NAME", "HERMES_PROFILE"):
+    for env_name in ("QWERTY_PROFILE_NAME", "QWERTY_PROFILE"):
         value = os.environ.get(env_name, "").strip()
         if value and value != "default":
             return value

@@ -2,13 +2,13 @@
 name: qwerty-fork
 description: Use when contributing to the Qwerty fork. Keep beta as a shared integration branch, work on personal branches, sync before edits, test first, and merge without force-pushing shared branches.
 version: 1.0.0
-author: Hermes Agent
+author: Qwerty Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  qwerty:
     tags: [qwerty, fork, git, beta, collaboration, merge, branches]
-    related_skills: [hermes-agent-customization, requesting-code-review]
+    related_skills: [qwerty-agent-customization, requesting-code-review]
 ---
 
 # Qwerty Fork Collaboration Workflow
@@ -43,7 +43,7 @@ The repository currently has contributor branches including `forget`, `kmoella`,
 ## Start work on a personal branch
 
 ```bash
-cd /home/forget/.hermes/hermes-agent   # or the local Qwerty checkout
+cd /home/forget/.qwerty/qwerty-agent   # or the local Qwerty checkout
 
 git fetch origin --prune
 git switch <personal-branch>
@@ -74,10 +74,10 @@ python -m py_compile <changed-python-files>
 pytest -q <focused-tests>
 ```
 
-For Hermes changes, also inspect the live runtime path when relevant:
+For Qwerty changes, also inspect the live runtime path when relevant:
 
 ```bash
-systemctl --user show hermes-gateway.service -p ExecStart -p WorkingDirectory -p MainPID
+systemctl --user show qwerty-gateway.service -p ExecStart -p WorkingDirectory -p MainPID
 git branch --show-current
 git rev-parse HEAD
 ```

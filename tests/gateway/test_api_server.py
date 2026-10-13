@@ -32,7 +32,7 @@ from gateway.platforms.api_server import (
     ResponseStore,
     _IdempotencyCache,
     _derive_chat_session_id,
-    _hermes_version,
+    _qwerty_version,
     _redact_api_error_text,
     _request_agent_overrides,
     check_api_server_requirements,
@@ -368,7 +368,7 @@ class TestAdapterInit:
             staticmethod(lambda: {"enabled": True, "effort": "xhigh"}),
         )
         monkeypatch.setattr("gateway.run.GatewayRunner._load_fallback_model", staticmethod(lambda: None))
-        monkeypatch.setattr("hermes_cli.tools_config._get_platform_tools", lambda *_: set())
+        monkeypatch.setattr("qwerty_cli.tools_config._get_platform_tools", lambda *_: set())
 
         adapter = APIServerAdapter(PlatformConfig(enabled=True))
         monkeypatch.setattr(adapter, "_ensure_session_db", lambda: None)
@@ -406,7 +406,7 @@ class TestAdapterInit:
         )
         monkeypatch.setattr("gateway.run.GatewayRunner._load_fallback_model", staticmethod(lambda: None))
         monkeypatch.setattr("gateway.run._current_max_iterations", lambda: 200)
-        monkeypatch.setattr("hermes_cli.tools_config._get_platform_tools", lambda *_: set())
+        monkeypatch.setattr("qwerty_cli.tools_config._get_platform_tools", lambda *_: set())
 
         adapter = APIServerAdapter(PlatformConfig(enabled=True))
         monkeypatch.setattr(adapter, "_ensure_session_db", lambda: None)
@@ -446,7 +446,7 @@ class TestAdapterInit:
         )
         monkeypatch.setattr("gateway.run.GatewayRunner._load_fallback_model", staticmethod(lambda: None))
         monkeypatch.setattr("gateway.run._current_max_iterations", lambda: 90)
-        monkeypatch.setattr("hermes_cli.tools_config._get_platform_tools", lambda *_: set())
+        monkeypatch.setattr("qwerty_cli.tools_config._get_platform_tools", lambda *_: set())
 
         adapter = APIServerAdapter(PlatformConfig(enabled=True))
         monkeypatch.setattr(adapter, "_ensure_session_db", lambda: None)
@@ -484,7 +484,7 @@ class TestAdapterInit:
         )
         monkeypatch.setattr("gateway.run.GatewayRunner._load_fallback_model", staticmethod(lambda: None))
         monkeypatch.setattr("gateway.run._current_max_iterations", lambda: 90)
-        monkeypatch.setattr("hermes_cli.tools_config._get_platform_tools", lambda *_: set())
+        monkeypatch.setattr("qwerty_cli.tools_config._get_platform_tools", lambda *_: set())
 
         adapter = APIServerAdapter(PlatformConfig(enabled=True))
         monkeypatch.setattr(adapter, "_ensure_session_db", lambda: None)
@@ -571,22 +571,22 @@ class TestAuth:
 
 class TestConcurrencyCap:
     def test_resolve_defaults_to_10_when_unset(self):
-        with patch("hermes_cli.config.load_config", return_value={}):
+        with patch("qwerty_cli.config.load_config", return_value={}):
             assert APIServerAdapter._resolve_max_concurrent_runs() == 10
 
     def test_resolve_reads_config_value(self):
         cfg = {"gateway": {"api_server": {"max_concurrent_runs": 3}}}
-        with patch("hermes_cli.config.load_config", return_value=cfg):
+        with patch("qwerty_cli.config.load_config", return_value=cfg):
             assert APIServerAdapter._resolve_max_concurrent_runs() == 3
 
     def test_resolve_clamps_negative_to_zero(self):
         cfg = {"gateway": {"api_server": {"max_concurrent_runs": -5}}}
-        with patch("hermes_cli.config.load_config", return_value=cfg):
+        with patch("qwerty_cli.config.load_config", return_value=cfg):
             assert APIServerAdapter._resolve_max_concurrent_runs() == 0
 
     def test_resolve_malformed_falls_back_to_default(self):
         cfg = {"gateway": {"api_server": {"max_concurrent_runs": "not-an-int"}}}
-        with patch("hermes_cli.config.load_config", return_value=cfg):
+        with patch("qwerty_cli.config.load_config", return_value=cfg):
             assert APIServerAdapter._resolve_max_concurrent_runs() == 10
 
     def test_under_cap_returns_none(self):
@@ -747,8 +747,8 @@ class TestAgentExecution:
 
     def test_create_agent_honors_request_model_provider_and_options(self, adapter, monkeypatch):
         import gateway.run as gateway_run
-        import hermes_cli.runtime_provider as runtime_provider
-        import hermes_cli.tools_config as tools_config
+        import qwerty_cli.runtime_provider as runtime_provider
+        import qwerty_cli.tools_config as tools_config
 
         class _CapturingAgent:
             last_kwargs = None
@@ -833,7 +833,7 @@ class TestAgentExecution:
 
         _patch_create_agent_runtime(monkeypatch, captured, FakeAgent)
         monkeypatch.setattr(
-            "hermes_cli.runtime_provider.resolve_runtime_provider",
+            "qwerty_cli.runtime_provider.resolve_runtime_provider",
             lambda requested=None, target_model=None, **_kwargs: {
                 "api_key": f"sk-{requested}",
                 "base_url": f"https://{requested}.example/v1",
@@ -845,7 +845,7 @@ class TestAgentExecution:
                 "max_output_tokens": 64000,
             },
         )
-        monkeypatch.setattr("hermes_cli.runtime_provider._get_model_config", lambda: {})
+        monkeypatch.setattr("qwerty_cli.runtime_provider._get_model_config", lambda: {})
 
         adapter = _make_routing_adapter(
             {
@@ -1001,7 +1001,7 @@ class TestHealthEndpoint:
             assert resp.status == 200
             data = await resp.json()
             assert data["status"] == "ok"
-            assert data["platform"] == "hermes-agent"
+            assert data["platform"] == "qwerty-agent"
 
     @pytest.mark.asyncio
     async def test_health_reports_version(self, adapter):
@@ -1020,17 +1020,17 @@ class TestHealthEndpoint:
     def test_health_version_prefers_runtime_source_over_stale_metadata(self):
         """Editable installs can leave importlib.metadata at an older release.
 
-        The health endpoint must report the running Hermes source version, not
-        stale ``hermes_agent-*.dist-info`` metadata from before a source update.
+        The health endpoint must report the running Qwerty source version, not
+        stale ``qwerty_agent-*.dist-info`` metadata from before a source update.
         """
-        from hermes_cli import __version__
+        from qwerty_cli import __version__
 
         with patch("importlib.metadata.version", return_value="0.18.0"):
-            assert _hermes_version() == __version__
+            assert _qwerty_version() == __version__
 
     @pytest.mark.asyncio
     async def test_health_endpoint_prefers_runtime_version_over_stale_metadata(self, adapter):
-        from hermes_cli import __version__
+        from qwerty_cli import __version__
 
         app = _create_app(adapter)
         with patch("importlib.metadata.version", return_value="0.18.0"):
@@ -1049,7 +1049,7 @@ class TestHealthEndpoint:
             assert resp.status == 200
             data = await resp.json()
             assert data["status"] == "ok"
-            assert data["platform"] == "hermes-agent"
+            assert data["platform"] == "qwerty-agent"
             assert data.get("version")
 
 
@@ -1075,7 +1075,7 @@ class TestHealthDetailedEndpoint:
                 assert resp.status == 200
                 data = await resp.json()
                 assert data["status"] == "ok"
-                assert data["platform"] == "hermes-agent"
+                assert data["platform"] == "qwerty-agent"
                 assert data["gateway_state"] == "running"
                 assert data["platforms"] == {"telegram": {"state": "connected"}}
                 assert data["active_agents"] == 2
@@ -1194,7 +1194,7 @@ class TestHealthDetailedEndpoint:
 
 class TestModelsEndpoint:
     @pytest.mark.asyncio
-    async def test_models_returns_hermes_agent(self, adapter):
+    async def test_models_returns_qwerty_agent(self, adapter):
         app = _create_app(adapter)
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.get("/v1/models")
@@ -1202,8 +1202,8 @@ class TestModelsEndpoint:
             data = await resp.json()
             assert data["object"] == "list"
             assert len(data["data"]) == 1
-            assert data["data"][0]["id"] == "hermes-agent"
-            assert data["data"][0]["owned_by"] == "hermes"
+            assert data["data"][0]["id"] == "qwerty-agent"
+            assert data["data"][0]["owned_by"] == "qwerty"
 
     @pytest.mark.asyncio
     async def test_models_returns_profile_name(self):
@@ -1230,13 +1230,13 @@ class TestModelsEndpoint:
         assert APIServerAdapter._resolve_model_name("my-bot") == "my-bot"
 
     def test_resolve_model_name_default_profile(self):
-        """Default profile falls back to 'hermes-agent'."""
-        with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
-            assert APIServerAdapter._resolve_model_name("") == "hermes-agent"
+        """Default profile falls back to 'qwerty-agent'."""
+        with patch("qwerty_cli.profiles.get_active_profile_name", return_value="default"):
+            assert APIServerAdapter._resolve_model_name("") == "qwerty-agent"
 
     def test_resolve_model_name_named_profile(self):
         """Named profile uses the profile name as model name."""
-        with patch("hermes_cli.profiles.get_active_profile_name", return_value="lucas"):
+        with patch("qwerty_cli.profiles.get_active_profile_name", return_value="lucas"):
             assert APIServerAdapter._resolve_model_name("") == "lucas"
 
     @pytest.mark.asyncio
@@ -1259,7 +1259,7 @@ class TestModelsEndpoint:
     @pytest.mark.asyncio
     async def test_model_options_returns_shared_inventory(self, adapter, monkeypatch):
         """GET /api/model/options builds the shared picker payload off-loop."""
-        from hermes_cli import inventory
+        from qwerty_cli import inventory
 
         ctx = object()
         payload = {
@@ -1325,9 +1325,9 @@ class TestCapabilitiesEndpoint:
             resp = await cli.get("/v1/capabilities")
             assert resp.status == 200
             data = await resp.json()
-            assert data["object"] == "hermes.api_server.capabilities"
-            assert data["platform"] == "hermes-agent"
-            assert data["model"] == "hermes-agent"
+            assert data["object"] == "qwerty.api_server.capabilities"
+            assert data["platform"] == "qwerty-agent"
+            assert data["model"] == "qwerty-agent"
             assert data["auth"]["type"] == "bearer"
             assert data["auth"]["required"] is False
             assert data["runtime"]["mode"] == "server_agent"
@@ -1338,7 +1338,7 @@ class TestCapabilitiesEndpoint:
             assert data["features"]["run_status"] is True
             assert data["features"]["run_events_sse"] is True
             assert data["features"]["model_options"] is True
-            assert data["features"]["session_continuity_header"] == "X-Hermes-Session-Id"
+            assert data["features"]["session_continuity_header"] == "X-Qwerty-Session-Id"
             assert data["endpoints"]["run_status"]["path"] == "/v1/runs/{run_id}"
             assert data["endpoints"]["model_options"] == {"method": "GET", "path": "/api/model/options"}
             assert data["endpoints"]["skills"] == {"method": "GET", "path": "/v1/skills"}
@@ -1423,13 +1423,13 @@ class TestToolsetsEndpoint:
             ("web", "Web Tools", "Search and extract"),
         ]
         with patch(
-            "hermes_cli.tools_config._get_effective_configurable_toolsets",
+            "qwerty_cli.tools_config._get_effective_configurable_toolsets",
             return_value=fake_toolsets,
         ), patch(
-            "hermes_cli.tools_config._get_platform_tools",
+            "qwerty_cli.tools_config._get_platform_tools",
             return_value={"default"},
         ), patch(
-            "hermes_cli.tools_config._toolset_has_keys",
+            "qwerty_cli.tools_config._toolset_has_keys",
             return_value=True,
         ), patch(
             "toolsets.resolve_toolset",
@@ -1466,13 +1466,13 @@ class TestToolsetsEndpoint:
             return ["some_tool"]
 
         with patch(
-            "hermes_cli.tools_config._get_effective_configurable_toolsets",
+            "qwerty_cli.tools_config._get_effective_configurable_toolsets",
             return_value=fake_toolsets,
         ), patch(
-            "hermes_cli.tools_config._get_platform_tools",
+            "qwerty_cli.tools_config._get_platform_tools",
             return_value=set(),
         ), patch(
-            "hermes_cli.tools_config._toolset_has_keys",
+            "qwerty_cli.tools_config._toolset_has_keys",
             return_value=False,
         ), patch(
             "toolsets.resolve_toolset",
@@ -1490,10 +1490,10 @@ class TestToolsetsEndpoint:
     @pytest.mark.asyncio
     async def test_toolsets_requires_auth_when_key_configured(self, auth_adapter):
         with patch(
-            "hermes_cli.tools_config._get_effective_configurable_toolsets",
+            "qwerty_cli.tools_config._get_effective_configurable_toolsets",
             return_value=[],
         ), patch(
-            "hermes_cli.tools_config._get_platform_tools",
+            "qwerty_cli.tools_config._get_platform_tools",
             return_value=set(),
         ):
             app = _create_app(auth_adapter)
@@ -1798,7 +1798,7 @@ class TestChatCompletionsEndpoint:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "messages": [{"role": "user", "content": "Hello"}],
                         "stream": "false",
                     },
@@ -1982,7 +1982,7 @@ class TestChatCompletionsEndpoint:
                 # Tool progress must appear as a custom SSE event, not in
                 # delta.content — prevents model from learning to imitate
                 # markers instead of calling tools (#6972).
-                assert "event: hermes.tool.progress" in body
+                assert "event: qwerty.tool.progress" in body
                 assert '"tool": "terminal"' in body
                 # ``label`` is now derived by ``build_tool_preview`` from the
                 # tool args rather than passed by the caller, so we assert
@@ -2041,7 +2041,7 @@ class TestChatCompletionsEndpoint:
                 assert "some internal state" not in body
                 assert "call_internal_1" not in body
                 # Real tool progress should appear as custom SSE event
-                assert "event: hermes.tool.progress" in body
+                assert "event: qwerty.tool.progress" in body
                 assert '"tool": "web_search"' in body
                 # Label is derived from the args dict by build_tool_preview;
                 # asserting on the structural fact (label exists, call id
@@ -2055,14 +2055,14 @@ class TestChatCompletionsEndpoint:
         """Regression for #16588.
 
         ``/v1/chat/completions`` streaming previously emitted only a
-        ``tool.started``-style ``hermes.tool.progress`` event; clients
+        ``tool.started``-style ``qwerty.tool.progress`` event; clients
         rendering tool lifecycle UI had no way to mark a tool as finished
         because no matching ``status: completed`` event was emitted, and
         no ``toolCallId`` was carried for correlation.
 
         The fix adds ``tool_start_callback`` / ``tool_complete_callback``
         to the chat completions agent invocation and writes both halves
-        of the lifecycle pair on the same ``event: hermes.tool.progress``
+        of the lifecycle pair on the same ``event: qwerty.tool.progress``
         SSE line, with stable ``toolCallId`` and ``status``.
         """
         import asyncio
@@ -2108,7 +2108,7 @@ class TestChatCompletionsEndpoint:
             pairs: list[tuple[str | None, str | None]] = []
             lines = body.splitlines()
             for i, line in enumerate(lines):
-                if line.strip() != "event: hermes.tool.progress":
+                if line.strip() != "event: qwerty.tool.progress":
                     continue
                 for follow in lines[i + 1: i + 4]:
                     if follow.startswith("data: "):
@@ -2205,7 +2205,7 @@ class TestChatCompletionsEndpoint:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "messages": [{"role": "user", "content": "Hello"}],
                     },
                 )
@@ -2214,7 +2214,7 @@ class TestChatCompletionsEndpoint:
             data = await resp.json()
             assert data["object"] == "chat.completion"
             assert data["id"].startswith("chatcmpl-")
-            assert data["model"] == "hermes-agent"
+            assert data["model"] == "qwerty-agent"
             assert len(data["choices"]) == 1
             assert data["choices"][0]["message"]["role"] == "assistant"
             assert data["choices"][0]["message"]["content"] == "Hello! How can I help you today?"
@@ -2237,7 +2237,7 @@ class TestChatCompletionsEndpoint:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "messages": [
                             {"role": "system", "content": "You are a pirate."},
                             {"role": "user", "content": "Hello"},
@@ -2263,7 +2263,7 @@ class TestChatCompletionsEndpoint:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "messages": [
                             {"role": "user", "content": "1+1=?"},
                             {"role": "assistant", "content": "2"},
@@ -2289,7 +2289,7 @@ class TestChatCompletionsEndpoint:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "messages": [{"role": "user", "content": "Hello"}],
                     },
                 )
@@ -2312,7 +2312,7 @@ class TestChatCompletionsEndpoint:
                 await cli.post(
                     "/v1/chat/completions",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "messages": [{"role": "user", "content": "Hello"}],
                     },
                 )
@@ -2324,7 +2324,7 @@ class TestChatCompletionsEndpoint:
                 await cli.post(
                     "/v1/chat/completions",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "messages": [
                             {"role": "user", "content": "Hello"},
                             {"role": "assistant", "content": "Hi there!"},
@@ -2351,7 +2351,7 @@ class TestChatCompletionsEndpoint:
                     await cli.post(
                         "/v1/chat/completions",
                         json={
-                            "model": "hermes-agent",
+                            "model": "qwerty-agent",
                             "messages": [{"role": "user", "content": first_msg}],
                         },
                     )
@@ -2433,7 +2433,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "What is the capital of France?",
                     },
                 )
@@ -2489,7 +2489,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": [
                             {"role": "user", "content": "Hello"},
                             {"role": "user", "content": "What is 2+2?"},
@@ -2515,7 +2515,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Hello",
                         "instructions": "Talk like a pirate.",
                     },
@@ -2541,7 +2541,7 @@ class TestResponsesEndpoint:
                 mock_run.return_value = (mock_result_1, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp1 = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "What is 1+1?"},
+                    json={"model": "qwerty-agent", "input": "What is 1+1?"},
                 )
 
             assert resp1.status == 200
@@ -2560,7 +2560,7 @@ class TestResponsesEndpoint:
                 resp2 = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Now add 1 more",
                         "previous_response_id": response_id,
                     },
@@ -2593,7 +2593,7 @@ class TestResponsesEndpoint:
                 )
                 resp1 = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "What is 1+1?"},
+                    json={"model": "qwerty-agent", "input": "What is 1+1?"},
                 )
 
             assert resp1.status == 200
@@ -2617,7 +2617,7 @@ class TestResponsesEndpoint:
                 resp2 = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Now add 1 more",
                         "previous_response_id": resp1_data["id"],
                     },
@@ -2669,7 +2669,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Now add 1 more",
                         "previous_response_id": "resp_prev",
                     },
@@ -2733,7 +2733,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Now add 1 more",
                         "previous_response_id": "resp_prev_rot",
                     },
@@ -2756,7 +2756,7 @@ class TestResponsesEndpoint:
         assert stored["session_id"] == "rotated-child-session"
 
         # Response header must also reflect the rotated session
-        assert resp.headers.get("X-Hermes-Session-Id") == "rotated-child-session"
+        assert resp.headers.get("X-Qwerty-Session-Id") == "rotated-child-session"
 
     @pytest.mark.asyncio
     async def test_inplace_compression_exercises_detection_and_persists_compressed_history(
@@ -2804,7 +2804,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Continue",
                         "previous_response_id": "resp_prev_inplace",
                     },
@@ -2823,7 +2823,7 @@ class TestResponsesEndpoint:
 
         # Session_id must NOT change for in-place compaction
         assert stored["session_id"] == "api-test-session"
-        assert resp.headers.get("X-Hermes-Session-Id") == "api-test-session"
+        assert resp.headers.get("X-Qwerty-Session-Id") == "api-test-session"
 
     @pytest.mark.asyncio
     async def test_chained_rotation_propagates_effective_session_id(self, adapter):
@@ -2851,7 +2851,7 @@ class TestResponsesEndpoint:
             with patch.object(adapter, "_create_agent", return_value=mock_agent_1):
                 resp1 = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hello"},
+                    json={"model": "qwerty-agent", "input": "Hello"},
                 )
             assert resp1.status == 200
             data1 = await resp1.json()
@@ -2885,7 +2885,7 @@ class TestResponsesEndpoint:
                 resp2 = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Goodbye",
                         "previous_response_id": response_id_1,
                     },
@@ -2966,7 +2966,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Read new file",
                         "previous_response_id": "resp_prev",
                     },
@@ -2996,7 +2996,7 @@ class TestResponsesEndpoint:
                 mock_run.return_value = (mock_result, usage)
                 resp1 = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hello"},
+                    json={"model": "qwerty-agent", "input": "Hello"},
                 )
             assert resp1.status == 200
             first_session_id = mock_run.call_args.kwargs["session_id"]
@@ -3009,7 +3009,7 @@ class TestResponsesEndpoint:
                 resp2 = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Follow up",
                         "previous_response_id": response_id,
                     },
@@ -3027,7 +3027,7 @@ class TestResponsesEndpoint:
             resp = await cli.post(
                 "/v1/responses",
                 json={
-                    "model": "hermes-agent",
+                    "model": "qwerty-agent",
                     "input": "follow up",
                     "previous_response_id": "resp_nonexistent",
                 },
@@ -3046,7 +3046,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Hello",
                         "store": False,
                     },
@@ -3072,7 +3072,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Hello",
                         "store": "false",
                     },
@@ -3095,7 +3095,7 @@ class TestResponsesEndpoint:
                 resp1 = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Hello",
                         "instructions": "Be a pirate",
                     },
@@ -3110,7 +3110,7 @@ class TestResponsesEndpoint:
                 resp2 = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Tell me more",
                         "previous_response_id": resp_id,
                     },
@@ -3128,7 +3128,7 @@ class TestResponsesEndpoint:
                 mock_run.side_effect = RuntimeError("Boom")
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hello"},
+                    json={"model": "qwerty-agent", "input": "Hello"},
                 )
 
             assert resp.status == 500
@@ -3150,7 +3150,7 @@ class TestResponsesEndpoint:
                 )
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hello"},
+                    json={"model": "qwerty-agent", "input": "Hello"},
                 )
 
             assert resp.status == 200
@@ -3166,7 +3166,7 @@ class TestResponsesEndpoint:
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.post(
                 "/v1/responses",
-                json={"model": "hermes-agent", "input": 42},
+                json={"model": "qwerty-agent", "input": 42},
             )
             assert resp.status == 400
 
@@ -3189,7 +3189,7 @@ class TestResponsesStreaming:
             with patch.object(adapter, "_run_agent", side_effect=_mock_run_agent):
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "hi", "stream": True},
+                    json={"model": "qwerty-agent", "input": "hi", "stream": True},
                 )
                 assert resp.status == 200
                 assert "text/event-stream" in resp.headers.get("Content-Type", "")
@@ -3222,7 +3222,7 @@ class TestResponsesStreaming:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "What is the capital of France?",
                         "stream": "false",
                     },
@@ -3270,7 +3270,7 @@ class TestResponsesStreaming:
                 mock_write_sse.return_value = web.Response(status=200, text="ok")
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "hi", "stream": True},
+                    json={"model": "qwerty-agent", "input": "hi", "stream": True},
                 )
                 assert resp.status == 200
 
@@ -3324,7 +3324,7 @@ class TestResponsesStreaming:
             with patch.object(adapter, "_run_agent", side_effect=_mock_run_agent):
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "read the file", "stream": True},
+                    json={"model": "qwerty-agent", "input": "read the file", "stream": True},
                 )
                 assert resp.status == 200
                 body = await resp.text()
@@ -3353,7 +3353,7 @@ class TestResponsesStreaming:
             with patch.object(adapter, "_run_agent", side_effect=_mock_run_agent):
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "store this", "stream": True},
+                    json={"model": "qwerty-agent", "input": "store this", "stream": True},
                 )
                 body = await resp.text()
                 response_id = None
@@ -3414,7 +3414,7 @@ class TestResponsesStreaming:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "Now add 1 more",
                         "previous_response_id": "resp_prev",
                         "stream": True,
@@ -3487,7 +3487,7 @@ class TestResponsesStreaming:
                 await adapter._write_sse_responses(
                     request=fake_request,
                     response_id=response_id,
-                    model="hermes-agent",
+                    model="qwerty-agent",
                     created_at=int(time.time()),
                     stream_q=stream_q,
                     agent_task=agent_task,
@@ -3556,7 +3556,7 @@ class TestResponsesStreaming:
             await adapter._write_sse_responses(
                 request=fake_request,
                 response_id=response_id,
-                model="hermes-agent",
+                model="qwerty-agent",
                 created_at=int(time.time()),
                 stream_q=stream_q,
                 agent_task=agent_task,
@@ -3708,7 +3708,7 @@ class TestMultipleSystemMessages:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "messages": [
                             {"role": "system", "content": "You are helpful."},
                             {"role": "system", "content": "Be concise."},
@@ -3832,7 +3832,7 @@ class TestGetResponse:
                 mock_run.return_value = (mock_result, {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15})
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hi"},
+                    json={"model": "qwerty-agent", "input": "Hi"},
                 )
 
             assert resp.status == 200
@@ -3879,7 +3879,7 @@ class TestDeleteResponse:
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hi"},
+                    json={"model": "qwerty-agent", "input": "Hi"},
                 )
 
             data = await resp.json()
@@ -3956,7 +3956,7 @@ class TestToolCallsInOutput:
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "What is 6*7?"},
+                    json={"model": "qwerty-agent", "input": "What is 6*7?"},
                 )
 
             assert resp.status == 200
@@ -3986,7 +3986,7 @@ class TestToolCallsInOutput:
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hello"},
+                    json={"model": "qwerty-agent", "input": "Hello"},
                 )
 
             assert resp.status == 200
@@ -4013,7 +4013,7 @@ class TestUsageCounting:
                 mock_run.return_value = (mock_result, usage)
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hi"},
+                    json={"model": "qwerty-agent", "input": "Hi"},
                 )
 
             assert resp.status == 200
@@ -4035,7 +4035,7 @@ class TestUsageCounting:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "messages": [{"role": "user", "content": "Hi"}],
                     },
                 )
@@ -4073,7 +4073,7 @@ class TestTruncation:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "follow up",
                         "previous_response_id": "resp_prev",
                         "truncation": "auto",
@@ -4113,7 +4113,7 @@ class TestTruncation:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "follow up",
                         "previous_response_id": "resp_summary",
                         "truncation": "auto",
@@ -4160,7 +4160,7 @@ class TestTruncation:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "follow up",
                         "previous_response_id": "resp_summary_mid",
                         "truncation": "auto",
@@ -4193,7 +4193,7 @@ class TestTruncation:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "input": "follow up",
                         "previous_response_id": "resp_prev2",
                     },
@@ -4218,7 +4218,7 @@ class TestChatCompletionsAgentIncomplete:
     @pytest.mark.asyncio
     async def test_truncation_with_partial_text_uses_length_finish_reason(self, adapter):
         """Partial text + truncation marker → finish_reason='length', 200 OK,
-        plus hermes extras + headers."""
+        plus qwerty extras + headers."""
         mock_result = {
             "final_response": "Here is part one of the answer",
             "completed": False,
@@ -4233,17 +4233,17 @@ class TestChatCompletionsAgentIncomplete:
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "tell me everything"}]},
+                    json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "tell me everything"}]},
                 )
             assert resp.status == 200
             data = await resp.json()
             assert data["choices"][0]["finish_reason"] == "length"
             assert data["choices"][0]["message"]["content"] == "Here is part one of the answer"
-            assert data["hermes"]["partial"] is True
-            assert data["hermes"]["completed"] is False
-            assert data["hermes"]["error_code"] == "output_truncated"
-            assert resp.headers.get("X-Hermes-Completed") == "false"
-            assert resp.headers.get("X-Hermes-Partial") == "true"
+            assert data["qwerty"]["partial"] is True
+            assert data["qwerty"]["completed"] is False
+            assert data["qwerty"]["error_code"] == "output_truncated"
+            assert resp.headers.get("X-Qwerty-Completed") == "false"
+            assert resp.headers.get("X-Qwerty-Partial") == "true"
 
     @pytest.mark.asyncio
     async def test_hard_failure_redacts_secret_like_error_text(self, adapter):
@@ -4263,16 +4263,16 @@ class TestChatCompletionsAgentIncomplete:
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hello"}]},
+                    json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "hello"}]},
                 )
 
             assert resp.status == 502
             data = await resp.json()
             body = json.dumps(data)
             assert raw_secret not in body
-            assert raw_secret not in resp.headers.get("X-Hermes-Error", "")
+            assert raw_secret not in resp.headers.get("X-Qwerty-Error", "")
             assert "OPENAI_API_KEY=" in body
-            assert data["error"]["hermes"]["failed"] is True
+            assert data["error"]["qwerty"]["failed"] is True
 
     @pytest.mark.asyncio
     async def test_failure_with_no_text_returns_502_error_envelope(self, adapter):
@@ -4297,21 +4297,21 @@ class TestChatCompletionsAgentIncomplete:
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "x"}]},
+                    json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "x"}]},
                 )
             # Hard fail: SDK clients will raise on this status
             assert resp.status == 502
             data = await resp.json()
             assert data["error"]["code"] == "agent_incomplete"
             assert "truncated" in data["error"]["message"].lower()
-            assert data["error"]["hermes"]["partial"] is True
-            assert data["error"]["hermes"]["failed"] is True
-            assert resp.headers.get("X-Hermes-Completed") == "false"
+            assert data["error"]["qwerty"]["partial"] is True
+            assert data["error"]["qwerty"]["failed"] is True
+            assert resp.headers.get("X-Qwerty-Completed") == "false"
 
     @pytest.mark.asyncio
     async def test_normal_completion_unchanged(self, adapter):
         """Sanity: a completed-True result still returns finish_reason='stop'
-        and no hermes extras (preserves the existing happy-path contract)."""
+        and no qwerty extras (preserves the existing happy-path contract)."""
         mock_result = {
             "final_response": "All good.",
             "completed": True,
@@ -4326,14 +4326,14 @@ class TestChatCompletionsAgentIncomplete:
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
+                    json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "hi"}]},
                 )
             assert resp.status == 200
             data = await resp.json()
             assert data["choices"][0]["finish_reason"] == "stop"
             assert data["choices"][0]["message"]["content"] == "All good."
-            assert "hermes" not in data
-            assert "X-Hermes-Completed" not in resp.headers
+            assert "qwerty" not in data
+            assert "X-Qwerty-Completed" not in resp.headers
 
 
 # ---------------------------------------------------------------------------
@@ -4630,14 +4630,14 @@ class TestConversationParameter:
 
 
 # ---------------------------------------------------------------------------
-# X-Hermes-Session-Id header (session continuity)
+# X-Qwerty-Session-Id header (session continuity)
 # ---------------------------------------------------------------------------
 
 
 class TestSessionIdHeader:
     @pytest.mark.asyncio
     async def test_new_session_response_includes_session_id_header(self, adapter):
-        """Without X-Hermes-Session-Id, a new session is created and returned in the header."""
+        """Without X-Qwerty-Session-Id, a new session is created and returned in the header."""
         mock_result = {"final_response": "Hello!", "messages": [], "api_calls": 1}
         app = _create_app(adapter)
         async with TestClient(TestServer(app)) as cli:
@@ -4645,14 +4645,14 @@ class TestSessionIdHeader:
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "Hi"}]},
+                    json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "Hi"}]},
                 )
             assert resp.status == 200
-            assert resp.headers.get("X-Hermes-Session-Id") is not None
+            assert resp.headers.get("X-Qwerty-Session-Id") is not None
 
     @pytest.mark.asyncio
     async def test_provided_session_id_is_used_and_echoed(self, auth_adapter):
-        """When X-Hermes-Session-Id is provided, it's passed to the agent and echoed in the response."""
+        """When X-Qwerty-Session-Id is provided, it's passed to the agent and echoed in the response."""
         mock_result = {"final_response": "Continuing!", "messages": [], "api_calls": 1}
         mock_db = MagicMock()
         mock_db.get_messages_as_conversation.return_value = [
@@ -4667,18 +4667,18 @@ class TestSessionIdHeader:
 
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    headers={"X-Hermes-Session-Id": "my-session-123", "Authorization": "Bearer sk-secret"},
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "Continue"}]},
+                    headers={"X-Qwerty-Session-Id": "my-session-123", "Authorization": "Bearer sk-secret"},
+                    json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "Continue"}]},
                 )
 
             assert resp.status == 200
-            assert resp.headers.get("X-Hermes-Session-Id") == "my-session-123"
+            assert resp.headers.get("X-Qwerty-Session-Id") == "my-session-123"
             call_kwargs = mock_run.call_args.kwargs
             assert call_kwargs["session_id"] == "my-session-123"
 
     @pytest.mark.asyncio
     async def test_traversal_session_id_header_rejected(self, auth_adapter):
-        """Security (#5958): a path-traversal X-Hermes-Session-Id must be
+        """Security (#5958): a path-traversal X-Qwerty-Session-Id must be
         rejected with 400 so it can't reach the filesystem artifact paths
         (session snapshot / request dump) and escape the sessions dir."""
         app = _create_app(auth_adapter)
@@ -4687,8 +4687,8 @@ class TestSessionIdHeader:
                 for bad in ("../../../../etc/pwned", "/abs/path", "..\\win"):
                     resp = await cli.post(
                         "/v1/chat/completions",
-                        headers={"X-Hermes-Session-Id": bad, "Authorization": "Bearer sk-secret"},
-                        json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
+                        headers={"X-Qwerty-Session-Id": bad, "Authorization": "Bearer sk-secret"},
+                        json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "hi"}]},
                     )
                     assert resp.status == 400, f"{bad!r} should be rejected"
                 # The agent is never invoked for a rejected ID.
@@ -4696,7 +4696,7 @@ class TestSessionIdHeader:
 
     @pytest.mark.asyncio
     async def test_provided_session_id_loads_history_from_db(self, auth_adapter):
-        """When X-Hermes-Session-Id is provided, history comes from SessionDB not request body."""
+        """When X-Qwerty-Session-Id is provided, history comes from SessionDB not request body."""
         mock_result = {"final_response": "OK", "messages": [], "api_calls": 1}
         db_history = [
             {"role": "user", "content": "stored message 1"},
@@ -4712,10 +4712,10 @@ class TestSessionIdHeader:
 
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    headers={"X-Hermes-Session-Id": "existing-session", "Authorization": "Bearer sk-secret"},
+                    headers={"X-Qwerty-Session-Id": "existing-session", "Authorization": "Bearer sk-secret"},
                     # Request body has different history — should be ignored
                     json={
-                        "model": "hermes-agent",
+                        "model": "qwerty-agent",
                         "messages": [
                             {"role": "user", "content": "old msg from client"},
                             {"role": "assistant", "content": "old reply from client"},
@@ -4739,13 +4739,13 @@ class TestSessionIdHeader:
         app = _create_app(auth_adapter)
         async with TestClient(TestServer(app)) as cli:
             with patch.object(auth_adapter, "_run_agent", new_callable=AsyncMock) as mock_run, \
-                 patch("hermes_state.SessionDB", side_effect=Exception("DB unavailable")):
+                 patch("qwerty_state.SessionDB", side_effect=Exception("DB unavailable")):
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
 
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    headers={"X-Hermes-Session-Id": "some-session", "Authorization": "Bearer sk-secret"},
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "Hi"}]},
+                    headers={"X-Qwerty-Session-Id": "some-session", "Authorization": "Bearer sk-secret"},
+                    json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "Hi"}]},
                 )
 
             assert resp.status == 200
@@ -4755,7 +4755,7 @@ class TestSessionIdHeader:
 
 
 # ---------------------------------------------------------------------------
-# X-Hermes-Session-Key header (long-term memory scoping)
+# X-Qwerty-Session-Key header (long-term memory scoping)
 # ---------------------------------------------------------------------------
 
 
@@ -4769,7 +4769,7 @@ class TestSessionKeyHeader:
 
     @pytest.mark.asyncio
     async def test_session_key_passed_to_agent_and_echoed(self, auth_adapter):
-        """X-Hermes-Session-Key reaches _run_agent as gateway_session_key and is echoed back."""
+        """X-Qwerty-Session-Key reaches _run_agent as gateway_session_key and is echoed back."""
         mock_result = {"final_response": "ok", "messages": [], "api_calls": 1}
         app = _create_app(auth_adapter)
         async with TestClient(TestServer(app)) as cli:
@@ -4778,13 +4778,13 @@ class TestSessionKeyHeader:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     headers={
-                        "X-Hermes-Session-Key": "webui:user-42",
+                        "X-Qwerty-Session-Key": "webui:user-42",
                         "Authorization": "Bearer sk-secret",
                     },
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
+                    json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "hi"}]},
                 )
             assert resp.status == 200
-            assert resp.headers.get("X-Hermes-Session-Key") == "webui:user-42"
+            assert resp.headers.get("X-Qwerty-Session-Key") == "webui:user-42"
             call_kwargs = mock_run.call_args.kwargs
             assert call_kwargs["gateway_session_key"] == "webui:user-42"
 
@@ -4802,15 +4802,15 @@ class TestSessionKeyHeader:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     headers={
-                        "X-Hermes-Session-Key": "channel-abc",
-                        "X-Hermes-Session-Id": "transcript-xyz",
+                        "X-Qwerty-Session-Key": "channel-abc",
+                        "X-Qwerty-Session-Id": "transcript-xyz",
                         "Authorization": "Bearer sk-secret",
                     },
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
+                    json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "hi"}]},
                 )
             assert resp.status == 200
-            assert resp.headers.get("X-Hermes-Session-Key") == "channel-abc"
-            assert resp.headers.get("X-Hermes-Session-Id") == "transcript-xyz"
+            assert resp.headers.get("X-Qwerty-Session-Key") == "channel-abc"
+            assert resp.headers.get("X-Qwerty-Session-Id") == "transcript-xyz"
             call_kwargs = mock_run.call_args.kwargs
             assert call_kwargs["gateway_session_key"] == "channel-abc"
             assert call_kwargs["session_id"] == "transcript-xyz"
@@ -4826,10 +4826,10 @@ class TestSessionKeyHeader:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     headers={"Authorization": "Bearer sk-secret"},
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
+                    json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "hi"}]},
                 )
             assert resp.status == 200
-            assert "X-Hermes-Session-Key" not in resp.headers
+            assert "X-Qwerty-Session-Key" not in resp.headers
             call_kwargs = mock_run.call_args.kwargs
             assert call_kwargs["gateway_session_key"] is None
 
@@ -4840,8 +4840,8 @@ class TestSessionKeyHeader:
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.post(
                 "/v1/chat/completions",
-                headers={"X-Hermes-Session-Key": "whatever"},
-                json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
+                headers={"X-Qwerty-Session-Key": "whatever"},
+                json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "hi"}]},
             )
             assert resp.status == 403
 
@@ -4856,7 +4856,7 @@ class TestSessionKeyHeader:
         validation.
         """
         mock_request = MagicMock()
-        mock_request.headers = {"X-Hermes-Session-Key": "bad\rvalue"}
+        mock_request.headers = {"X-Qwerty-Session-Key": "bad\rvalue"}
         key, err = auth_adapter._parse_session_key_header(mock_request)
         assert key is None
         assert err is not None
@@ -4869,8 +4869,8 @@ class TestSessionKeyHeader:
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.post(
                 "/v1/chat/completions",
-                headers={"X-Hermes-Session-Key": "x" * 1000, "Authorization": "Bearer sk-secret"},
-                json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
+                headers={"X-Qwerty-Session-Key": "x" * 1000, "Authorization": "Bearer sk-secret"},
+                json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "hi"}]},
             )
             assert resp.status == 400
 
@@ -4894,10 +4894,10 @@ class TestSessionKeyHeader:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     headers={
-                        "X-Hermes-Session-Key": "agent:main:webui:dm:user-7",
+                        "X-Qwerty-Session-Key": "agent:main:webui:dm:user-7",
                         "Authorization": "Bearer sk-secret",
                     },
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
+                    json={"model": "qwerty-agent", "messages": [{"role": "user", "content": "hi"}]},
                 )
             assert resp.status == 200
             # _create_agent must be called with gateway_session_key threaded through
@@ -4905,7 +4905,7 @@ class TestSessionKeyHeader:
 
     @pytest.mark.asyncio
     async def test_responses_endpoint_accepts_session_key(self, auth_adapter):
-        """Responses API honors the same X-Hermes-Session-Key contract."""
+        """Responses API honors the same X-Qwerty-Session-Key contract."""
         mock_result = {"final_response": "ok", "messages": [], "api_calls": 1}
         app = _create_app(auth_adapter)
         async with TestClient(TestServer(app)) as cli:
@@ -4914,13 +4914,13 @@ class TestSessionKeyHeader:
                 resp = await cli.post(
                     "/v1/responses",
                     headers={
-                        "X-Hermes-Session-Key": "webui:chan-1",
+                        "X-Qwerty-Session-Key": "webui:chan-1",
                         "Authorization": "Bearer sk-secret",
                     },
-                    json={"model": "hermes-agent", "input": "hello", "store": False},
+                    json={"model": "qwerty-agent", "input": "hello", "store": False},
                 )
             assert resp.status == 200
-            assert resp.headers.get("X-Hermes-Session-Key") == "webui:chan-1"
+            assert resp.headers.get("X-Qwerty-Session-Key") == "webui:chan-1"
             call_kwargs = mock_run.call_args.kwargs
             assert call_kwargs["gateway_session_key"] == "webui:chan-1"
 
@@ -4932,7 +4932,7 @@ class TestSessionKeyHeader:
             resp = await cli.get("/v1/capabilities")
             assert resp.status == 200
             data = await resp.json()
-            assert data["features"]["session_key_header"] == "X-Hermes-Session-Key"
+            assert data["features"]["session_key_header"] == "X-Qwerty-Session-Key"
 
 
 # ---------------------------------------------------------------------------
@@ -4967,7 +4967,7 @@ def _patch_create_agent_runtime(monkeypatch, captured: dict, fake_agent_cls):
         "gateway.run.GatewayRunner._load_fallback_model", staticmethod(lambda: None)
     )
     monkeypatch.setattr("gateway.run._current_max_iterations", lambda: 90)
-    monkeypatch.setattr("hermes_cli.tools_config._get_platform_tools", lambda *_: set())
+    monkeypatch.setattr("qwerty_cli.tools_config._get_platform_tools", lambda *_: set())
 
 
 class TestModelRoutesParsing:
@@ -5003,7 +5003,7 @@ class TestModelRoutesParsing:
 
     def test_no_routes_configured(self):
         adapter = _make_routing_adapter({})
-        assert adapter._resolve_route("hermes-agent") is None
+        assert adapter._resolve_route("qwerty-agent") is None
 
 
 class TestModelRoutesModelsEndpoint:
@@ -5321,9 +5321,9 @@ class TestSessionDbOffEventLoop:
         auth_adapter._session_db_lock = None
 
         original_class = None
-        import hermes_state
-        original_class = hermes_state.SessionDB
-        hermes_state.SessionDB = FakeDB
+        import qwerty_state
+        original_class = qwerty_state.SessionDB
+        qwerty_state.SessionDB = FakeDB
         try:
             app = _create_app(auth_adapter)
             app.router.add_get("/api/sessions", auth_adapter._handle_list_sessions)
@@ -5337,7 +5337,7 @@ class TestSessionDbOffEventLoop:
             assert "init_thread" in captured
             assert captured["init_thread"] != threading.current_thread()
         finally:
-            hermes_state.SessionDB = original_class
+            qwerty_state.SessionDB = original_class
             auth_adapter._session_db = None
             auth_adapter._session_db_lock = None
 
@@ -5374,8 +5374,8 @@ class TestApiKeyStartupGuardFailsClosed:
         real_import = __import__
 
         def _blocked(name, *args, **kwargs):
-            if name == "hermes_cli.auth":
-                raise ImportError("simulated: hermes_cli.auth unavailable")
+            if name == "qwerty_cli.auth":
+                raise ImportError("simulated: qwerty_cli.auth unavailable")
             return real_import(name, *args, **kwargs)
 
         return patch("builtins.__import__", _blocked)
@@ -5453,14 +5453,14 @@ class TestKeyRejectionSetsNonRetryableFatalError:
     @pytest.mark.asyncio
     async def test_unverifiable_key_sets_non_retryable_fatal_error(self, monkeypatch):
         """The fail-closed branch: a strong key whose strength cannot be
-        verified (hermes_cli.auth unimportable) must also be non-retryable —
+        verified (qwerty_cli.auth unimportable) must also be non-retryable —
         the install won't repair itself between retries."""
         adapter = self._make_adapter("a" * 40, monkeypatch)
         real_import = __import__
 
         def _blocked(name, *args, **kwargs):
-            if name == "hermes_cli.auth":
-                raise ImportError("simulated: hermes_cli.auth unavailable")
+            if name == "qwerty_cli.auth":
+                raise ImportError("simulated: qwerty_cli.auth unavailable")
             return real_import(name, *args, **kwargs)
 
         with patch("builtins.__import__", _blocked):
@@ -5516,8 +5516,8 @@ class TestDirectModelRequestsGate:
 
     def test_virtual_model_alias_still_ignored(self):
         overrides = _request_agent_overrides(
-            {"model": "hermes-agent", "provider": "minimax"},
-            virtual_model="hermes-agent",
+            {"model": "qwerty-agent", "provider": "minimax"},
+            virtual_model="qwerty-agent",
             allow_bare_model=True,
         )
         assert "requested_model" not in overrides
@@ -5617,7 +5617,7 @@ class TestCreateAgentModelRecovery:
     def test_create_agent_defaults_to_provider_catalog_model_when_empty(self, monkeypatch):
         """api_server.py had no equivalent of run.py's provider-catalog
         default when model resolves empty but a provider did resolve (e.g.
-        `hermes auth add openai-codex` without `hermes model`) —
+        `qwerty auth add openai-codex` without `qwerty model`) —
         AIAgent(model="") 400s every call."""
         captured = {}
 
@@ -5633,7 +5633,7 @@ class TestCreateAgentModelRecovery:
         )
         monkeypatch.setattr("gateway.run._resolve_gateway_model", lambda: "")
         monkeypatch.setattr(
-            "hermes_cli.models.get_default_model_for_provider",
+            "qwerty_cli.models.get_default_model_for_provider",
             lambda provider: "gpt-5.5-codex" if provider == "openai-codex" else None,
         )
 

@@ -1,12 +1,12 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { TerminalBackendsResponse } from '@/types/hermes'
+import type { TerminalBackendsResponse } from '@/types/qwerty'
 
 const getTerminalBackends = vi.fn()
 const selectTerminalBackend = vi.fn()
 
-vi.mock('@/hermes', () => ({
+vi.mock('@/qwerty', () => ({
   getTerminalBackends: () => getTerminalBackends(),
   selectTerminalBackend: (backend: string) => selectTerminalBackend(backend)
 }))
@@ -42,7 +42,7 @@ function backends(overrides: Partial<TerminalBackendsResponse> = {}): TerminalBa
         description: 'Run commands on a remote host over SSH.',
         active: false,
         status: 'ready',
-        detail: 'hermes@devbox'
+        detail: 'qwerty@devbox'
       }
     ],
     ...overrides

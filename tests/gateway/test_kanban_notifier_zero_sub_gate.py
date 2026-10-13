@@ -22,7 +22,7 @@ from unittest.mock import patch
 
 from gateway.config import Platform
 from gateway.run import GatewayRunner
-from hermes_cli import kanban_db as kb
+from qwerty_cli import kanban_db as kb
 
 
 class RecordingAdapter:
@@ -69,7 +69,7 @@ def _create_completed_task(*, subscribe: bool) -> str:
 def test_zero_sub_board_is_never_opened_writable(tmp_path, monkeypatch):
     """A board with zero subscriptions must be skipped BEFORE `_kb.connect`."""
     db_path = tmp_path / "zero-subs.db"
-    monkeypatch.setenv("HERMES_KANBAN_DB", str(db_path))
+    monkeypatch.setenv("QWERTY_KANBAN_DB", str(db_path))
     kb.init_db()
     _create_completed_task(subscribe=False)
 
@@ -86,7 +86,7 @@ def test_zero_sub_board_is_never_opened_writable(tmp_path, monkeypatch):
 def test_subscribed_board_still_delivers_through_the_gate(tmp_path, monkeypatch):
     """Regression: the zero-sub probe must not change delivery for live subs."""
     db_path = tmp_path / "subscribed.db"
-    monkeypatch.setenv("HERMES_KANBAN_DB", str(db_path))
+    monkeypatch.setenv("QWERTY_KANBAN_DB", str(db_path))
     kb.init_db()
     tid = _create_completed_task(subscribe=True)
 
@@ -103,7 +103,7 @@ def test_probe_failure_falls_back_to_writable_open(tmp_path, monkeypatch):
     fall back to the writable open — a broken probe must never silently
     disable notifications for a board with live subscriptions."""
     db_path = tmp_path / "probe-broken.db"
-    monkeypatch.setenv("HERMES_KANBAN_DB", str(db_path))
+    monkeypatch.setenv("QWERTY_KANBAN_DB", str(db_path))
     kb.init_db()
     tid = _create_completed_task(subscribe=True)
 

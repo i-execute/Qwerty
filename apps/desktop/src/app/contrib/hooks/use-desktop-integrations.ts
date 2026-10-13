@@ -50,7 +50,7 @@ export function useDesktopIntegrations({
   // process's "open updates" menu request.
   useEffect(() => {
     startUpdatePoller()
-    const unsubscribe = window.hermesDesktop?.onOpenUpdatesRequested?.(() => openUpdatesWindow())
+    const unsubscribe = window.qwertyDesktop?.onOpenUpdatesRequested?.(() => openUpdatesWindow())
 
     return () => {
       unsubscribe?.()
@@ -62,7 +62,7 @@ export function useDesktopIntegrations({
   // close the window, so claim it unconditionally — the menu then routes ⌘W
   // to us (close-preview-requested IPC) and we decide tab-vs-window.
   useEffect(() => {
-    window.hermesDesktop?.setPreviewShortcutActive?.(true)
+    window.qwertyDesktop?.setPreviewShortcutActive?.(true)
   }, [])
 
   // Remember the open chat (session id for notifications/resume) AND the last
@@ -126,7 +126,7 @@ export function useDesktopIntegrations({
   // Native-notification click -> jump to the session (runtime id translated to
   // the stored id the chat route is keyed by); action buttons resolve in place.
   useEffect(() => {
-    const unsubscribe = window.hermesDesktop?.onFocusSession?.(sessionId => {
+    const unsubscribe = window.qwertyDesktop?.onFocusSession?.(sessionId => {
       if (sessionId) {
         navigate(sessionRoute(storedSessionIdForNotification(sessionId, runtimeIdByStoredSessionId.current)))
       }
@@ -136,16 +136,16 @@ export function useDesktopIntegrations({
   }, [navigate, runtimeIdByStoredSessionId])
 
   useEffect(() => {
-    const unsubscribe = window.hermesDesktop?.onNotificationAction?.(({ actionId, sessionId }) => {
+    const unsubscribe = window.qwertyDesktop?.onNotificationAction?.(({ actionId, sessionId }) => {
       void respondToApprovalAction(sessionId ?? null, actionId)
     })
 
     return () => unsubscribe?.()
   }, [])
 
-  // hermes:// deep links -> a reviewable /blueprint command in the composer.
+  // qwerty:// deep links -> a reviewable /blueprint command in the composer.
   useEffect(() => {
-    const unsubscribe = window.hermesDesktop?.onDeepLink?.(payload => {
+    const unsubscribe = window.qwertyDesktop?.onDeepLink?.(payload => {
       if (!payload || payload.kind !== 'blueprint' || !payload.name) {
         return
       }
@@ -163,7 +163,7 @@ export function useDesktopIntegrations({
       requestComposerFocus('main')
     })
 
-    void window.hermesDesktop?.signalDeepLinkReady?.()
+    void window.qwertyDesktop?.signalDeepLinkReady?.()
 
     return () => unsubscribe?.()
   }, [])
@@ -173,7 +173,7 @@ export function useDesktopIntegrations({
   // OS-standard window close, esp. secondary windows). The Win/Linux keyboard
   // path is the `view.closeTab` keybind (use-keybinds), sharing closeActiveTab.
   useEffect(() => {
-    const unsubscribe = window.hermesDesktop?.onClosePreviewRequested?.(
+    const unsubscribe = window.qwertyDesktop?.onClosePreviewRequested?.(
       () => void closeActiveTab(id => navigate(sessionRoute(id)))
     )
 

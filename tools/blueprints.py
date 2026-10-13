@@ -5,7 +5,7 @@ agent loads) that additionally declares an automation schedule in its
 frontmatter:
 
     metadata:
-      hermes:
+      qwerty:
         blueprint:
           schedule: "0 9 * * *"     # presence of `blueprint:` marks it runnable
           deliver: origin            # optional (default "origin")
@@ -15,7 +15,7 @@ frontmatter:
 Because a blueprint is just a skill, it flows through the ENTIRE existing
 skills-hub pipeline for free — search, inspect, quarantine, security scan,
 install, lock-file provenance, audit log, taps, the centralized index, and
-`hermes skills publish` for sharing. No new source type, no new store, no new
+`qwerty skills publish` for sharing. No new source type, no new store, no new
 transport. This module is the thin bridge between that skill metadata and the
 existing cron `create_job()` API:
 
@@ -95,7 +95,7 @@ def _split_frontmatter(text: str) -> Optional[Dict[str, Any]]:
 def parse_blueprint(skill_md_text: str) -> Optional[BlueprintSpec]:
     """Extract a BlueprintSpec from a SKILL.md string, or None if not a blueprint.
 
-    A skill is a blueprint iff ``metadata.hermes.blueprint`` is a mapping containing
+    A skill is a blueprint iff ``metadata.qwerty.blueprint`` is a mapping containing
     a non-empty ``schedule``. Raises BlueprintError if the block exists but is
     structurally invalid (so a typo surfaces instead of silently no-op'ing).
     """
@@ -106,8 +106,8 @@ def parse_blueprint(skill_md_text: str) -> Optional[BlueprintSpec]:
     name = str(fm.get("name", "")).strip()
 
     meta = fm.get("metadata")
-    hermes = meta.get("hermes") if isinstance(meta, dict) else None
-    blueprint = hermes.get("blueprint") if isinstance(hermes, dict) else None
+    qwerty = meta.get("qwerty") if isinstance(meta, dict) else None
+    blueprint = qwerty.get("blueprint") if isinstance(qwerty, dict) else None
     if blueprint is None:
         return None
     if not isinstance(blueprint, dict):
@@ -247,8 +247,8 @@ def export_blueprint(job: Dict[str, Any], body: str, *, blueprint_name: Optional
     """Render a shareable blueprint SKILL.md from an existing cron job dict.
 
     The inverse of ``create_blueprint_job``: take a cron job a user already built
-    and emit a SKILL.md (with a ``metadata.hermes.blueprint`` block) they can hand
-    to ``hermes skills publish`` to share. ``body`` is the plain-language
+    and emit a SKILL.md (with a ``metadata.qwerty.blueprint`` block) they can hand
+    to ``qwerty skills publish`` to share. ``body`` is the plain-language
     description / instructions that become the SKILL.md body.
     """
     import yaml
@@ -288,7 +288,7 @@ def export_blueprint(job: Dict[str, Any], body: str, *, blueprint_name: Optional
         "version": "1.0.0",
         "license": "MIT",
         "metadata": {
-            "hermes": {
+            "qwerty": {
                 "tags": ["blueprint", "automation"],
                 "blueprint": blueprint_block,
             }

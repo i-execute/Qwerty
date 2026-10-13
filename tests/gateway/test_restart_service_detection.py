@@ -35,10 +35,10 @@ def _make_restart_event(update_id: int | None = 100) -> MessageEvent:
 
 
 def _make_runner_with_mock_restart(tmp_path, monkeypatch):
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_qwerty_home", tmp_path)
     monkeypatch.delenv("INVOCATION_ID", raising=False)
     monkeypatch.delenv("XPC_SERVICE_NAME", raising=False)
-    monkeypatch.delenv("HERMES_S6_SUPERVISED_CHILD", raising=False)
+    monkeypatch.delenv("QWERTY_S6_SUPERVISED_CHILD", raising=False)
     monkeypatch.delenv(EXTERNAL_GATEWAY_SUPERVISOR_ENV, raising=False)
     runner, _adapter = make_restart_runner()
     runner.request_restart = MagicMock(return_value=True)
@@ -49,7 +49,7 @@ def _make_runner_with_mock_restart(tmp_path, monkeypatch):
 async def test_restart_under_launchd_uses_service_path(tmp_path, monkeypatch):
     """launchd job label in XPC_SERVICE_NAME routes /restart via the service path."""
     runner = _make_runner_with_mock_restart(tmp_path, monkeypatch)
-    monkeypatch.setenv("XPC_SERVICE_NAME", "ai.hermes.gateway")
+    monkeypatch.setenv("XPC_SERVICE_NAME", "ai.qwerty.gateway")
 
     await runner._handle_restart_command(_make_restart_event())
 

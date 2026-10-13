@@ -13,7 +13,7 @@ export consumers (trace upload, context guard) read the transcript as-is.
 
 import pytest
 
-from hermes_state import SessionDB
+from qwerty_state import SessionDB
 
 
 @pytest.fixture()
