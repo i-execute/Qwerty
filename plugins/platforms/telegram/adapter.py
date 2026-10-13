@@ -7033,7 +7033,8 @@ class TelegramAdapter(BasePlatformAdapter):
         r"|_(?P<em>[^\n_]+?)_"
         r"|~(?P<s>[^~\n]+?)~"
         r"|\|\|(?P<sp>[^|\n]+?)\|\|"
-        r"|\[(?P<lt>[^\]\n]+)\]\((?P<lu>[^\s)]+)\)"
+        r"|\[(?P<lt>[^\]\n]+)\]\((?P<lu>[^\s)]+)\)",
+        re.DOTALL,
     )
 
     def _entities_for_markdown(self, text: str) -> tuple:
