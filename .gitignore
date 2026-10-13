@@ -190,3 +190,5 @@ infographics/
 infograficos/
 infografico/
 native/fts5_cjk/*.so
+
+Gateway_emoji.json

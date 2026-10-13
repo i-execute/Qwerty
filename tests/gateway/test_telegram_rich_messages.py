@@ -139,7 +139,7 @@ def test_rich_payload_promotes_only_user_verified_premium_emoji_entities():
     payload = adapter._rich_message_payload("📝 Готово: 🤩")
 
     assert payload["markdown"] == (
-        "![📝](tg://emoji?id=5454014806950429357) "
+        "![📝](tg://emoji?id=5465465194056525619) "
         "Готово: ![🤩](tg://emoji?id=5346270183621171895)"
     )
 
@@ -153,7 +153,7 @@ def test_rich_payload_uses_uploaded_native_ids_in_order_for_duplicate_fallbacks(
         "![🖤](tg://emoji?id=5361635124179906093) "
         "![🌟](tg://emoji?id=5429168219279603879) "
         "![🌟](tg://emoji?id=5449860740351539454) "
-        "![❤️](tg://emoji?id=5296594136609075307) "
+        "![❤](tg://emoji?id=5465465194056525619)️ "
         "![💔](tg://emoji?id=5287395828489532868) "
         "![💔](tg://emoji?id=5208787155194761088) "
         "![👻](tg://emoji?id=5208664366374733420) "
@@ -175,20 +175,20 @@ def test_rich_payload_promotes_md3_pack_with_precedence_over_pack1():
 
 
 def test_premium_emoji_pack_system_is_ordered_and_complete():
-    """Pack registry: md3 first, legacy last, all IDs unique per pack."""
+    """Pack registry: game-emoji first, legacy last, all IDs unique per pack."""
     adapter = _make_adapter()
     packs = adapter._PREMIUM_EMOJI_PACKS
     names = [name for name, _desc, _reg in packs]
-    assert names[0] == "md3-expressive"
+    assert names[0] == "game-emoji"
     assert names[-1] == "legacy"
     assert len({name for name, _, _ in packs}) == len(packs)
     for _name, desc, registry in packs:
         assert desc.strip()
         ids = [emoji_id for emoji_id, _glyph in registry]
         assert len(ids) == len(set(ids)), _name
-    md3_waves = [glyph for _eid, glyph in packs[0][2] if glyph == "🌊"]
-    assert len(md3_waves) == 3  # начало / продление / конец
-    native_ids = {eid for eid, _g in packs[1][2]}
+    md3_waves = [glyph for _eid, glyph in packs[1][2] if glyph == "🌊"]
+    assert len(md3_waves) == 3
+    native_ids = {eid for eid, _g in packs[2][2]}
     assert len(native_ids) == 100
 
 
@@ -201,7 +201,7 @@ def test_rich_payload_preserves_existing_custom_emoji_entity():
 
     assert payload["markdown"] == (
         "![🤩](tg://emoji?id=5190683945351535076) и "
-        "![🧠](tg://emoji?id=5226639745106330551)"
+        "![🧠](tg://emoji?id=5447595110743168717)"
     )
 
 
