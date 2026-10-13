@@ -7155,9 +7155,8 @@ class TelegramAdapter(BasePlatformAdapter):
         if not text:
             return entities
         glyph_ids: Dict[str, str] = {}
-        for _pack_name, _pack_desc, registry in self._PREMIUM_EMOJI_PACKS:
-            for emoji_id, glyph in registry:
-                glyph_ids.setdefault(glyph, emoji_id)
+        for emoji_id, glyph in self._GAME_EMOJI_PACK:
+            glyph_ids.setdefault(glyph, emoji_id)
         fallback_ids = [emoji_id for emoji_id, _glyph in self._GAME_EMOJI_PACK]
         if not glyph_ids:
             return entities
