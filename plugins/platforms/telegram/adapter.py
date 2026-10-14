@@ -2592,7 +2592,19 @@ class TelegramAdapter(BasePlatformAdapter):
             raise RuntimeError("MTProto client is not connected")
         location = _mt_file_location(media, thumb)
         buf = io.BytesIO()
-        await self._app.charged_download(location, buf, size=int(size or 0), media_source=media)
+        from goygram.errors import BadRequestError
+
+        try:
+            await self._app.charged_download(location, buf, size=int(size or 0), media_source=media)
+        except BadRequestError as exc:
+            if exc.message != "AUTH_BYTES_INVALID":
+                raise
+            logger.warning("[Telegram] Parallel download authorization failed; retrying on primary transport")
+            buf.seek(0)
+            buf.truncate()
+            await self._app.mt.download_file(location, buf, media_source=media)
+        if size and len(buf.getbuffer()) != int(size):
+            raise RuntimeError("downloaded size does not match expected size")
         return buf.getvalue()
 
     def _mt_peer_dialog_to_chat_info(self, result: Any, chat_id: Any) -> Dict[str, Any]:
