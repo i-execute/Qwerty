@@ -8526,6 +8526,7 @@ class TelegramAdapter(BasePlatformAdapter):
                     )
                 ]
                 out.caption = raw.get("message") or None
+                out.text = None
             elif media_type == "messageMediaDocument":
                 doc = media.get("document") or {}
                 attrs = doc.get("attributes") or [] if isinstance(doc, dict) else []
@@ -8550,6 +8551,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 else:
                     out.document = _MTInboundMedia(self, media, "document")
                 out.caption = raw.get("message") or None
+                out.text = None
             elif media_type == "messageMediaGeo":
                 out.location = media.get("geo") if isinstance(media.get("geo"), dict) else media
             elif media_type == "messageMediaVenue":
