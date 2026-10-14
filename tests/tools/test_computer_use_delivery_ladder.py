@@ -1,6 +1,6 @@
 """Regression tests for the cua-driver verify → escalate ladder.
 
-Covers NousResearch/hermes-agent#67052:
+Covers NousResearch/qwerty-agent#67052:
   - Phase A: cua-driver structured verdicts (verified/effect/escalation/code/
     degraded/path) are preserved through ActionResult and surfaced in the
     model-facing response, additively (old drivers omit them cleanly).
@@ -203,7 +203,7 @@ def test_bad_delivery_mode_rejected():
 def test_dispatcher_threads_delivery_mode_to_backend():
     """End-to-end through the tool dispatcher with the noop backend."""
     from tools.computer_use import tool as cu
-    with patch.dict(os.environ, {"HERMES_COMPUTER_USE_BACKEND": "noop"}, clear=False):
+    with patch.dict(os.environ, {"QWERTY_COMPUTER_USE_BACKEND": "noop"}, clear=False):
         cu.reset_backend_for_tests()
         be = cu._get_backend()
         cu.handle_computer_use({"action": "click", "element": 5,

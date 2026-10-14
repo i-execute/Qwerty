@@ -37,8 +37,8 @@ class TestCliTurnRoutePool:
             service_tier=None,
         )
 
-        from cli import HermesCLI
-        bound = HermesCLI._resolve_turn_agent_config.__get__(shell)
+        from cli import QwertyCLI
+        bound = QwertyCLI._resolve_turn_agent_config.__get__(shell)
         route = bound("test message")
 
         assert route["runtime"]["credential_pool"] is fake_pool
@@ -302,9 +302,9 @@ class TestApiKeyHintRealPool:
     def _seed_pool(self, tmp_path, monkeypatch):
         import json
 
-        hermes_home = tmp_path / "hermes"
-        hermes_home.mkdir(parents=True, exist_ok=True)
-        (hermes_home / "auth.json").write_text(
+        qwerty_home = tmp_path / "qwerty"
+        qwerty_home.mkdir(parents=True, exist_ok=True)
+        (qwerty_home / "auth.json").write_text(
             json.dumps(
                 {
                     "version": 1,
@@ -332,7 +332,7 @@ class TestApiKeyHintRealPool:
                 }
             )
         )
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("QWERTY_HOME", str(qwerty_home))
         from agent.credential_pool import load_pool
 
         return load_pool("openrouter")
@@ -383,10 +383,10 @@ class TestFailureAttribution:
     """
 
     def _make_pool(self, tmp_path, monkeypatch, entries):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
-        hermes_home = tmp_path / "hermes"
-        hermes_home.mkdir(parents=True, exist_ok=True)
-        (hermes_home / "auth.json").write_text(
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path / "qwerty"))
+        qwerty_home = tmp_path / "qwerty"
+        qwerty_home.mkdir(parents=True, exist_ok=True)
+        (qwerty_home / "auth.json").write_text(
             json.dumps({"version": 1, "credential_pool": {"anthropic": entries}})
         )
         from agent.credential_pool import load_pool

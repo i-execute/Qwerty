@@ -26,7 +26,7 @@ import posixpath
 from contextvars import ContextVar
 from pathlib import Path
 from typing import Dict, List, Optional
-from hermes_cli.config import cfg_get
+from qwerty_cli.config import cfg_get
 
 try:  # pragma: no cover - exercised via the fail-closed test below
     from agent.file_safety import get_read_block_error
@@ -54,9 +54,9 @@ def _get_registered() -> Dict[str, str]:
 _config_files: List[Dict[str, str]] | None = None
 
 
-def _resolve_hermes_home() -> Path:
-    from hermes_constants import get_hermes_home
-    return get_hermes_home()
+def _resolve_qwerty_home() -> Path:
+    from qwerty_constants import get_qwerty_home
+    return get_qwerty_home()
 
 
 def register_credential_file(
@@ -65,15 +65,15 @@ def register_credential_file(
 ) -> bool:
     """Register a credential file for mounting into remote sandboxes.
 
-    *relative_path* is relative to ``HERMES_HOME`` (e.g. ``google_token.json``).
+    *relative_path* is relative to ``QWERTY_HOME`` (e.g. ``google_token.json``).
     Returns True if the file exists on the host and was registered.
 
     Security: rejects absolute paths and path traversal sequences (``..``).
-    The resolved host path must remain inside HERMES_HOME so that a malicious
+    The resolved host path must remain inside QWERTY_HOME so that a malicious
     skill cannot declare ``required_credential_files: ['../../.ssh/id_rsa']``
     and exfiltrate sensitive host files into a container sandbox.
 
-    Containment alone is not sufficient, because HERMES_HOME is exactly where
+    Containment alone is not sufficient, because QWERTY_HOME is exactly where
     the MASTER credential stores live. A skill legitimately needs its own
     service token (``google_token.json``); it never needs ``.env`` (every
     provider key), ``auth.json`` (all provider tokens and OAuth grants),
@@ -82,23 +82,23 @@ def register_credential_file(
     — the same guard that stops the agent reading them with ``read_file``, so
     the mount surface cannot hand a skill what the read surface denies it.
     """
-    hermes_home = _resolve_hermes_home()
+    qwerty_home = _resolve_qwerty_home()
 
-    # Reject absolute paths — they bypass the HERMES_HOME sandbox entirely.
+    # Reject absolute paths — they bypass the QWERTY_HOME sandbox entirely.
     if os.path.isabs(relative_path):
         logger.warning(
-            "credential_files: rejected absolute path %r (must be relative to HERMES_HOME)",
+            "credential_files: rejected absolute path %r (must be relative to QWERTY_HOME)",
             relative_path,
         )
         return False
 
-    host_path = hermes_home / relative_path
+    host_path = qwerty_home / relative_path
 
     # Resolve symlinks and normalise ``..`` before the containment check so
-    # that traversal like ``../. ssh/id_rsa`` cannot escape HERMES_HOME.
+    # that traversal like ``../. ssh/id_rsa`` cannot escape QWERTY_HOME.
     from tools.path_security import validate_within_dir
 
-    containment_error = validate_within_dir(host_path, hermes_home)
+    containment_error = validate_within_dir(host_path, qwerty_home)
     if containment_error:
         logger.warning(
             "credential_files: rejected path traversal %r (%s)",
@@ -113,7 +113,7 @@ def register_credential_file(
         return False
 
     # Master credential stores are never mountable, even though they sit
-    # inside HERMES_HOME and therefore pass the containment check above.
+    # inside QWERTY_HOME and therefore pass the containment check above.
     # Fails CLOSED: if the canonical guard can't be consulted we refuse the
     # mount rather than risk bind-mounting auth.json into a sandbox. The
     # import lives at module top (no circular-import concern — file_safety is
@@ -142,7 +142,7 @@ def register_credential_file(
         )
         return False
 
-    container_path = f"{container_base.rstrip('/')}/{relative_path}"
+    container_path = f"{_normalize_container_base(container_base)}/{relative_path}"
     _get_registered()[container_path] = str(resolved)
     logger.debug("credential_files: registered %s -> %s", resolved, container_path)
     return True
@@ -181,8 +181,8 @@ def _load_config_files() -> List[Dict[str, str]]:
 
     result: List[Dict[str, str]] = []
     try:
-        from hermes_cli.config import read_raw_config
-        hermes_home = _resolve_hermes_home()
+        from qwerty_cli.config import read_raw_config
+        qwerty_home = _resolve_qwerty_home()
         cfg = read_raw_config()
         cred_files = cfg_get(cfg, "terminal", "credential_files")
         if isinstance(cred_files, list):
@@ -196,8 +196,8 @@ def _load_config_files() -> List[Dict[str, str]]:
                             "credential_files: rejected absolute config path %r", rel,
                         )
                         continue
-                    host_path = hermes_home / rel
-                    containment_error = validate_within_dir(host_path, hermes_home)
+                    host_path = qwerty_home / rel
+                    containment_error = validate_within_dir(host_path, qwerty_home)
                     if containment_error:
                         logger.warning(
                             "credential_files: rejected config path traversal %r (%s)",
@@ -244,6 +244,15 @@ def get_credential_file_mounts() -> List[Dict[str, str]]:
     ]
 
 
+def _normalize_container_base(container_base: str) -> str:
+    """The container/remote home is always ``.hermes`` in this fork, even when
+    the host-side base is named ``.qwerty``."""
+    base = container_base.rstrip("/")
+    if base.endswith("/.qwerty"):
+        base = base[: -len("/.qwerty")] + "/.hermes"
+    return base
+
+
 def get_skills_directory_mount(
     container_base: str = "/root/.hermes",
 ) -> list[Dict[str, str]]:
@@ -264,13 +273,13 @@ def get_skills_directory_mount(
     at ``<container_base>/external_skills/<index>``.
     """
     mounts = []
-    hermes_home = _resolve_hermes_home()
-    skills_dir = hermes_home / "skills"
+    qwerty_home = _resolve_qwerty_home()
+    skills_dir = qwerty_home / "skills"
     if skills_dir.is_dir():
         host_path = _safe_skills_path(skills_dir)
         mounts.append({
             "host_path": host_path,
-            "container_path": f"{container_base.rstrip('/')}/skills",
+            "container_path": f"{_normalize_container_base(container_base)}/skills",
         })
 
     # Mount external skill dirs
@@ -281,7 +290,7 @@ def get_skills_directory_mount(
                 host_path = _safe_skills_path(ext_dir)
                 mounts.append({
                     "host_path": host_path,
-                    "container_path": f"{container_base.rstrip('/')}/external_skills/{idx}",
+                    "container_path": f"{_normalize_container_base(container_base)}/external_skills/{idx}",
                 })
     except ImportError:
         pass
@@ -312,7 +321,7 @@ def _safe_skills_path(skills_dir: Path) -> str:
     if _safe_skills_tempdir and _safe_skills_tempdir.is_dir():
         shutil.rmtree(_safe_skills_tempdir, ignore_errors=True)
 
-    safe_dir = Path(tempfile.mkdtemp(prefix="hermes-skills-safe-"))
+    safe_dir = Path(tempfile.mkdtemp(prefix="qwerty-skills-safe-"))
     _safe_skills_tempdir = safe_dir
 
     for item in skills_dir.rglob("*"):
@@ -347,10 +356,10 @@ def iter_skills_files(
     """
     result: List[Dict[str, str]] = []
 
-    hermes_home = _resolve_hermes_home()
-    skills_dir = hermes_home / "skills"
+    qwerty_home = _resolve_qwerty_home()
+    skills_dir = qwerty_home / "skills"
     if skills_dir.is_dir():
-        container_root = f"{container_base.rstrip('/')}/skills"
+        container_root = f"{_normalize_container_base(container_base)}/skills"
         for item in skills_dir.rglob("*"):
             if item.is_symlink() or not item.is_file():
                 continue
@@ -366,7 +375,7 @@ def iter_skills_files(
         for idx, ext_dir in enumerate(get_external_skills_dirs()):
             if not ext_dir.is_dir():
                 continue
-            container_root = f"{container_base.rstrip('/')}/external_skills/{idx}"
+            container_root = f"{_normalize_container_base(container_base)}/external_skills/{idx}"
             for item in ext_dir.rglob("*"):
                 if item.is_symlink() or not item.is_file():
                     continue
@@ -386,7 +395,7 @@ def iter_skills_files(
 # ---------------------------------------------------------------------------
 
 # The cache subdirectories that should be mirrored into remote backends.
-# Each tuple is (new_subpath, old_name) matching hermes_constants.get_hermes_dir().
+# Each tuple is (new_subpath, old_name) matching qwerty_constants.get_qwerty_dir().
 _CACHE_DIRS: list[tuple[str, str]] = [
     ("cache/documents", "document_cache"),
     ("cache/images", "image_cache"),
@@ -405,16 +414,16 @@ def get_cache_directory_mounts(
 
     Used by Docker to create bind mounts.  Each entry has ``host_path`` and
     ``container_path`` keys.  The host path is resolved via
-    ``get_hermes_dir()`` for backward compatibility with old directory layouts.
+    ``get_qwerty_dir()`` for backward compatibility with old directory layouts.
     """
-    from hermes_constants import get_hermes_dir
+    from qwerty_constants import get_qwerty_dir
 
     mounts: List[Dict[str, str]] = []
     for new_subpath, old_name in _CACHE_DIRS:
-        host_dir = get_hermes_dir(new_subpath, old_name)
+        host_dir = get_qwerty_dir(new_subpath, old_name)
         if host_dir.is_dir():
             # Always map to the *new* container layout regardless of host layout.
-            container_path = f"{container_base.rstrip('/')}/{new_subpath}"
+            container_path = f"{_normalize_container_base(container_base)}/{new_subpath}"
             mounts.append({
                 "host_path": str(host_dir),
                 "container_path": container_path,
@@ -430,12 +439,13 @@ def map_cache_path_to_container(
 
     Returns the POSIX container path when *host_path* lives under one of the
     auto-mounted cache directories, otherwise ``None``.  Backend-agnostic: the
-    caller decides which ``container_base`` applies (Docker ``/root/.hermes``,
-    SSH ``<remote_home>/.hermes``, etc.) and whether translation is wanted.
+    caller decides which ``container_base`` applies (Docker ``/root/.qwerty``,
+    SSH ``<remote_home>/.qwerty``, etc.) and whether translation is wanted.
     Always joins with ``posixpath`` because container/remote paths are POSIX
     regardless of the host OS.
     """
     path = Path(host_path)
+    container_base = _normalize_container_base(container_base)
     for mount in get_cache_directory_mounts(container_base=container_base):
         host_dir = Path(mount["host_path"])
         try:
@@ -499,14 +509,14 @@ def iter_cache_files(
     Used by Modal to upload files individually and resync before each command.
     Skips symlinks.  The container paths use the new ``cache/<subdir>`` layout.
     """
-    from hermes_constants import get_hermes_dir
+    from qwerty_constants import get_qwerty_dir
 
     result: List[Dict[str, str]] = []
     for new_subpath, old_name in _CACHE_DIRS:
-        host_dir = get_hermes_dir(new_subpath, old_name)
+        host_dir = get_qwerty_dir(new_subpath, old_name)
         if not host_dir.is_dir():
             continue
-        container_root = f"{container_base.rstrip('/')}/{new_subpath}"
+        container_root = f"{_normalize_container_base(container_base)}/{new_subpath}"
         for item in host_dir.rglob("*"):
             if item.is_symlink() or not item.is_file():
                 continue

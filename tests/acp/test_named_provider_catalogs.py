@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import pytest
 
-from acp_adapter.server import HermesACPAgent, _named_custom_provider_catalogs
+from acp_adapter.server import QwertyACPAgent, _named_custom_provider_catalogs
 from acp_adapter.session import SessionManager
 from acp.schema import SessionModelState
 
@@ -44,8 +44,8 @@ class TestNamedCustomProviderCatalogs:
                 }
             }
         )
-        with patch("hermes_cli.config.load_config", return_value=cfg), patch(
-            "hermes_cli.models.fetch_api_models", return_value=None
+        with patch("qwerty_cli.config.load_config", return_value=cfg), patch(
+            "qwerty_cli.models.fetch_api_models", return_value=None
         ):
             catalogs = _named_custom_provider_catalogs()
 
@@ -69,8 +69,8 @@ class TestNamedCustomProviderCatalogs:
                 }
             }
         )
-        with patch("hermes_cli.config.load_config", return_value=cfg), patch(
-            "hermes_cli.models.fetch_api_models",
+        with patch("qwerty_cli.config.load_config", return_value=cfg), patch(
+            "qwerty_cli.models.fetch_api_models",
             return_value=["model-a", "model-b"],
         ):
             catalogs = _named_custom_provider_catalogs()
@@ -93,8 +93,8 @@ class TestNamedCustomProviderCatalogs:
                 }
             }
         )
-        with patch("hermes_cli.config.load_config", return_value=cfg), patch(
-            "hermes_cli.models.fetch_api_models", return_value=None
+        with patch("qwerty_cli.config.load_config", return_value=cfg), patch(
+            "qwerty_cli.models.fetch_api_models", return_value=None
         ):
             catalogs = _named_custom_provider_catalogs()
 
@@ -113,8 +113,8 @@ class TestNamedCustomProviderCatalogs:
                 }
             }
         )
-        with patch("hermes_cli.config.load_config", return_value=cfg), patch(
-            "hermes_cli.models.fetch_api_models", return_value=None
+        with patch("qwerty_cli.config.load_config", return_value=cfg), patch(
+            "qwerty_cli.models.fetch_api_models", return_value=None
         ):
             assert _named_custom_provider_catalogs() == []
 
@@ -129,8 +129,8 @@ class TestNamedCustomProviderCatalogs:
                 }
             }
         )
-        with patch("hermes_cli.config.load_config", return_value=cfg), patch(
-            "hermes_cli.models.fetch_api_models", return_value=None
+        with patch("qwerty_cli.config.load_config", return_value=cfg), patch(
+            "qwerty_cli.models.fetch_api_models", return_value=None
         ):
             assert _named_custom_provider_catalogs() == []
 
@@ -146,8 +146,8 @@ class TestNamedCustomProviderCatalogs:
                 }
             ]
         )
-        with patch("hermes_cli.config.load_config", return_value=cfg), patch(
-            "hermes_cli.models.fetch_api_models", return_value=None
+        with patch("qwerty_cli.config.load_config", return_value=cfg), patch(
+            "qwerty_cli.models.fetch_api_models", return_value=None
         ):
             catalogs = _named_custom_provider_catalogs()
 
@@ -164,10 +164,10 @@ class TestModelStateIncludesNamedProviders:
                 model="gpt-5.4", provider="openai-codex"
             )
         )
-        acp_agent = HermesACPAgent(session_manager=manager)
+        acp_agent = QwertyACPAgent(session_manager=manager)
 
         with patch(
-            "hermes_cli.models.curated_models_for_provider",
+            "qwerty_cli.models.curated_models_for_provider",
             return_value=[("gpt-5.4", "recommended")],
         ), patch(
             "acp_adapter.server._named_custom_provider_catalogs",
@@ -195,7 +195,7 @@ class TestModelStateIncludesNamedProviders:
 
     def test_selector_choice_id_round_trips_through_parse_model_input(self):
         """The encoded choice id must resolve back to the named provider."""
-        from hermes_cli.models import parse_model_input
+        from qwerty_cli.models import parse_model_input
 
         choice_id = "custom:bedrock-mantle:openai.gpt-5.5"
         provider, model = parse_model_input(choice_id, "bedrock")

@@ -65,7 +65,7 @@ function setVisibility(hidden: boolean) {
 
 function installWindowStateBridge() {
   windowStateCallback = null
-  Object.defineProperty(window, 'hermesDesktop', {
+  Object.defineProperty(window, 'qwertyDesktop', {
     configurable: true,
     value: {
       onWindowStateChanged: vi.fn((callback: typeof windowStateCallback) => {
@@ -145,7 +145,7 @@ describe('PetSprite RAF scheduling', () => {
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
     setVisibility(false)
-    delete (window as unknown as { hermesDesktop?: unknown }).hermesDesktop
+    delete (window as unknown as { qwertyDesktop?: unknown }).qwertyDesktop
   })
 
   it('sleeps between visible sprite frames instead of chaining RAFs', () => {

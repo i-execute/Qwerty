@@ -9,11 +9,11 @@ own glyph lines in the conversation thread).
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 
-from cli import HermesCLI
+from cli import QwertyCLI
 
 
 def _make_cli(model: str = "anthropic/claude-sonnet-4-20250514"):
-    cli_obj = HermesCLI.__new__(HermesCLI)
+    cli_obj = QwertyCLI.__new__(QwertyCLI)
     cli_obj.model = model
     cli_obj.session_start = datetime.now() - timedelta(minutes=14, seconds=32)
     cli_obj.conversation_history = [{"role": "user", "content": "hi"}]
@@ -61,7 +61,7 @@ class TestStatusBarGoalSegment:
         assert cli_obj._status_bar_goal_segment(snapshot) == ""
 
     def test_goal_segment_without_budget_omits_counter(self):
-        segment = HermesCLI._status_bar_goal_segment(
+        segment = QwertyCLI._status_bar_goal_segment(
             {"goal_active": True, "goal_turns_used": 0, "goal_max_turns": 0}
         )
 

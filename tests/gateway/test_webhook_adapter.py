@@ -696,8 +696,8 @@ class TestPayloadFilters:
 
     @pytest.mark.asyncio
     async def test_filter_accepts_nested_any_and_in_file(self, tmp_path, monkeypatch):
-        """Nested any groups can match dynamic watchlists under HERMES_HOME."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        """Nested any groups can match dynamic watchlists under QWERTY_HOME."""
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         watchlist = tmp_path / "data" / "watchlist.json"
         watchlist.parent.mkdir()
         watchlist.write_text(json.dumps(["chat-1", "chat-2"]), encoding="utf-8")
@@ -710,11 +710,11 @@ class TestPayloadFilters:
                         "any": [
                             {
                                 "field": "payload.chatId",
-                                "in_file": "~/.hermes/data/watchlist.json",
+                                "in_file": "~/.qwerty/data/watchlist.json",
                             },
                             {
                                 "field": "payload.id.remote",
-                                "in_file": "~/.hermes/data/watchlist.json",
+                                "in_file": "~/.qwerty/data/watchlist.json",
                             },
                         ]
                     },
@@ -784,7 +784,7 @@ class TestPayloadFilters:
     @pytest.mark.asyncio
     async def test_script_transforms_payload_before_prompt_rendering(self, tmp_path, monkeypatch):
         """A script can replace the payload used by prompt templates."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         scripts = tmp_path / "scripts"
         scripts.mkdir()
         script = scripts / "todoist_filter.py"
@@ -824,9 +824,9 @@ class TestPayloadFilters:
         assert captured[0].raw_message["body"] == "PAY BILLS"
 
     @pytest.mark.asyncio
-    async def test_script_tilde_hermes_path_resolves_to_active_profile_home(self, tmp_path, monkeypatch):
-        """~/.hermes/scripts paths must resolve through HERMES_HOME for profiles."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    async def test_script_tilde_qwerty_path_resolves_to_active_profile_home(self, tmp_path, monkeypatch):
+        """~/.qwerty/scripts paths must resolve through QWERTY_HOME for profiles."""
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         scripts = tmp_path / "scripts"
         scripts.mkdir()
         (scripts / "todoist_filter.py").write_text(
@@ -839,7 +839,7 @@ class TestPayloadFilters:
         routes = {
             "todoist": {
                 "secret": _INSECURE_NO_AUTH,
-                "script": "~/.hermes/scripts/todoist_filter.py",
+                "script": "~/.qwerty/scripts/todoist_filter.py",
                 "prompt": "Task: {body}",
             }
         }
@@ -866,7 +866,7 @@ class TestPayloadFilters:
     @pytest.mark.asyncio
     async def test_script_silent_stdout_ignores_without_idempotency_hit(self, tmp_path, monkeypatch):
         """Empty or [SILENT] script stdout filters the webhook out."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         scripts = tmp_path / "scripts"
         scripts.mkdir()
         (scripts / "skip.py").write_text("print('[SILENT]')\n", encoding="utf-8")
@@ -901,7 +901,7 @@ class TestPayloadFilters:
     @pytest.mark.asyncio
     async def test_script_nonzero_exit_ignores_webhook(self, tmp_path, monkeypatch):
         """A script can fail closed by exiting nonzero."""
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
         scripts = tmp_path / "scripts"
         scripts.mkdir()
         (scripts / "skip.py").write_text(
@@ -1770,6 +1770,15 @@ class TestDualStackBind:
     @pytest.mark.asyncio
     async def test_default_bind_rejects_existing_ipv6_listener(self):
         """A specific IPv6 listener must block the wildcard dual-stack bind."""
+        import socket as _socket
+
+        probe = _socket.socket(_socket.AF_INET6, _socket.SOCK_STREAM)
+        try:
+            probe.bind(("::1", 0))
+        except OSError:
+            pytest.skip("IPv6 loopback (::1) disabled on this host")
+        finally:
+            probe.close()
         blocker = await asyncio.start_server(
             lambda _reader, _writer: None,
             host="::1",

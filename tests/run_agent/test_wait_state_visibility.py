@@ -24,7 +24,7 @@ sys.modules.setdefault("fal_client", types.SimpleNamespace())
 
 
 def _make_agent(tmp_path, monkeypatch, **kwargs):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("QWERTY_HOME", str(tmp_path))
     (tmp_path / ".env").write_text("", encoding="utf-8")
     (tmp_path / "config.yaml").write_text("{}\n", encoding="utf-8")
     from run_agent import AIAgent
@@ -110,7 +110,7 @@ def test_nonstream_wait_loop_emits_explained_notice(tmp_path, monkeypatch):
     # cadence by patching threading.Thread.join used in the poll loop is
     # overkill — instead just verify the TTFB reconnect notice, which flows
     # through the same _emit_wait_notice path.
-    monkeypatch.setenv("HERMES_CODEX_TTFB_TIMEOUT_SECONDS", "1")
+    monkeypatch.setenv("QWERTY_CODEX_TTFB_TIMEOUT_SECONDS", "1")
 
     try:
         with pytest.raises(TimeoutError):

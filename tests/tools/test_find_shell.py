@@ -117,7 +117,7 @@ class TestFindBashUnchanged:
 
 
 class TestFindBashSkipsBrokenCustomPath:
-    """Stale HERMES_GIT_BASH_PATH must not brick Windows terminal startup."""
+    """Stale QWERTY_GIT_BASH_PATH must not brick Windows terminal startup."""
 
     def test_falls_through_to_portable_when_custom_fails_probe(self, tmp_path, monkeypatch):
         import tools.environments.local as local_mod
@@ -128,11 +128,11 @@ class TestFindBashSkipsBrokenCustomPath:
         broken = tmp_path / "broken" / "bash.exe"
         broken.parent.mkdir()
         broken.write_text("", encoding="utf-8")
-        portable = tmp_path / "hermes" / "git" / "bin" / "bash.exe"
+        portable = tmp_path / "qwerty" / "git" / "bin" / "bash.exe"
         portable.parent.mkdir(parents=True)
         portable.write_text("", encoding="utf-8")
 
-        monkeypatch.setenv("HERMES_GIT_BASH_PATH", str(broken))
+        monkeypatch.setenv("QWERTY_GIT_BASH_PATH", str(broken))
         monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
 
         def fake_starts(path: str) -> bool:
@@ -170,12 +170,12 @@ class TestGitBashExternalProgramProbe:
 
         local_mod._bash_starts_cache.clear()
         local_mod._bash_probe_details_cache.clear()
-        portable = tmp_path / "hermes" / "git" / "bin" / "bash.exe"
+        portable = tmp_path / "qwerty" / "git" / "bin" / "bash.exe"
         portable.parent.mkdir(parents=True)
         portable.write_text("", encoding="utf-8")
 
         monkeypatch.setattr(local_mod, "_IS_WINDOWS", True)
-        monkeypatch.setenv("HERMES_GIT_BASH_PATH", "")
+        monkeypatch.setenv("QWERTY_GIT_BASH_PATH", "")
         monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
         monkeypatch.setenv("ProgramFiles", str(tmp_path / "empty-program-files"))
         monkeypatch.delenv("ProgramFiles(x86)", raising=False)
@@ -196,7 +196,7 @@ class TestGitBashExternalProgramProbe:
         assert "Mandatory ASLR" in message
         assert "Reinstalling Git will not change" in message
         assert "Set-ProcessMitigation" in message
-        assert str(tmp_path / "hermes" / "git") in message
+        assert str(tmp_path / "qwerty" / "git") in message
 
 
 @pytest.mark.skipif(

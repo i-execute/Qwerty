@@ -144,7 +144,7 @@ from plugins.platforms.telegram.telegram_network import (
 )
 from utils import atomic_replace, env_float, env_int
 
-_inline_msg_id: ContextVar[Optional[Any]] = ContextVar("inline_msg_id", default=None)
+_inline_msg_id: ContextVar[Optional[str]] = ContextVar("inline_msg_id", default=None)
 
 # Premium emoji (verified ID from the user's premium-emoji registry) used in
 # inline placeholder messages: renders animated for Telegram Premium owners,
@@ -452,13 +452,6 @@ def _tl_photo_size_bytes(size: Any) -> int:
 
 
 class _SentMessage(dict):
-    """Send-result dict that also answers attribute reads (``msg.message_id``).
-
-    The MTProto shim hands back raw TL dicts, but the surrounding control paths
-    were written against PTB's object-shaped results and read ``.message_id``.
-    Attribute fallback to the dict key keeps both surfaces working.
-    """
-
     def __getattr__(self, name: str) -> Any:
         if name == "message_id" and "id" in self:
             return self["id"]
@@ -673,7 +666,7 @@ class TelegramAdapter(BasePlatformAdapter):
         )
         # Buffer rapid/album photo updates so Telegram image bursts are handled
         # as a single MessageEvent instead of self-interrupting multiple turns.
-        self._media_batch_delay_seconds = env_float("HERMES_TELEGRAM_MEDIA_BATCH_DELAY_SECONDS", 0.8)
+        self._media_batch_delay_seconds = env_float("QWERTY_TELEGRAM_MEDIA_BATCH_DELAY_SECONDS", 0.8)
         self._pending_photo_batches: Dict[str, MessageEvent] = {}
         self._pending_photo_batch_tasks: Dict[str, asyncio.Task] = {}
         self._media_group_events: Dict[str, MessageEvent] = {}
@@ -686,13 +679,13 @@ class TelegramAdapter(BasePlatformAdapter):
         # in ~180ms.  All bounds are conservative for Telegram's
         # ~1 edit/s flood envelope.
         self._text_batch_delay_seconds = self._env_float_clamped(
-            "HERMES_TELEGRAM_TEXT_BATCH_DELAY_SECONDS",
+            "QWERTY_TELEGRAM_TEXT_BATCH_DELAY_SECONDS",
             0.3,
             min_value=0.08,
             max_value=2.0,
         )
         self._text_batch_split_delay_seconds = self._env_float_clamped(
-            "HERMES_TELEGRAM_TEXT_BATCH_SPLIT_DELAY_SECONDS",
+            "QWERTY_TELEGRAM_TEXT_BATCH_SPLIT_DELAY_SECONDS",
             1.0,
             min_value=self._text_batch_delay_seconds,
             max_value=4.0,
@@ -701,7 +694,7 @@ class TelegramAdapter(BasePlatformAdapter):
         self._pending_text_batch_tasks: Dict[str, asyncio.Task] = {}
         # Diagnostic index only; response routing itself is task-local via
         # _inline_msg_id so inline and DM turns can safely share a session.
-        self._inline_edits: Dict[str, Any] = {}
+        self._inline_edits: Dict[str, str] = {}
         self._drop_delayed_deliveries = False
         self._app_run_task: Optional[asyncio.Task] = None
         # While True, send() short-circuits to a failure so callers
@@ -828,7 +821,7 @@ class TelegramAdapter(BasePlatformAdapter):
             if obj_id is None:
                 obj_id = getattr(result, "id", None)
             if obj_id is not None:
-                return _SentMessage(id=obj_id, message_id=obj_id)
+                return {"id": obj_id, "message_id": obj_id}
             return None
         inner = result.get("result") if isinstance(result.get("result"), dict) else result
         if not isinstance(inner, dict):
@@ -836,11 +829,11 @@ class TelegramAdapter(BasePlatformAdapter):
         for upd in (inner.get("updates") or []):
             inner_msg = upd.get("message") if isinstance(upd, dict) else None
             if isinstance(inner_msg, dict) and inner_msg.get("id") is not None:
-                return _SentMessage(inner_msg)
+                return inner_msg
         if inner.get("id") is not None:
-            return _SentMessage(inner)
+            return inner
         if result.get("id") is not None:
-            return _SentMessage(result)
+            return result
         return None
 
     async def _mt_edit_message_text(
@@ -872,8 +865,7 @@ class TelegramAdapter(BasePlatformAdapter):
         else:
             payload["message"] = text
             if use_markdown:
-                entities, _, plain = self._entities_for_markdown(text)
-                payload["message"] = plain
+                entities, _ = self._entities_for_markdown(text)
                 if entities:
                     payload["entities"] = entities
         if reply_markup is not None:
@@ -1177,7 +1169,7 @@ class TelegramAdapter(BasePlatformAdapter):
 
         Supergroup/forum topics use ``message_thread_id``. True Bot API Direct
         Messages topics can opt in with explicit ``direct_messages_topic_id``
-        metadata. Hermes-created private-chat topic lanes are marked with
+        metadata. Qwerty-created private-chat topic lanes are marked with
         ``telegram_dm_topic_reply_fallback``. Live replies send the private
         topic thread id together with a reply anchor; synthetic/resumed sends
         without an anchor use ``direct_messages_topic_id`` when metadata has it.
@@ -1490,7 +1482,7 @@ class TelegramAdapter(BasePlatformAdapter):
     # the RAW agent markdown so richer constructs (tables, task lists,
     # collapsible details, math, ...) render natively. The legacy MarkdownV2
     # send() path stays as the fallback for unsupported/oversized content and
-    # older PTB/clients. Streaming edits stay on Hermes' existing MarkdownV2
+    # older PTB/clients. Streaming edits stay on Qwerty' existing MarkdownV2
     # edit path for now; finalization can re-send as rich and delete the stale
     # preview until rich_message edit support is wired directly.
     # ------------------------------------------------------------------
@@ -1541,7 +1533,7 @@ class TelegramAdapter(BasePlatformAdapter):
         Telegram Desktop 6.9.1 can crash while rendering Bot API 10.1 rich
         messages containing math inside a collapsible details block
         (telegramdesktop/tdesktop#30808). The Bot API accepts the payload, so
-        Hermes must skip rich delivery up front and use the legacy MarkdownV2
+        Qwerty must skip rich delivery up front and use the legacy MarkdownV2
         path until affected Desktop clients age out.
         """
         if not content:
@@ -1832,6 +1824,33 @@ class TelegramAdapter(BasePlatformAdapter):
         ('5208485257648555488', '📌'),  # 100
     )
 
+    # Tool-emoji aliases: gateway tool glyphs not present in any pack map to
+    # the closest GameEmoji entry so tool-progress lines promote to premium.
+    _GAME_EMOJI_ALIASES = {
+        '💻': '🖥', '🖥️': '🖥', '🪟': '🖥',
+        '✍️': '⚔️', '📝': '⚔️',
+        '📖': '👁', '📄': '👁', '🔍': '👁', '🔎': '👁', '🖼️': '👁', '🐦': '👁',
+        '🔧': '🛠', '⚙️': '🛠',
+        '🐍': '👾', '🧪': '🔮', '🎨': '🧙‍♀️',
+        '⏰': '⏱', '⏳': '⌛️',
+        '📋': '📦', '📚': '📦',
+        '🎬': '📀', '🔊': '💋',
+        '🏠': '🛡', '🔗': '🔄', '🔀': '🔄',
+        '⚡': '🔥',
+    }
+
+    # GameEmoji pack — user upload #3 (t.me/addemoji/GameEmoji), 100 emoji.
+    _EMOJI_PACK_FILE = _Path(__file__).resolve().parent.parent.parent.parent / "Gateway_emoji.json"
+    _GAME_EMOJI_PACK: tuple = ()
+
+    def _load_game_emoji_pack():
+        try:
+            data = json.loads(TelegramAdapter._EMOJI_PACK_FILE.read_text(encoding="utf-8"))
+            return tuple((str(item["document_id"]), item["glyph"]) for item in data.get("emoji", []))
+        except Exception:
+            return ()
+
+
     _USER_UPLOADED_NATIVE_PREMIUM_EMOJI_MD3 = (
         # Material Design 3 Expressive (Material You) — user upload #2.
         ('5345778951031658558', '😭'),  # 1
@@ -1878,6 +1897,14 @@ class TelegramAdapter(BasePlatformAdapter):
     # fallbacks within a pack cycle through that pack's IDs in upload order.
     _PREMIUM_EMOJI_PACKS = (
         (
+            "game-emoji",
+            "Game Emoji pack — user upload #3 (t.me/addemoji/GameEmoji): "
+            "game UI glyphs (hearts, weapons, coins, faces, status). "
+            "Highest priority: every emoji resolves into this pack; glyphs "
+            "missing from it fall back to a random pack ID.",
+            _GAME_EMOJI_PACK,
+        ),
+        (
             "md3-expressive",
             "Material Design 3 Expressive (Material You) — Google-style icons. "
             "Segment roles for the progress waves: #4 начало, #5 продление, "
@@ -1918,25 +1945,37 @@ class TelegramAdapter(BasePlatformAdapter):
         # own IDs in upload order.
         uploaded_by_glyph: Dict[str, List[str]] = {}
         emoji_ids: Dict[str, str] = {}
-        for _pack_name, _pack_desc, registry in cls._PREMIUM_EMOJI_PACKS:
-            for emoji_id, glyph in registry:
-                uploaded_by_glyph.setdefault(glyph, []).append(emoji_id)
-                emoji_ids.setdefault(glyph, emoji_id)
+        for emoji_id, glyph in cls._GAME_EMOJI_PACK:
+            uploaded_by_glyph.setdefault(glyph, []).append(emoji_id)
+            emoji_ids.setdefault(glyph, emoji_id)
         known_glyphs = set(emoji_ids)
+        aliases = getattr(cls, "_GAME_EMOJI_ALIASES", {})
+        if aliases:
+            for alias, target in aliases.items():
+                if alias not in emoji_ids and target in emoji_ids:
+                    emoji_ids[alias] = emoji_ids[target]
+                    uploaded_by_glyph.setdefault(alias, []).append(emoji_ids[target])
+                    known_glyphs.add(alias)
         glyph_pattern = re.compile(
-            "|".join(re.escape(glyph) for glyph in sorted(known_glyphs, key=len, reverse=True))
+            "[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u2049\u203C\u2122\u2139\u2194-\u21AA]"
         )
         counters: Dict[str, int] = {}
+        fallback_pool = [emoji_id for emoji_id, _glyph in cls._GAME_EMOJI_PACK]
+        fallback_pos = 0
 
         def replace_emoji(match: re.Match[str]) -> str:
+            nonlocal fallback_pos
             glyph = match.group(0)
+            if glyph == "\ufe0f":
+                return glyph
             uploaded_ids = uploaded_by_glyph.get(glyph)
             if uploaded_ids:
                 occurrence = counters.get(glyph, 0)
                 counters[glyph] = occurrence + 1
                 emoji_id = uploaded_ids[occurrence % len(uploaded_ids)]
             else:
-                emoji_id = emoji_ids[glyph]
+                emoji_id = fallback_pool[fallback_pos % len(fallback_pool)]
+                fallback_pos += 1
             return f"![{glyph}](tg://emoji?id={emoji_id})"
 
         for index, part in enumerate(parts):
@@ -2087,27 +2126,15 @@ class TelegramAdapter(BasePlatformAdapter):
             reply_markup: Any = None,
             **kwargs: Any,
         ) -> Dict[str, Any]:
-            plain = text
-            entities: List[Dict[str, Any]] = []
-            no_webpage = False
-            inline_msg_id = _inline_msg_id.get()
-            if inline_msg_id is not None:
-                await self.edit_message_text(
-                    inline_message_id=inline_msg_id, text=text,
-                    parse_mode=parse_mode, reply_markup=reply_markup,
-                )
-                return _SentMessage({"id": inline_msg_id, "message_id": inline_msg_id})
-            if (
-                parse_mode is not None
-                and str(parse_mode).lower().replace("_", "").endswith("markdownv2")
-                and text
-            ):
-                entities, no_webpage, plain = self._adapter._entities_for_markdown(text)
+            if parse_mode is not None and str(parse_mode).lower().endswith("markdown_v2") and text:
+                entities, no_webpage = self._adapter._entities_for_markdown(text)
                 if no_webpage:
                     kwargs.setdefault("no_webpage", True)
+            else:
+                entities, no_webpage = self._adapter._entities_for_markdown(text) if parse_mode else ([], False)
             payload: Dict[str, Any] = {
                 "peer": self._peer(chat_id),
-                "message": plain,
+                "message": text,
                 "random_id": secrets.randbits(63),
             }
             if entities:
@@ -2125,37 +2152,32 @@ class TelegramAdapter(BasePlatformAdapter):
             if kwargs.get("disable_notification"):
                 payload["silent"] = True
             result = await self._app.mt_req("messages.sendMessage", **payload)
-            msg = self._adapter._extract_sent_message(result) or _SentMessage({"id": None})
-            msg["message_id"] = msg.get("id")
-            return msg
+            msg = self._adapter._extract_sent_message(result) or {"id": None}
+            return _SentMessage(msg)
+
 
         async def edit_message_text(
             self,
-            chat_id: Any = None,
-            message_id: Any = None,
-            text: str = "",
+            chat_id: Any,
+            message_id: Any,
+            text: str,
             parse_mode: Any = None,
             reply_markup: Any = None,
-            inline_message_id: Any = None,
             **kwargs: Any,
         ) -> Dict[str, Any]:
             entities: List[Dict[str, Any]] = []
-            plain = text
-            if parse_mode is not None and str(parse_mode).lower().replace("_", "").endswith("markdownv2"):
-                entities, _, plain = self._adapter._entities_for_markdown(text)
-            payload: Dict[str, Any] = {"message": plain}
+            if parse_mode is not None:
+                entities, _ = self._adapter._entities_for_markdown(text)
+            payload: Dict[str, Any] = {
+                "peer": self._peer(chat_id),
+                "id": int(message_id),
+                "message": text,
+            }
             if entities:
                 payload["entities"] = entities
             kbd = self._kbd(reply_markup)
             if kbd is not None:
                 payload["reply_markup"] = kbd
-            if inline_message_id is not None:
-                await self._app.mt_req(
-                    "messages.editInlineBotMessage", id=inline_message_id, **payload
-                )
-                return _SentMessage({"inline_message_id": inline_message_id})
-            payload["peer"] = self._peer(chat_id)
-            payload["id"] = int(message_id)
             await self._app.mt_req("messages.editMessage", **payload)
             return _SentMessage({"id": int(message_id), "message_id": int(message_id)})
 
@@ -2168,8 +2190,6 @@ class TelegramAdapter(BasePlatformAdapter):
             return True
 
         async def send_chat_action(self, chat_id: Any, action: str = "typing", **kwargs: Any) -> bool:
-            if _inline_msg_id.get() is not None:
-                return True
             action_map = {
                 "typing": "sendMessageTypingAction",
                 "upload_photo": "sendMessageUploadPhotoAction",
@@ -2285,13 +2305,6 @@ class TelegramAdapter(BasePlatformAdapter):
             **kwargs: Any,
         ) -> Dict[str, Any]:
             adapter = self._adapter
-            inline_msg_id = _inline_msg_id.get()
-            if inline_msg_id is not None:
-                await self.edit_message_media(
-                    chat_id=chat_id, inline_message_id=inline_msg_id,
-                    media={"type": media_kind, "media": media, "caption": caption},
-                )
-                return _SentMessage({"id": inline_msg_id, "message_id": inline_msg_id})
             payload: Dict[str, Any] = {
                 "peer": self._peer(chat_id),
                 "message": caption or "",
@@ -2309,10 +2322,17 @@ class TelegramAdapter(BasePlatformAdapter):
                 payload["reply_markup"] = kbd
             if kwargs.get("disable_notification"):
                 payload["silent"] = True
-            result = await self._app.mt_req("messages.sendMedia", **payload)
-            msg = adapter._extract_sent_message(result) or _SentMessage({"id": None})
-            msg["message_id"] = msg.get("id")
-            return msg
+            for attempt in range(3):
+                try:
+                    result = await self._app.mt_req("messages.sendMedia", **payload)
+                    break
+                except Exception as exc:
+                    if attempt == 2 or "connection" not in str(exc).lower():
+                        raise
+                    await adapter._wait_mt_ready(10.0)
+            msg = adapter._extract_sent_message(result) or {"id": None}
+            return _SentMessage(msg)
+
 
         async def set_message_reaction(
             self,
@@ -2395,47 +2415,29 @@ class TelegramAdapter(BasePlatformAdapter):
                 caption = getattr(media, "caption", "") or ""
             caption = kwargs.get("caption") or caption or ""
             adapter = self._adapter
-            kind = media.get("type", "photo") if isinstance(media, dict) else getattr(media, "type", "photo")
             file_payload = await adapter._mt_upload_media(
-                handle, force_document=kind == "document", kind=kind,
+                handle, force_document=True, kind="photo",
             )
-            filename = media.get("filename") if isinstance(media, dict) else getattr(media, "filename", None)
-            if filename and file_payload.get("_") == "inputMediaUploadedDocument":
-                file_payload["file"]["name"] = filename
-                file_payload["mime_type"] = mimetypes.guess_type(filename)[0] or file_payload["mime_type"]
-                file_payload["attributes"] = [
-                    attr for attr in file_payload["attributes"] if attr.get("_") != "documentAttributeFilename"
-                ] + [{"_": "documentAttributeFilename", "file_name": filename}]
+            kbd = self._kbd(kwargs.get("reply_markup"))
             inline_msg_id = kwargs.get("inline_message_id")
             if inline_msg_id:
-                uploaded = await self._app.mt_req(
-                    "messages.uploadMedia", peer=self._peer(chat_id) if chat_id is not None else {"_": "inputPeerSelf"},
-                    media=file_payload,
-                )
-                uploaded = uploaded.get("result", uploaded)
-                key = "photo" if kind == "photo" else "document"
-                item = uploaded[key]
-                file_payload = {
-                    "_": "inputMediaPhoto" if key == "photo" else "inputMediaDocument",
-                    "id": {"_": "inputPhoto" if key == "photo" else "inputDocument",
-                           "id": item["id"], "access_hash": item["access_hash"],
-                           "file_reference": item["file_reference"]},
-                }
                 await self._app.mt_req(
                     "messages.editInlineBotMessage",
-                    id=inline_msg_id,
+                    id=str(inline_msg_id),
                     media=file_payload,
                     message=caption,
+                    **({"reply_markup": kbd} if kbd is not None else {}),
                 )
-                return {"inline_message_id": inline_msg_id}
+                return {"inline_message_id": str(inline_msg_id)}
             await self._app.mt_req(
                 "messages.editMessage",
                 peer=self._peer(chat_id),
                 id=int(message_id),
                 media=file_payload,
                 message=caption,
+                **({"reply_markup": kbd} if kbd is not None else {}),
             )
-            return {"id": int(message_id), "message_id": int(message_id)}
+            return _SentMessage({"id": int(message_id), "message_id": int(message_id)})
 
         async def send_message_draft(
             self,
@@ -2452,13 +2454,8 @@ class TelegramAdapter(BasePlatformAdapter):
             setTyping carries sendMessageTextDraftAction.
             """
             entities: List[Dict[str, Any]] = []
-            plain = text
-            if (
-                parse_mode is not None
-                and str(parse_mode).lower().replace("_", "").endswith("markdownv2")
-                and text
-            ):
-                entities, _, plain = self._adapter._entities_for_markdown(text)
+            if parse_mode is not None and text:
+                entities, _ = self._adapter._entities_for_markdown(text)
             action: Dict[str, Any] = {
                 "_": "sendMessageTextDraftAction",
                 "can_stop": True,
@@ -2467,7 +2464,7 @@ class TelegramAdapter(BasePlatformAdapter):
             if text:
                 action["text"] = {
                     "_": "textWithEntities",
-                    "text": plain,
+                    "text": text,
                     "entities": entities,
                 }
             payload: Dict[str, Any] = {
@@ -2507,10 +2504,24 @@ class TelegramAdapter(BasePlatformAdapter):
                     payload["reply_to"] = reply_to
                     first_payload = payload
                 result = await self._app.mt_req("messages.sendMedia", **payload)
-                msg = adapter._extract_sent_message(result) or _SentMessage({"id": None})
-                msg["message_id"] = msg.get("id")
-                sent.append(msg)
+                msg = adapter._extract_sent_message(result) or {"id": None}
+                sent.append(_SentMessage(msg))
             return sent
+
+    async def _wait_mt_ready(self, timeout: float) -> bool:
+        mt = getattr(self._app, "mt", None)
+        if mt is None:
+            return False
+        async def _probe() -> bool:
+            while True:
+                rd = getattr(mt, "rd", None)
+                if rd is not None and not rd.at_eof():
+                    return True
+                await asyncio.sleep(0.5)
+        try:
+            return await asyncio.wait_for(_probe(), timeout)
+        except asyncio.TimeoutError:
+            return False
 
     async def _mt_upload_media(self, media: Any, *, force_document: bool, kind: str) -> Dict[str, Any]:
         """Upload a local file handle or path via MTProto and wrap it in InputMedia.
@@ -2520,33 +2531,32 @@ class TelegramAdapter(BasePlatformAdapter):
         upload.saveBigFilePart in 512 KiB chunks.
         """
         if isinstance(media, str) and (media.startswith("http://") or media.startswith("https://")):
-            ctor = "inputMediaPhotoExternal" if kind == "photo" and not force_document else "inputMediaDocumentExternal"
+            ctor = "inputMediaDocumentExternal" if force_document else "inputMediaPhotoExternal"
             return {"_": ctor, "url": media}
         path = None
         fh = None
         try:
-            if isinstance(media, (str, os.PathLike)):
-                path = os.fsdecode(media)
-                if not os.path.isfile(path):
-                    raise ValueError(f"unsupported media path: {path}")
-                media = path
-            elif isinstance(media, (bytes, bytearray)):
-                fh = io.BytesIO(media)
-                media = fh
-            elif hasattr(media, "read"):
-                name = getattr(media, "name", None)
-                if isinstance(name, (str, os.PathLike)):
-                    path = os.fsdecode(name)
-                    if os.path.isfile(path):
-                        media = path
-            else:
+            if isinstance(media, str):
+                path = media
+            elif hasattr(media, "name") and hasattr(media, "read"):
+                fh = media
+                path = getattr(media, "name", None)
+            if fh is not None and path is None:
+                import tempfile as _tempfile
+                with _tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as tmp:
+                    tmp.write(media.read())
+                    path = tmp.name
+            if not path or not os.path.isfile(path):
                 raise ValueError(f"unsupported media handle: {type(media).__name__}")
-            mime = mimetypes.guess_type(path or "")[0] or "application/octet-stream"
-            file_name = os.path.basename(path or "") or "file"
+            mime = "application/octet-stream"
+            guessed, _ = mimetypes.guess_type(path)
+            if guessed:
+                mime = guessed
+            file_name = os.path.basename(path) or "file"
             # Charged upload: parallel parts over several connections, streamed
             # from disk (the old hand-rolled saveFilePart loop read the whole
             # file into memory and sent hex-encoded parts).
-            up = await self._app.charged_upload(media, file_name=file_name)
+            up = await self._app.charged_upload(path, file_name=file_name, connections=8)
             file_name = str(up.get("name") or file_name)
             file_ref: Dict[str, Any] = {
                 "_": "inputFileBig" if up.get("big") else "inputFile",
@@ -2554,26 +2564,17 @@ class TelegramAdapter(BasePlatformAdapter):
                 "parts": up["parts"],
                 "name": file_name,
             }
-            if not up.get("big"):
+            if not up.get("big") and up.get("md5"):
                 file_ref["md5_checksum"] = up["md5"]
-            if force_document or kind != "photo":
-                attributes = [{"_": "documentAttributeFilename", "file_name": file_name}]
-                if not force_document and kind in {"audio", "voice", "video"}:
-                    duration = await asyncio.to_thread(_probe_voice_duration_seconds, path) if path and os.path.isfile(path) else None
-                    if kind == "video":
-                        attributes.append({"_": "documentAttributeVideo", "duration": duration or 0, "w": 0, "h": 0})
-                    else:
-                        attributes.append({"_": "documentAttributeAudio", "duration": duration or 0, "voice": kind == "voice"})
-                        if kind == "voice":
-                            mime = "audio/ogg"
-                if not force_document and kind == "animation":
-                    attributes.append({"_": "documentAttributeAnimated"})
+            if force_document or kind == "document":
                 return {
                     "_": "inputMediaUploadedDocument",
                     "file": file_ref,
                     "mime_type": mime,
-                    "attributes": attributes,
-                    "force_file": force_document or kind == "document",
+                    "attributes": [
+                        {"_": "documentAttributeFilename", "file_name": file_name},
+                    ],
+                    "force_file": True,
                 }
             return {"_": "inputMediaUploadedPhoto", "file": file_ref}
         finally:
@@ -3158,8 +3159,8 @@ class TelegramAdapter(BasePlatformAdapter):
     ) -> None:
         """Save a newly created thread_id back into config.yaml so it persists across restarts."""
         try:
-            from hermes_constants import get_hermes_home
-            config_path = get_hermes_home() / "config.yaml"
+            from qwerty_constants import get_qwerty_home
+            config_path = get_qwerty_home() / "config.yaml"
             if not config_path.exists():
                 logger.warning("[%s] Config file not found at %s, cannot persist thread_id", self.name, config_path)
                 return
@@ -3208,7 +3209,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 changed = True
 
             if changed:
-                from hermes_cli.config import atomic_config_write
+                from qwerty_cli.config import atomic_config_write
 
                 atomic_config_write(
                     config_path,
@@ -3329,11 +3330,11 @@ class TelegramAdapter(BasePlatformAdapter):
             # List is derived from the central COMMAND_REGISTRY — adding a new
             # gateway command there automatically adds it to the Telegram menu.
             try:
-                from hermes_cli.commands import telegram_menu_commands, telegram_menu_max_commands
+                from qwerty_cli.commands import telegram_menu_commands, telegram_menu_max_commands
                 if not self._app:
                     return
                 # Telegram allows up to 100 commands but has an undocumented
-                # payload size limit (~4KB total).  Hermes defaults to 60 to
+                # payload size limit (~4KB total).  Qwerty defaults to 60 to
                 # keep built-ins plus common skill commands visible while
                 # staying under the threshold; users can tune the cap via
                 # platforms.telegram.extra.command_menu.
@@ -3449,7 +3450,7 @@ class TelegramAdapter(BasePlatformAdapter):
             api_id = int(self.config.extra.get("api_id") or 25395315)
             api_hash = self.config.extra.get("api_hash") or "37ac5da3430234c0e88fe7595244d5c7"
             session_name = self.config.extra.get("session_name") or "qwerty-telegram"
-            session_dir = self.config.extra.get("session_dir") or os.path.expanduser("~/.hermes/telegram")
+            session_dir = self.config.extra.get("session_dir") or os.path.expanduser("~/.qwerty/telegram")
 
             os.makedirs(session_dir, exist_ok=True)
             token_fingerprint = hashlib.sha256(self.config.token.encode()).hexdigest()
@@ -3746,22 +3747,40 @@ class TelegramAdapter(BasePlatformAdapter):
         # Inline turns inherit this task-local marker from the chosen-result
         # dispatch. Keep the normal chat_id/session untouched so DM and inline
         # conversations share history without DM sends hijacking inline edits.
-        inline_msg_id = _inline_msg_id.get() or (metadata or {}).get("inline_message_id")
-        if inline_msg_id is None and reply_to is not None:
-            inline_msg_id = getattr(self, "_inline_edits", {}).get("inline:" + str(reply_to))
-        if inline_msg_id is not None:
+        inline_msg_id = _inline_msg_id.get()
+        if inline_msg_id:
             # Inline edits are ALWAYS rich: Telegram drops custom-emoji entities
             # in rich inline edits (verified against the official API), while
             # MarkdownV2 has no native tables. The user chose native tables
             # over animated premium emoji here — do not route these through
             # MarkdownV2 without asking again (2026-08-13).
+            try:
                 # MTProto inline edits: messages.editInlineBotMessage carries
                 # the rich_message payload directly (no Bot API involved).
-            return await self.edit_message(
-                chat_id, inline_msg_id, content,
-                finalize=bool((metadata or {}).get("notify")) or not (metadata or {}).get("expect_edits", False),
-                metadata={**(metadata or {}), "inline_message_id": inline_msg_id},
-            )
+                await self._app.mt_req(
+                    "messages.editInlineBotMessage",
+                    id=inline_msg_id,
+                    rich_message=self._rich_input_tl(content),
+                )
+            except Exception as inline_error:
+                logger.warning(
+                    "[Telegram] Inline rich edit failed: %s",
+                    _redact_telegram_error_text(inline_error),
+                    exc_info=True,
+                )
+                try:
+                    await self._app.mt_req(
+                        "messages.editInlineBotMessage",
+                        id=inline_msg_id,
+                        message=content[:self.MAX_MESSAGE_LENGTH],
+                    )
+                except Exception as fallback_error:
+                    logger.warning(
+                        "[Telegram] Inline plain-text fallback failed: %s",
+                        _redact_telegram_error_text(fallback_error),
+                        exc_info=True,
+                    )
+            return SendResult(success=True, message_id=inline_msg_id)
         
         try:
             # Bot API 10.1 rich fast-path: send the raw agent markdown via
@@ -3769,7 +3788,7 @@ class TelegramAdapter(BasePlatformAdapter):
             # through to the legacy MarkdownV2 path on permanent/capability
             # errors or DM-topic routing skips; returns directly on success or
             # on a transient failure (which must NOT be legacy-resent).
-            if ((metadata or {}).get("rich") is True or getattr(getattr(self, "config", None), "extra", {}).get("rich_messages") is True) and self._should_attempt_rich(content, metadata=metadata):
+            if self._should_attempt_rich(content, metadata=metadata):
                 rich_result = await self._try_send_rich(chat_id, content, reply_to, metadata)
                 if rich_result is not None:
                     if rich_result.success:
@@ -3856,14 +3875,15 @@ class TelegramAdapter(BasePlatformAdapter):
                     try:
                         # Derive MTProto entities from the MarkdownV2 chunk;
                         # the shim re-derives them from parse_mode identically.
-                        _, no_webpage, _ = self._entities_for_markdown(chunk)
+                        entities, no_webpage = self._entities_for_markdown(chunk)
                         # Single transport: route through the _MTBot shim so
                         # tests and production share one call surface.
                         shim_kwargs: Dict[str, Any] = {
                             "chat_id": normalize_telegram_chat_id(chat_id),
                             "text": chunk,
-                            "parse_mode": ParseMode.MARKDOWN_V2,
                         }
+                        if entities:
+                            shim_kwargs["parse_mode"] = ParseMode.MARKDOWN_V2
                         if no_webpage or getattr(self, "_disable_link_previews", False):
                             shim_kwargs["no_webpage"] = True
                         shim_kwargs["reply_to_message_id"] = int(reply_to_id) if reply_to_id is not None else None
@@ -4106,47 +4126,40 @@ class TelegramAdapter(BasePlatformAdapter):
         if not self._bot:
             return SendResult(success=False, error="Not connected")
 
-        inline_msg_id = _inline_msg_id.get() or (metadata or {}).get("inline_message_id")
-        inline_edits = getattr(self, "_inline_edits", {})
-        if inline_msg_id is None:
-            if isinstance(message_id, dict):
-                inline_msg_id = message_id
-            else:
-                inline_msg_id = inline_edits.get("inline:" + str(message_id))
-                cached = inline_edits.get(str(chat_id))
-                if inline_msg_id is None and cached is not None and str(cached) == str(message_id):
-                    inline_msg_id = cached
-        if inline_msg_id is not None:
-            inline_edits["inline:" + str(inline_msg_id)] = inline_msg_id
-            self._inline_edits = inline_edits
-            rich = (
-                ((metadata or {}).get("rich") is True
-                 or getattr(getattr(self, "config", None), "extra", {}).get("rich_messages") is True)
-                and self._rich_eligible(content)
-            )
-            if not rich and utf16_len(content) > self.MAX_MESSAGE_LENGTH:
-                if finalize:
-                    return await self._send_inline_media(
-                        chat_id, inline_msg_id, content.encode("utf-8"), "document",
-                        "Полный ответ — в текстовом файле.", file_name="response.txt",
-                    )
-                content = self._truncate_stream_overflow_preview(content)
-            if not content or not content.strip():
-                return SendResult(success=True, message_id=inline_msg_id)
-            preview_key = (str(chat_id), "inline:" + str(inline_msg_id))
-            previews = getattr(self, "_last_overflow_preview", {})
-            payload = {"rich_message": self._rich_input_tl(content)} if rich else {"message": content}
-            if previews.get(preview_key) == payload:
-                return SendResult(success=True, message_id=inline_msg_id)
+        inline_msg_id = _inline_msg_id.get()
+        if inline_msg_id:
             try:
-                await self._app.mt_req("messages.editInlineBotMessage", id=inline_msg_id, **payload)
-            except Exception as exc:
-                if "not modified" not in str(exc).lower().replace("_", " "):
-                    return SendResult(success=False, message_id=inline_msg_id,
-                                      error=_redact_telegram_error_text(exc),
-                                      retryable=self._is_transient_typing_error(exc))
-            previews[preview_key] = payload
-            self._last_overflow_preview = previews
+                await self._app.mt_req(
+                    "messages.editInlineBotMessage",
+                    id=inline_msg_id,
+                    rich_message=self._rich_input_tl(content),
+                )
+                logger.info(
+                    "[Telegram] Inline streaming edit: msg_id=%s content_len=%d finalize=%s",
+                    inline_msg_id,
+                    len(content),
+                    finalize,
+                )
+            except Exception as inline_error:
+                if "not modified" not in str(inline_error).lower():
+                    logger.warning(
+                        "[Telegram] Inline streaming rich edit failed: %s",
+                        _redact_telegram_error_text(inline_error),
+                        exc_info=True,
+                    )
+                    try:
+                        await self._app.mt_req(
+                            "messages.editInlineBotMessage",
+                            id=inline_msg_id,
+                            message=content[:self.MAX_MESSAGE_LENGTH],
+                        )
+                    except Exception as fallback_error:
+                        if "not modified" not in str(fallback_error).lower():
+                            logger.warning(
+                                "[Telegram] Inline streaming plain-text fallback failed: %s",
+                                _redact_telegram_error_text(fallback_error),
+                                exc_info=True,
+                            )
             return SendResult(success=True, message_id=inline_msg_id)
 
         # Rich finalize (Bot API 10.1): when the completed content has
@@ -4159,7 +4172,7 @@ class TelegramAdapter(BasePlatformAdapter):
         # table that exceeds the MarkdownV2 limit must not be split into legacy
         # chunks.  Falls back to the legacy edit path (overflow split included)
         # on capability/permanent rejection.
-        if finalize and ((metadata or {}).get("rich") is True or getattr(getattr(self, "config", None), "extra", {}).get("rich_messages") is True) and self._rich_eligible(content):
+        if finalize and self._rich_eligible(content):
             rich_result = await self._try_edit_rich(
                 chat_id, message_id, content, metadata=metadata,
             )
@@ -4621,13 +4634,7 @@ class TelegramAdapter(BasePlatformAdapter):
         # streaming preview with the same raw markdown the final
         # sendRichMessage will persist, so the animated draft matches the final
         # message. Any failure degrades to the legacy plain-text draft below.
-        inline_msg_id = _inline_msg_id.get() or (metadata or {}).get("inline_message_id")
-        if inline_msg_id is not None:
-            return await self.edit_message(
-                chat_id, inline_msg_id, content, finalize=False,
-                metadata={**(metadata or {}), "inline_message_id": inline_msg_id},
-            )
-        if ((metadata or {}).get("rich") is True or getattr(getattr(self, "config", None), "extra", {}).get("rich_messages") is True) and self._should_attempt_rich_draft(content):
+        if self._should_attempt_rich_draft(content):
             if await self._try_send_rich_draft(chat_id, draft_id, content, metadata):
                 # Drafts have no message_id; report success without one.
                 return SendResult(success=True, message_id=None)
@@ -4736,7 +4743,7 @@ class TelegramAdapter(BasePlatformAdapter):
     ) -> SendResult:
         """Send an inline-keyboard update prompt (Yes / No buttons).
 
-        Used by the gateway ``/update`` watcher when ``hermes update --gateway``
+        Used by the gateway ``/update`` watcher when ``qwerty update --gateway``
         needs user input (stash restore, config migration).
         """
         if not self._bot:
@@ -5004,7 +5011,7 @@ class TelegramAdapter(BasePlatformAdapter):
             return SendResult(success=False, error="Not connected")
 
         try:
-            from hermes_cli.providers import get_label
+            from qwerty_cli.providers import get_label
         except ImportError:
             def get_label(slug):
                 return slug
@@ -5127,10 +5134,7 @@ class TelegramAdapter(BasePlatformAdapter):
     ) -> None:
         """Handle choice picker button taps (cp:<index>)."""
         state = self._choice_picker_state.get(chat_id)
-        if not state or (
-            state.get("msg_id") is not None
-            and str(state["msg_id"]) != str(getattr(getattr(query, "message", None), "message_id", None))
-        ):
+        if not state:
             await query.answer(text="Picker expired — run the command again.")
             return
 
@@ -5192,11 +5196,11 @@ class TelegramAdapter(BasePlatformAdapter):
         a single ``mpg:<gid>`` button; tapping it drills into a member
         sub-keyboard. Single providers (and groups with only one authenticated
         member) render as direct ``mp:<slug>`` buttons. Grouping mirrors the
-        CLI ``hermes model`` picker via the shared ``group_providers`` fold,
+        CLI ``qwerty model`` picker via the shared ``group_providers`` fold,
         so all surfaces stay consistent.
         """
         try:
-            from hermes_cli.models import group_providers
+            from qwerty_cli.models import group_providers
         except Exception:
             group_providers = None
 
@@ -5307,7 +5311,7 @@ class TelegramAdapter(BasePlatformAdapter):
             return
 
         try:
-            from hermes_cli.providers import get_label
+            from qwerty_cli.providers import get_label
         except ImportError:
             def get_label(slug):
                 return slug
@@ -5488,7 +5492,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 return
 
             try:
-                from hermes_cli.model_cost_guard import expensive_model_warning
+                from qwerty_cli.model_cost_guard import expensive_model_warning
 
                 # Pricing lookup can hit models.dev / a /models endpoint on a
                 # cache miss — keep it off the event loop.
@@ -5553,7 +5557,7 @@ class TelegramAdapter(BasePlatformAdapter):
             # --- Provider group selected: show member providers ---
             group_id = data[4:]
             try:
-                from hermes_cli.models import PROVIDER_GROUPS
+                from qwerty_cli.models import PROVIDER_GROUPS
                 _label, _desc, member_slugs = PROVIDER_GROUPS.get(group_id, ("", "", []))
             except Exception:
                 _label, member_slugs = "", []
@@ -5671,10 +5675,6 @@ class TelegramAdapter(BasePlatformAdapter):
         query_chat_type = getattr(query_chat, "type", None)
         query_thread_id = getattr(query_message, "message_thread_id", None)
         query_user_name = getattr(query.from_user, "first_name", None)
-        if data == "inline_placeholder":
-            allowed = self._is_callback_user_authorized(str(getattr(query.from_user, "id", "")))
-            await query.answer(text="Hermes готовит ответ." if allowed else "Access denied.")
-            return
 
         # Every callback must be acknowledged quickly. PTB otherwise leaves a
         # spinner on the client and late handler failures look like /model did
@@ -5682,10 +5682,7 @@ class TelegramAdapter(BasePlatformAdapter):
         # cl:, update_prompt:) must not be pre-acked — the branch's own
         # answer carries the status text and Telegram allows only one
         # answerCallbackQuery per query.
-        self_answered = data.startswith((
-            "ea:", "sc:", "cl:", "update_prompt:", "cp:",
-            "mp:", "mpg:", "mpv:", "mm:", "mc:", "mb", "mx", "mg:",
-        ))
+        self_answered = data.startswith(("ea:", "sc:", "cl:", "update_prompt:"))
         acked = False
         try:
             if not self_answered:
@@ -5698,22 +5695,6 @@ class TelegramAdapter(BasePlatformAdapter):
         if data.startswith(("mp:", "mpg:", "mpv:", "mm:", "mc:", "mb", "mx", "mg:")):
             chat_id = str(query.message.chat_id) if query.message else None
             if chat_id:
-                state = self._model_picker_state.get(chat_id)
-                if not state or (
-                    state.get("msg_id") is not None
-                    and str(state["msg_id"]) != str(getattr(getattr(query, "message", None), "message_id", None))
-                ):
-                    await query.answer(text="Picker expired — use /model again.")
-                    return
-                if not self._is_callback_user_authorized(
-                    str(getattr(query.from_user, "id", "")),
-                    chat_id=query_chat_id,
-                    chat_type=query_chat_type,
-                    thread_id=query_thread_id,
-                    user_name=query_user_name,
-                ):
-                    await query.answer(text="You are not authorized to change this setting.")
-                    return
                 try:
                     await self._handle_model_picker_callback(query, data, chat_id)
                 except Exception as exc:
@@ -6000,8 +5981,8 @@ class TelegramAdapter(BasePlatformAdapter):
                         await query.answer(text="✏️ Type your answer in the chat.")
                     try:
                         await query.edit_message_text(
-                            text=f"❓ {query.message.text or ''}\n\n<i>Awaiting typed response from {_html.escape(user_display)}…</i>",
-                            parse_mode=ParseMode.HTML,
+                            text=f"✏️ Ожидаю ответ текстом от {user_display}…",
+                            parse_mode=None,
                             reply_markup=None,
                         )
                     except Exception:
@@ -6048,12 +6029,15 @@ class TelegramAdapter(BasePlatformAdapter):
                         await query.answer(text=f"✓ {resolved_text[:60]}")
                     try:
                         await query.edit_message_text(
-                            text=f"❓ {_html.escape(query.message.text or '')}\n\n<b>{_html.escape(user_display)}:</b> {_html.escape(resolved_text)}",
-                            parse_mode=ParseMode.HTML,
+                            text=f"✓ {user_display}: {resolved_text}",
+                            parse_mode=None,
                             reply_markup=None,
                         )
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        logger.warning(
+                            "[%s] clarify edit_message_text failed: %s",
+                            self.name, _redact_telegram_error_text(exc),
+                        )
                     logger.info(
                         "Telegram clarify button resolved (id=%s, choice=%r, user=%s)",
                         clarify_id, resolved_text, user_display,
@@ -6098,8 +6082,8 @@ class TelegramAdapter(BasePlatformAdapter):
             pass  # non-fatal if edit fails
         # Write the response file
         try:
-            from hermes_constants import get_hermes_home
-            home = get_hermes_home()
+            from qwerty_constants import get_qwerty_home
+            home = get_qwerty_home()
             response_path = home / ".update_response"
             tmp = response_path.with_suffix(".tmp")
             tmp.write_text(answer, encoding="utf-8")
@@ -6110,7 +6094,7 @@ class TelegramAdapter(BasePlatformAdapter):
             logger.error("Failed to write update response from callback: %s", exc)
 
     # Maps `gt:<verb>` -> (script-name, extra-args, success-label, is_state).
-    # Scripts live in ~/.hermes/scripts/gmail-triage/. `arg` from the callback
+    # Scripts live in ~/.qwerty/scripts/gmail-triage/. `arg` from the callback
     # data is always passed as the first positional arg.
     # is_state=True means the verb is a sticky sender-rule change (mute, trust,
     # vip) that should leave the keyboard tappable for follow-on actions.
@@ -6163,7 +6147,7 @@ class TelegramAdapter(BasePlatformAdapter):
             return
         script_name, extra_args, success_label, is_state_verb = entry
 
-        script_path = _Path.home() / ".hermes" / "scripts" / "gmail-triage" / script_name
+        script_path = _Path.home() / ".qwerty" / "scripts" / "gmail-triage" / script_name
         if not script_path.exists():
             await query.answer(text=f"❌ {script_name} missing")
             logger.error("[%s] gmail-triage script missing: %s", self.name, script_path)
@@ -6276,11 +6260,6 @@ class TelegramAdapter(BasePlatformAdapter):
         """Send audio as a native Telegram voice message or audio file."""
         if not self._bot:
             return SendResult(success=False, error="Not connected")
-        inline_msg_id = _inline_msg_id.get() or (metadata or {}).get("inline_message_id")
-        if inline_msg_id is not None:
-            ext = os.path.splitext(audio_path)[1].lower()
-            kind = "voice" if ext in {".ogg", ".opus"} else "audio" if ext in {".mp3", ".m4a"} else "document"
-            return await self._send_inline_media(chat_id, inline_msg_id, audio_path, kind, caption)
         
         try:
             if not os.path.exists(audio_path):
@@ -6368,23 +6347,6 @@ class TelegramAdapter(BasePlatformAdapter):
             )
             return await super().send_voice(chat_id, audio_path, caption, reply_to, metadata=metadata)
 
-    async def _send_inline_media(
-        self, chat_id: str, inline_msg_id: Any, media: Any,
-        kind: str, caption: Optional[str] = None, *, file_name: Optional[str] = None,
-    ) -> SendResult:
-        try:
-            await self._bot.edit_message_media(
-                chat_id=chat_id, inline_message_id=inline_msg_id,
-                media={"type": kind, "media": media,
-                       "filename": file_name,
-                       "caption": (caption or "").encode("utf-16-le")[:2048].decode("utf-16-le", errors="ignore")},
-            )
-            getattr(self, "_last_overflow_preview", {}).pop((str(chat_id), "inline:" + str(inline_msg_id)), None)
-            return SendResult(success=True, message_id=inline_msg_id)
-        except Exception as exc:
-            return SendResult(success=False, message_id=inline_msg_id,
-                              error=_redact_telegram_error_text(exc), retryable=False)
-
     async def _upload_inline_media(self, file_path: str) -> Optional[str]:
         """Upload a local file for Telegram inline edits, which only accept URLs."""
         try:
@@ -6460,21 +6422,17 @@ class TelegramAdapter(BasePlatformAdapter):
         if not images:
             return
 
-        inline_msg_id = _inline_msg_id.get() or (metadata or {}).get("inline_message_id")
+        inline_msg_id = _inline_msg_id.get()
         if inline_msg_id:
             # Inline media must not replace the text-backed placeholder. Once
             # Telegram turns the inline result into a photo, editMessageText
             # cannot restore the final Rich text and the user sees photo-only.
-            if len(images) != 1:
-                raise ValueError("Telegram inline messages support one media item, not an album")
-            image_url, caption = images[0]
-            if image_url.startswith("file://"):
-                from urllib.parse import unquote
-                image_url = unquote(image_url[7:])
-            kind = "animation" if self._is_animation_url(image_url) else "photo"
-            result = await self._send_inline_media(chat_id, inline_msg_id, image_url, kind, caption)
-            if not result.success:
-                raise RuntimeError(result.error)
+            logger.info(
+                "[Telegram] Inline media suppressed to preserve text Rich final: "
+                "msg_id=%s images=%d",
+                inline_msg_id,
+                len(images),
+            )
             return
 
         # Peel off animations — they need send_animation, not send_media_group
@@ -6591,9 +6549,6 @@ class TelegramAdapter(BasePlatformAdapter):
         """Send a local image file natively as a Telegram photo."""
         if not self._bot:
             return SendResult(success=False, error="Not connected")
-        inline_msg_id = _inline_msg_id.get() or (metadata or {}).get("inline_message_id")
-        if inline_msg_id is not None:
-            return await self._send_inline_media(chat_id, inline_msg_id, image_path, "photo", caption)
 
         try:
             if not os.path.exists(image_path):
@@ -6689,9 +6644,31 @@ class TelegramAdapter(BasePlatformAdapter):
         if not self._bot:
             return SendResult(success=False, error="Not connected")
 
-        inline_msg_id = _inline_msg_id.get() or (metadata or {}).get("inline_message_id")
-        if inline_msg_id is not None:
-            return await self._send_inline_media(chat_id, inline_msg_id, file_path, "document", caption, file_name=file_name)
+        inline_msg_id = _inline_msg_id.get()
+        if inline_msg_id:
+            if not os.path.exists(file_path):
+                return SendResult(success=False, error=self._missing_media_path_error("File", file_path))
+            public_url = await self._upload_inline_media(file_path)
+            if not public_url:
+                return SendResult(success=False, error="inline media upload failed")
+            try:
+                await self._bot.edit_message_media(
+                    inline_message_id=inline_msg_id,
+                    media=InputMediaDocument(
+                        media=public_url,
+                        filename=file_name or os.path.basename(file_path),
+                        caption=caption[:1024] if caption else None,
+                    ),
+                )
+                logger.info("[Telegram] Inline document edit complete: msg_id=%s", inline_msg_id)
+                return SendResult(success=True, message_id=inline_msg_id)
+            except Exception as exc:
+                logger.warning(
+                    "[Telegram] Inline document edit failed: %s",
+                    _redact_telegram_error_text(exc),
+                    exc_info=True,
+                )
+                return SendResult(success=False, error=_redact_telegram_error_text(exc))
 
         try:
             if not os.path.exists(file_path):
@@ -6745,9 +6722,6 @@ class TelegramAdapter(BasePlatformAdapter):
         """Send a video natively as a Telegram video message."""
         if not self._bot:
             return SendResult(success=False, error="Not connected")
-        inline_msg_id = _inline_msg_id.get() or (metadata or {}).get("inline_message_id")
-        if inline_msg_id is not None:
-            return await self._send_inline_media(chat_id, inline_msg_id, video_path, "video", caption)
 
         try:
             if not os.path.exists(video_path):
@@ -6806,10 +6780,6 @@ class TelegramAdapter(BasePlatformAdapter):
         if not is_safe_url(image_url):
             logger.warning("[%s] Blocked unsafe image URL (SSRF protection)", self.name)
             return await super().send_image(chat_id, image_url, caption, reply_to, metadata=metadata)
-
-        inline_msg_id = _inline_msg_id.get() or (metadata or {}).get("inline_message_id")
-        if inline_msg_id is not None:
-            return await self._send_inline_media(chat_id, inline_msg_id, image_url, "photo", caption)
 
         try:
             # Telegram can send photos directly from URLs (up to ~5MB)
@@ -6895,9 +6865,6 @@ class TelegramAdapter(BasePlatformAdapter):
         """Send an animated GIF natively as a Telegram animation (auto-plays inline)."""
         if not self._bot:
             return SendResult(success=False, error="Not connected")
-        inline_msg_id = _inline_msg_id.get() or (metadata or {}).get("inline_message_id")
-        if inline_msg_id is not None:
-            return await self._send_inline_media(chat_id, inline_msg_id, animation_url, "animation", caption)
         
         try:
             _anim_thread = self._metadata_thread_id(metadata)
@@ -7053,16 +7020,21 @@ class TelegramAdapter(BasePlatformAdapter):
             )
             return {"name": str(chat_id), "type": "dm", "error": str(e)}
 
+    _EMOJI_ANY_RE = re.compile(
+        "[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\u2049\u203C\u2122\u2139\u2194-\u21AA\uFE0F]"
+    )
+
     _MDV2_TOKEN_RE = re.compile(
-        r"```(?P<cblang>[^\n`]*)\n?(?P<cb>(?s:.*?))```"
+        r"```(?P<cblang>[^\n`]*)\n?(?P<cb>.*?)```"
         r"|`(?P<ci>[^`\n]+)`"
-        r"|(?<!\\)\*\*(?P<b>[^*]+?)(?<!\\)\*\*"
-        r"|(?<!\\)__(?P<u>[^_]+?)(?<!\\)__"
-        r"|(?<!\\)\*(?P<i>[^*\n]+?)(?<!\\)\*"
-        r"|(?<!\\)_(?P<em>[^\n_]+?)(?<!\\)_"
-        r"|(?<!\\)~(?P<s>[^~\n]+?)(?<!\\)~"
+        r"|\*\*(?P<b>[^*]+?)\*\*"
+        r"|__(?P<u>[^_]+?)__"
+        r"|\*(?P<i>[^*\n]+?)\*"
+        r"|_(?P<em>[^\n_]+?)_"
+        r"|~(?P<s>[^~\n]+?)~"
         r"|\|\|(?P<sp>[^|\n]+?)\|\|"
-        r"|\[(?P<lt>[^\]\n]+)\]\((?P<lu>[^\s)]+)\)"
+        r"|\[(?P<lt>[^\]\n]+)\]\((?P<lu>[^\s)]+)\)",
+        re.DOTALL,
     )
 
     def _entities_for_markdown(self, text: str) -> tuple:
@@ -7074,7 +7046,7 @@ class TelegramAdapter(BasePlatformAdapter):
         Returns (entities, no_webpage).
         """
         if not text:
-            return [], False, ""
+            return [], False
         entities = []
         out = []
         pos = 0
@@ -7117,7 +7089,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 out.append(m.group("u"))
             elif m.group("i") is not None:
                 entities.append({
-                    "_": "messageEntityBold",
+                    "_": "messageEntityItalic",
                     "offset": base,
                     "length": len(m.group("i")),
                 })
@@ -7161,35 +7133,58 @@ class TelegramAdapter(BasePlatformAdapter):
         unescaped = self._mdv2_unescape(stripped)
         if unescaped != stripped:
             entities = self._remap_entities_after_unescape(unescaped, stripped, entities)
-        entities = self._entities_to_utf16(unescaped, entities)
-        return entities, self._has_uncollapsed_link_marker(unescaped), unescaped
+        entities = self._attach_custom_emoji_entities(unescaped, entities)
+        entities = self._remap_entities_to_utf16(unescaped, entities)
+        return entities, self._has_uncollapsed_link_marker(unescaped)
 
-    def _entities_to_utf16(self, text: str, entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Re-base entity spans onto UTF-16 code units.
-
-        MTProto counts ``MessageEntity.offset``/``length`` in UTF-16 code units,
-        so astral characters (most emoji) must count as two — a code-point span
-        lands the markup on the wrong characters.
-        """
+    def _remap_entities_to_utf16(self, text: str, entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if not entities:
             return entities
-        prefix = [0] * (len(text) + 1)
-        for i, ch in enumerate(text):
-            prefix[i + 1] = prefix[i] + (2 if ord(ch) > 0xFFFF else 1)
-        total = len(text)
+        prefix_units: List[int] = [0]
+        for ch in text:
+            prefix_units.append(prefix_units[-1] + (2 if ord(ch) > 0xFFFF else 1))
         for ent in entities:
-            start = ent.get("offset", 0)
-            end = start + ent.get("length", 0)
-            start = start if 0 <= start <= total else total
-            end = end if 0 <= end <= total else total
-            ent["offset"] = prefix[start]
-            if "length" in ent:
-                ent["length"] = max(0, prefix[end] - prefix[start])
+            off = ent.get("offset", 0)
+            ln = ent.get("length", 0)
+            if off < len(prefix_units) - 1 and (prefix_units[off + ln] - prefix_units[off]) != ln:
+                ent["offset"] = prefix_units[off]
+                ent["length"] = prefix_units[off + ln] - prefix_units[off]
+        return entities
+
+    def _attach_custom_emoji_entities(self, text: str, entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if not text:
+            return entities
+        glyph_ids: Dict[str, str] = {}
+        for emoji_id, glyph in self._GAME_EMOJI_PACK:
+            glyph_ids.setdefault(glyph, emoji_id)
+        fallback_ids = [emoji_id for emoji_id, _glyph in self._GAME_EMOJI_PACK]
+        if not glyph_ids:
+            return entities
+        if entities:
+            spans = sorted((e["offset"], e["offset"] + e["length"]) for e in entities)
+        else:
+            spans = []
+        fb_pos = 0
+        for m in self._EMOJI_ANY_RE.finditer(text):
+            start, end = m.span()
+            if any(s <= start and end <= t for s, t in spans):
+                continue
+            glyph = m.group(0)
+            emoji_id = glyph_ids.get(glyph)
+            if emoji_id is None:
+                emoji_id = fallback_ids[fb_pos % len(fallback_ids)]
+                fb_pos += 1
+            entities.append({
+                "_": "messageEntityCustomEmoji",
+                "offset": start,
+                "length": end - start,
+                "document_id": int(emoji_id),
+            })
         return entities
 
     def _mdv2_unescape(self, text: str) -> str:
         """Strip MarkdownV2 escape backslashes to recover the raw text."""
-        return re.sub(r"\\([_~\[\]()>#+=|{}.!\-*\\`])", r"\1", text)
+        return re.sub(r"\\([_~\[\]()>#+=|{}.!\-*\\])", r"\1", text)
 
     def _has_uncollapsed_link_marker(self, text: str) -> bool:
         """True when a ``[](...)-style link is present (suppress preview by default)."""
@@ -7199,30 +7194,25 @@ class TelegramAdapter(BasePlatformAdapter):
         """Shift entity offsets after backslash unescaping changes the text."""
         if not entities:
             return entities
-        mapping = [0] * (len(stripped) + 1)
+        mapping = []
         ui = 0
         si = 0
-        while si < len(stripped):
-            mapping[si] = ui
-            if (
-                stripped[si] == "\\"
-                and si + 1 < len(stripped)
-                and stripped[si + 1] in "_~[]()>#+=|{}.!-*\\`"
-            ):
-                mapping[si + 1] = ui
+        while si < len(stripped) and ui < len(unescaped):
+            sc = stripped[si]
+            uc = unescaped[ui]
+            if sc == "\\" and si + 1 < len(stripped):
+                mapping.append(ui)
                 si += 2
+                ui += 1
             else:
+                mapping.append(ui)
                 si += 1
-            ui += 1
-            mapping[si] = ui
+                ui += 1
         for ent in entities:
-            start = ent.get("offset", 0)
-            end = start + ent.get("length", 0)
-            new_start = mapping[start] if start < len(mapping) else len(unescaped)
-            new_end = mapping[end] if end < len(mapping) else len(unescaped)
-            ent["offset"] = new_start
-            if "length" in ent:
-                ent["length"] = max(0, new_end - new_start)
+            for key in ("offset",):
+                old = ent[key]
+                new = mapping[old] if old < len(mapping) else old
+                ent[key] = new
         return entities
 
     def format_message(self, content: str) -> str:
@@ -7850,7 +7840,7 @@ class TelegramAdapter(BasePlatformAdapter):
         # Telegram parses mentions server-side and emits MessageEntity objects
         # (type=mention for @username, type=text_mention for @FirstName targeting
         # a user without a public username). Those entities are authoritative:
-        # raw substring matches like "foo@hermes_bot.example" are not mentions
+        # raw substring matches like "foo@qwerty_bot.example" are not mentions
         # (bug #12545). Entities also correctly handle @handles inside URLs, code
         # blocks, and quoted text, where a regex scan would over-match.
         for source_text, entities in _iter_sources():
@@ -7894,7 +7884,7 @@ class TelegramAdapter(BasePlatformAdapter):
     def _explicit_bot_mentions_exclude_self(self, message: Any) -> bool:
         """Return True when explicit bot handles target other bots, not this one.
 
-        Telegram groups can contain several Hermes bot profiles. A message like
+        Telegram groups can contain several Qwerty bot profiles. A message like
         ``@bot3 hi @bot4`` must not wake ``@bot1`` through reply/wake-word
         fallbacks. Treat explicit bot-handle mentions as an exclusive routing
         hint: if at least one @...bot username is present and none matches this
@@ -8278,7 +8268,7 @@ class TelegramAdapter(BasePlatformAdapter):
         In some Telegram environments (groups, supergroups where the bot can
         see its own messages), getUpdates returns the bot's own outgoing
         messages as updates.  These must be filtered out so they are not
-        counted as incoming unread messages in the Hermes inbox.
+        counted as incoming unread messages in the Qwerty inbox.
         """
         if not self._bot:
             return False
@@ -8314,7 +8304,7 @@ class TelegramAdapter(BasePlatformAdapter):
         # Filter out the bot's own messages (returned by getUpdates in some
         # environments like groups/supergroups where the bot can see its own
         # messages).  Without this, outbound messages are counted as incoming
-        # unread in the Hermes inbox (#52363).
+        # unread in the Qwerty inbox (#52363).
         #
         # Telegram stamps our CURRENT @username on those own-messages and on
         # reply_to_message, so learn the live handle here — before any mention
@@ -8398,7 +8388,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 chat_id = int(chat.id)
                 if chat_id in self._forum_command_registered:
                     return
-                from hermes_cli.commands import telegram_menu_commands, telegram_menu_max_commands
+                from qwerty_cli.commands import telegram_menu_commands, telegram_menu_max_commands
                 menu_commands, _ = telegram_menu_commands(max_commands=telegram_menu_max_commands())
                 bot_commands = [
                     {"_": "botCommand", "command": name, "description": desc}
@@ -8622,6 +8612,11 @@ class TelegramAdapter(BasePlatformAdapter):
             raw = cbobj.raw if hasattr(cbobj, "raw") else (cbobj if isinstance(cbobj, dict) else {})
             if not isinstance(raw, dict):
                 raw = {}
+            logger.info(
+                "[Telegram] MT callback received: qid=%s data=%r",
+                getattr(cbobj, "id", None) or raw.get("query_id"),
+                (getattr(cbobj, "data", None) or raw.get("data"))[:80] if isinstance(getattr(cbobj, "data", None) or raw.get("data"), str) else None,
+            )
             cq = SimpleNamespace()
             cq.id = cbobj.id if hasattr(cbobj, "id") else raw.get("query_id")
             data = self._mt_decode_callback_data(cbobj)
@@ -8644,75 +8639,65 @@ class TelegramAdapter(BasePlatformAdapter):
             cq.from_user = u
             cq.message = None
             cq.inline_message_id = None
-            chat_id = raw.get("chat_id") or getattr(cbobj, "chat_id", None)
-            cq.chat_id = chat_id
+            cq.chat_id = raw.get("chat_id") or getattr(cbobj, "chat_id", None)
+
+            async def _cq_answer(text: str = "", show_alert: bool = False) -> None:
+                qid = cq.id
+                if qid is None:
+                    return
+                try:
+                    await self._app.mt_req(
+                        "messages.setBotCallbackAnswer",
+                        query_id=int(qid),
+                        message=text or None,
+                        alert=show_alert,
+                        cache_time=0,
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "[Telegram] Callback answer failed (qid=%s): %s",
+                        qid, _redact_telegram_error_text(exc),
+                    )
+
+            cq.answer = _cq_answer
+
+            async def _cq_edit_message_text(
+                text: str = "",
+                parse_mode: Any = None,
+                reply_markup: Any = None,
+                **kwargs: Any,
+            ) -> Dict[str, Any]:
+                chat_id = cq.chat_id
+                mid = getattr(cq.message, "message_id", None) or getattr(cq.message, "id", None)
+                if chat_id is None or mid is None:
+                    raise RuntimeError("callback edit_message_text: no chat_id/message_id")
+                return await self._bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=mid,
+                    text=text,
+                    parse_mode=parse_mode,
+                    reply_markup=reply_markup,
+                    **kwargs,
+                )
+
+            cq.edit_message_text = _cq_edit_message_text
+
             msg_id = raw.get("msg_id")
-            if isinstance(msg_id, dict):
-                cq.inline_message_id = msg_id
-                msg_id = None
             if msg_id is not None:
                 try:
                     msg_id = int(msg_id)
                 except (TypeError, ValueError):
                     msg_id = None
-            chat_type = "private" if isinstance(chat_id, int) and chat_id > 0 else "supergroup"
-            chat_shim = SimpleNamespace()
-            chat_shim.id = chat_id
-            chat_shim.type = chat_type
-            chat_shim.is_forum = False
-            chat_shim.title = None
-            chat_shim.username = None
             if msg_id:
                 m = SimpleNamespace()
                 m.id = msg_id
                 m.message_id = msg_id
-                m.chat_id = chat_id
-                m.chat = chat_shim
-                m.message_thread_id = raw.get("top_msg_id") or None
+                m.chat = None
                 m.text = None
                 cq.message = m
-
-            answered = {"done": False}
-
-            async def _cb_answer(
-                text: Any = None,
-                alert: bool = False,
-                url: Any = None,
-                cache_time: int = 0,
-                **kw: Any,
-            ) -> Any:
-                if answered["done"] or cbobj is None or not hasattr(cbobj, "answer"):
-                    return None
-                answered["done"] = True
-                try:
-                    return await cbobj.answer(
-                        text=text, alert=bool(kw.pop("show_alert", alert)), url=url, cache_time=cache_time, **kw
-                    )
-                except Exception:
-                    logger.debug("[%s] callback answer failed", self.name, exc_info=True)
-                    return None
-
-            async def _cb_edit(
-                text: Any = None,
-                parse_mode: Any = None,
-                reply_markup: Any = None,
-                **kw: Any,
-            ) -> Any:
-                if self._bot is None or (msg_id is None and cq.inline_message_id is None):
-                    return None
-                return await self._bot.edit_message_text(
-                    chat_id=chat_id,
-                    message_id=msg_id,
-                    inline_message_id=cq.inline_message_id,
-                    text=text or "",
-                    parse_mode=parse_mode,
-                    reply_markup=reply_markup,
-                )
-
-            cq.answer = _cb_answer
-            cq.edit_message_text = _cb_edit
             upd = SimpleNamespace()
             upd.callback_query = cq
+
             upd.effective_message = cq.message
             upd.update_id = cq.id or 0
             await self._handle_callback_query(upd)
@@ -8743,27 +8728,6 @@ class TelegramAdapter(BasePlatformAdapter):
             iq.query = getattr(query, "query", None) or raw.get("query") or ""
             iq.offset = raw.get("offset") or ""
             iq.chat_type = None
-
-            async def answer(results: Any, cache_time: int = 0, is_personal: bool = True, **kwargs: Any) -> Any:
-                converted = []
-                for result in results:
-                    item = result.to_dict() if hasattr(result, "to_dict") else result
-                    content = item.get("input_message_content") or {}
-                    message = {"_": "inputBotInlineMessageText", "message": content.get("message_text", "")}
-                    markup = self._MTBot._kbd(item.get("reply_markup"))
-                    if markup is not None:
-                        message["reply_markup"] = markup
-                    converted.append({
-                        "_": "inputBotInlineResult", "id": str(item["id"]),
-                        "type": item["type"], "title": item.get("title", ""),
-                        "description": item.get("description", ""), "send_message": message,
-                    })
-                return await self._app.mt_req(
-                    "messages.setInlineBotResults", query_id=int(iq.id),
-                    results=converted, cache_time=cache_time, private=is_personal,
-                )
-
-            iq.answer = answer
             from_id = raw.get("user_id")
             if from_id is None:
                 from_id = raw.get("from_id")
@@ -8791,9 +8755,9 @@ class TelegramAdapter(BasePlatformAdapter):
             chosen = SimpleNamespace()
             chosen.query = getattr(query, "query", None) or raw.get("query")
             chosen.inline_message_id = (
-                raw.get("msg_id")
-                or getattr(query, "inline_message_id", None)
+                getattr(query, "inline_message_id", None)
                 or raw.get("inline_message_id")
+                or raw.get("result_id")
             )
             from_id = getattr(query, "from_id", None) or raw.get("from_id")
             chosen.from_user = SimpleNamespace(id=from_id)
@@ -8817,12 +8781,9 @@ class TelegramAdapter(BasePlatformAdapter):
             await query.answer(results=[], cache_time=0, is_personal=True)
             return
         text = str(getattr(query, "query", "") or "").strip()
-        if not text:
-            await query.answer(results=[], cache_time=0, is_personal=True)
-            return
-        display = text
+        display = text or "Ask Qwerty"
         markup = InlineKeyboardMarkup([[
-            InlineKeyboardButton("Подготовка ответа…", callback_data="inline_placeholder")
+            InlineKeyboardButton("⚡ Run", callback_data="inline_placeholder")
         ]])
         logger.info("[Telegram] Inline query: %r", text)
         # Bot API 10.2 inline results support InputRichMessageContent. Using
@@ -8833,20 +8794,20 @@ class TelegramAdapter(BasePlatformAdapter):
         # with api_kwargs (which serializes as InputRichMessageContent).
         # Keep this constructed for the native Rich edit path; the initial
         # selection card above intentionally uses InputTextMessageContent.
+        initial_rich = {"markdown": "Подожди — inline Rich готовится."}
         await query.answer(
-            results=[{
-                "id": "hermes-inline",
-                "type": "article",
-                "title": f"⚡ {display[:60]}",
-                "description": "Tap to run Hermes here",
+            results=[InlineQueryResultArticle(
+                id="qwerty-inline",
+                title=f"⚡ {display[:60]}",
+                description="Tap to run Qwerty here",
                 # Use a guaranteed-valid text-backed inline card for selection.
                 # The selected result is upgraded to native Rich via
                 # editMessageText once Telegram supplies inline_message_id.
-                "input_message_content": {
-                    "message_text": "Подожди, Hermes готовит ответ."
-                },
-                "reply_markup": markup,
-            }],
+                input_message_content=InputTextMessageContent(
+                    message_text="Подожди — inline Rich готовится."
+                ),
+                reply_markup=markup,
+            )],
             cache_time=0,
             is_personal=True,
         )
@@ -8869,16 +8830,35 @@ class TelegramAdapter(BasePlatformAdapter):
         # Do not legacy-edit the chosen result before dispatch. The inline
         # result is Rich already; an InputText/MarkdownV2 edit destroys its
         # custom-emoji/media-capable representation before the final answer.
-        self._inline_edits[str(user_id)] = inline_id
-        self._inline_edits["inline:" + str(inline_id)] = inline_id
-        logger.info("[Telegram] Inline edit stored: user=%s — dispatching to agent", user_id)
+        self._inline_edits[str(user_id)] = str(inline_id)
+        logger.info("[Telegram] Inline edit stored: user=%s msg_id=%s — dispatching to agent", user_id, inline_id)
         # Telegram's inline premium-emoji gate is stateful in practice: the
         # initial inline result may serialize the fallback glyph, while a
         # first edit of that same inline message causes the Rich parser to
         # materialize the custom-emoji entity. Mirror the proven userbot flow
         # and prime the inline message with a minimal Rich edit before the
         # agent's full response is generated.
-        token = _inline_msg_id.set(inline_id)
+        try:
+            prime = self._rich_message_payload(
+                "![ ](tg://emoji?id=5447595110743168717) Inline Rich готовится."
+            )
+            await self._bot.do_api_request(
+                "editMessageText",
+                api_kwargs={
+                    "inline_message_id": str(inline_id),
+                    "text": "Inline Rich готовится.",
+                    "rich_message": self._rich_message_payload(
+                        "![ ](tg://emoji?id=5447595110743168717) Inline Rich готовится.",
+                    ),
+                },
+            )
+            logger.info("[Telegram] Inline Rich prime edit complete: msg_id=%s", inline_id)
+        except Exception as prime_error:
+            logger.warning(
+                "[Telegram] Inline Rich prime edit failed: %s",
+                _redact_telegram_error_text(prime_error),
+            )
+        token = _inline_msg_id.set(str(inline_id))
         try:
             from gateway.session import SessionSource
             event = MessageEvent(
@@ -8892,7 +8872,6 @@ class TelegramAdapter(BasePlatformAdapter):
                 ),
                 text=query_text,
                 message_type=MessageType.TEXT,
-                metadata={"inline_message_id": inline_id},
             )
             await self.handle_message(event)
             logger.info("[Telegram] Inline agent dispatch complete for user=%s", user_id)
@@ -9557,8 +9536,8 @@ class TelegramAdapter(BasePlatformAdapter):
         recognized without a gateway restart.
         """
         try:
-            from hermes_constants import get_hermes_home
-            config_path = get_hermes_home() / "config.yaml"
+            from qwerty_constants import get_qwerty_home
+            config_path = get_qwerty_home() / "config.yaml"
             if not config_path.exists():
                 return
 
@@ -9862,7 +9841,7 @@ class TelegramAdapter(BasePlatformAdapter):
             else:
                 reply_to_text = (
                     message.reply_to_message.text
-                    or message.reply_to_message.caption
+                    or getattr(message.reply_to_message, "caption", None)
                     or None
                 )
                 if not reply_to_text:
@@ -9991,7 +9970,7 @@ class TelegramAdapter(BasePlatformAdapter):
 # replace the per-platform core touchpoints (the Platform.TELEGRAM branch in
 # gateway/run.py, the telegram_cfg YAML→env/extra block in gateway/config.py,
 # the _setup_telegram wizard + _PLATFORMS["telegram"] static dict in
-# hermes_cli/{setup,gateway}.py, and the _send_telegram dispatch in
+# qwerty_cli/{setup,gateway}.py, and the _send_telegram dispatch in
 # tools/send_message_tool.py).  Telegram uses the generic token connected
 # check, so no is_connected override is needed.
 # ──────────────────────────────────────────────────────────────────────────
@@ -10002,7 +9981,7 @@ def _resolve_notifications_mode() -> str:
     config.yaml display.platforms.telegram.notifications, defaulting to
     'important'.  Mirrors the post-construction logic that used to live in
     gateway/run.py::_create_adapter()."""
-    mode = os.getenv("HERMES_TELEGRAM_NOTIFICATIONS", "")
+    mode = os.getenv("QWERTY_TELEGRAM_NOTIFICATIONS", "")
     if not mode:
         try:
             from gateway.config import load_gateway_config
@@ -10046,7 +10025,7 @@ def _is_connected(config) -> bool:
     """
     token = getattr(config, "token", None)
     if not token:
-        import hermes_cli.gateway as gateway_mod
+        import qwerty_cli.gateway as gateway_mod
         token = gateway_mod.get_env_value("TELEGRAM_BOT_TOKEN") or ""
     return bool(str(token).strip())
 
@@ -10088,9 +10067,9 @@ def interactive_setup() -> None:
     Delegates to the existing CLI setup helpers (managed-bot QR onboarding,
     token validation, allowlist capture) via lazy import so the full wizard
     behavior is preserved without duplicating ~150 lines. Replaces the
-    _PLATFORMS["telegram"] static dict dispatch in hermes_cli/gateway.py.
+    _PLATFORMS["telegram"] static dict dispatch in qwerty_cli/gateway.py.
     """
-    from hermes_cli import setup as _setup_mod
+    from qwerty_cli import setup as _setup_mod
     _setup_mod._setup_telegram()
 
 
@@ -10196,8 +10175,11 @@ def _apply_yaml_config(yaml_cfg: dict, telegram_cfg: dict) -> dict | None:
     return extras or None
 
 
+TelegramAdapter._GAME_EMOJI_PACK = TelegramAdapter._load_game_emoji_pack()
+
+
 def register(ctx) -> None:
-    """Plugin entry point — called by the Hermes plugin system."""
+    """Plugin entry point — called by the Qwerty plugin system."""
     ctx.register_platform(
         name="telegram",
         label="Telegram",
@@ -10205,7 +10187,7 @@ def register(ctx) -> None:
         check_fn=check_telegram_requirements,
         is_connected=_is_connected,
         required_env=["TELEGRAM_BOT_TOKEN"],
-        install_hint="pip install 'hermes-agent[telegram]'",
+        install_hint="pip install 'qwerty-agent[telegram]'",
         setup_fn=interactive_setup,
         apply_yaml_config_fn=_apply_yaml_config,
         allowed_users_env="TELEGRAM_ALLOWED_USERS",

@@ -43,7 +43,7 @@ class TestApiServerProfileResolution:
     def test_known_profile_accepted(self, monkeypatch):
         adapter = _make_adapter(multiplex=True)
         monkeypatch.setattr(
-            "hermes_cli.profiles.profiles_to_serve",
+            "qwerty_cli.profiles.profiles_to_serve",
             lambda multiplex: [("default", None), ("coder", None)],
         )
         assert adapter._resolve_request_profile(_FakeReq("coder")) == "coder"
@@ -51,7 +51,7 @@ class TestApiServerProfileResolution:
     def test_unknown_profile_rejected(self, monkeypatch):
         adapter = _make_adapter(multiplex=True)
         monkeypatch.setattr(
-            "hermes_cli.profiles.profiles_to_serve",
+            "qwerty_cli.profiles.profiles_to_serve",
             lambda multiplex: [("default", None), ("coder", None)],
         )
         assert adapter._resolve_request_profile(_FakeReq("ghost")) is _PROFILE_REJECTED
@@ -78,9 +78,9 @@ class TestApiServerModelsUnderProfile:
     def test_resolve_model_name_follows_active_profile(self, monkeypatch):
         """When the request is scoped to a named profile, advertise that name."""
         adapter = _make_adapter(multiplex=True)
-        adapter._model_name = "hermes-agent"
+        adapter._model_name = "qwerty-agent"
         monkeypatch.setattr(
-            "hermes_cli.profiles.get_active_profile_name",
+            "qwerty_cli.profiles.get_active_profile_name",
             lambda: "coder",
         )
         token_prof = _api_request_profile.set("coder")

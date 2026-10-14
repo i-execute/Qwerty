@@ -25,7 +25,7 @@ export function closeFindBar(): void {
 
   $findInPage.set({ ...EMPTY })
   // Clears both the search and the native highlight/selection in the page.
-  void window.hermesDesktop?.stopFindInPage()
+  void window.qwertyDesktop?.stopFindInPage()
 }
 
 export function setFindQuery(query: string): void {
@@ -40,20 +40,20 @@ export function setFindQuery(query: string): void {
 
   if (!query) {
     $findInPage.set({ ...prev, query: '', matchOrdinal: 0, matchCount: 0 })
-    void window.hermesDesktop?.stopFindInPage()
+    void window.qwertyDesktop?.stopFindInPage()
 
     return
   }
 
   $findInPage.set({ ...prev, query })
-  void window.hermesDesktop?.findInPage(query, { forward: true, findNext: false })
+  void window.qwertyDesktop?.findInPage(query, { forward: true, findNext: false })
 }
 
 export function findNext(): void {
   const { query } = $findInPage.get()
 
   if (query) {
-    void window.hermesDesktop?.findInPage(query, { forward: true, findNext: true })
+    void window.qwertyDesktop?.findInPage(query, { forward: true, findNext: true })
   }
 }
 
@@ -61,7 +61,7 @@ export function findPrevious(): void {
   const { query } = $findInPage.get()
 
   if (query) {
-    void window.hermesDesktop?.findInPage(query, { forward: false, findNext: true })
+    void window.qwertyDesktop?.findInPage(query, { forward: false, findNext: true })
   }
 }
 
@@ -89,7 +89,7 @@ export function initFindInPageListener(): () => void {
   listenerRefs += 1
 
   if (listenerRefs === 1) {
-    detachListener = window.hermesDesktop?.onFoundInPage?.(result => {
+    detachListener = window.qwertyDesktop?.onFoundInPage?.(result => {
       updateFindResults(result.activeMatchOrdinal, result.count)
     })
   }

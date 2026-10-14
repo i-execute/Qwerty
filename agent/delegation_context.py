@@ -1,7 +1,7 @@
 """Context-local state for delegate_task child execution.
 
-The parent Hermes process may itself be a Kanban dispatcher worker with
-HERMES_KANBAN_* variables in process env. delegate_task children run inside the
+The parent Qwerty process may itself be a Kanban dispatcher worker with
+QWERTY_KANBAN_* variables in process env. delegate_task children run inside the
 same Python process, but they are not dispatcher-owned Kanban workers. This
 module lets code paths that resolve tool schemas or spawn subprocesses fail
 closed for delegated children without mutating global os.environ for the parent.
@@ -13,20 +13,20 @@ from contextvars import ContextVar
 from typing import Iterator, Mapping, MutableMapping
 
 _DELEGATED_CHILD_CONTEXT: ContextVar[bool] = ContextVar(
-    "hermes_delegated_child_context",
+    "qwerty_delegated_child_context",
     default=False,
 )
 
-DELEGATED_CHILD_ENV_MARKER = "HERMES_DELEGATED_CHILD_CONTEXT"
+DELEGATED_CHILD_ENV_MARKER = "QWERTY_DELEGATED_CHILD_CONTEXT"
 
 KANBAN_ENV_KEYS: tuple[str, ...] = (
-    "HERMES_KANBAN_TASK",
-    "HERMES_KANBAN_RUN_ID",
-    "HERMES_KANBAN_WORKSPACE",
-    "HERMES_KANBAN_WORKSPACES_ROOT",
-    "HERMES_KANBAN_CLAIM_LOCK",
-    "HERMES_KANBAN_BOARD",
-    "HERMES_KANBAN_DB",
+    "QWERTY_KANBAN_TASK",
+    "QWERTY_KANBAN_RUN_ID",
+    "QWERTY_KANBAN_WORKSPACE",
+    "QWERTY_KANBAN_WORKSPACES_ROOT",
+    "QWERTY_KANBAN_CLAIM_LOCK",
+    "QWERTY_KANBAN_BOARD",
+    "QWERTY_KANBAN_DB",
 )
 
 
@@ -70,7 +70,7 @@ def delegated_child_subprocess_env(
 
     Most subprocess call sites historically used ``env=None`` to inherit the
     process environment.  In a ``delegate_task`` child, inheriting as-is leaks
-    parent dispatcher ``HERMES_KANBAN_*`` vars while losing the ContextVar in
+    parent dispatcher ``QWERTY_KANBAN_*`` vars while losing the ContextVar in
     the new process.  This helper preserves normal ``env=None`` semantics for
     non-delegated calls, and only materializes a scrubbed env when the lineage
     marker must be propagated across a child-process boundary.

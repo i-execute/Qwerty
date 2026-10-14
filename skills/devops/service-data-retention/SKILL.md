@@ -2,7 +2,7 @@
 name: service-data-retention
 description: Safely reduce disk use for a live local service while retaining specified data and preserving a recoverable/restartable service state.
 version: 1.0.0
-author: Hermes Agent
+author: Qwerty Agent
 created_by: agent
 ---
 

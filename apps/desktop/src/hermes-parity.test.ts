@@ -14,14 +14,14 @@ import {
   setCuratorPaused,
   setMcpServerEnabled,
   testMcpServer
-} from './hermes'
+} from './qwerty'
 
-describe('Hermes REST parity helpers (hub / mcp / maintenance)', () => {
+describe('Qwerty REST parity helpers (hub / mcp / maintenance)', () => {
   let api: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     api = vi.fn().mockResolvedValue({})
-    Object.defineProperty(window, 'hermesDesktop', {
+    Object.defineProperty(window, 'qwertyDesktop', {
       configurable: true,
       value: { api }
     })
@@ -29,7 +29,7 @@ describe('Hermes REST parity helpers (hub / mcp / maintenance)', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
-    Reflect.deleteProperty(window, 'hermesDesktop')
+    Reflect.deleteProperty(window, 'qwertyDesktop')
   })
 
   it('loads hub sources with a network-tolerant timeout', async () => {

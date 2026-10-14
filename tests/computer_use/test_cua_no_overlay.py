@@ -1,7 +1,7 @@
 """Tests for the cua-driver --no-overlay policy.
 
 cua-driver's cursor overlay rendering loop can consume CPU indefinitely when
-idle (#28152, #47032). Hermes passes ``--no-overlay`` to suppress it when the
+idle (#28152, #47032). Qwerty passes ``--no-overlay`` to suppress it when the
 ``computer_use.no_overlay`` config is enabled (or auto-detected on macOS and
 headless Linux / WSL2).
 
@@ -19,7 +19,7 @@ from tools.computer_use import cua_backend
 class TestNoOverlayFlag:
     def test_default_linux_headless_disables(self):
         """Auto-detect: Linux without DISPLAY => overlay disabled."""
-        with patch("hermes_cli.config.load_config", return_value={}), \
+        with patch("qwerty_cli.config.load_config", return_value={}), \
              patch.object(sys, "platform", "linux"), \
              patch.dict(os.environ, {}, clear=False):
             os.environ.pop("DISPLAY", None)
@@ -27,7 +27,7 @@ class TestNoOverlayFlag:
 
     def test_default_linux_desktop_enables(self):
         """Auto-detect: Linux with DISPLAY => overlay enabled."""
-        with patch("hermes_cli.config.load_config", return_value={}), \
+        with patch("qwerty_cli.config.load_config", return_value={}), \
              patch.object(sys, "platform", "linux"), \
              patch.dict(os.environ, {"DISPLAY": ":0"}):
             assert cua_backend._cua_no_overlay() is False
@@ -35,7 +35,7 @@ class TestNoOverlayFlag:
     def test_default_linux_wsl2_disables(self):
         """Auto-detect: WSL2 (microsoft in /proc/version) => overlay disabled."""
         fake_version = "Linux version 5.15.0 (Microsoft@Microsoft.com)"
-        with patch("hermes_cli.config.load_config", return_value={}), \
+        with patch("qwerty_cli.config.load_config", return_value={}), \
              patch.object(sys, "platform", "linux"), \
              patch.dict(os.environ, {"DISPLAY": ":0"}), \
              patch("builtins.open", mock_open(read_data=fake_version)):
@@ -43,23 +43,23 @@ class TestNoOverlayFlag:
 
     def test_default_macos_disables(self):
         """Auto-detect: macOS => overlay disabled (idle CPU / #47032)."""
-        with patch("hermes_cli.config.load_config", return_value={}), \
+        with patch("qwerty_cli.config.load_config", return_value={}), \
              patch.object(sys, "platform", "darwin"):
             assert cua_backend._cua_no_overlay() is True
 
     def test_default_windows_enables(self):
         """Auto-detect: Windows => overlay enabled."""
-        with patch("hermes_cli.config.load_config", return_value={}), \
+        with patch("qwerty_cli.config.load_config", return_value={}), \
              patch.object(sys, "platform", "win32"):
             assert cua_backend._cua_no_overlay() is False
 
     def test_explicit_true_overrides(self):
-        with patch("hermes_cli.config.load_config",
+        with patch("qwerty_cli.config.load_config",
                    return_value={"computer_use": {"no_overlay": True}}):
             assert cua_backend._cua_no_overlay() is True
 
     def test_explicit_false_overrides(self):
-        with patch("hermes_cli.config.load_config",
+        with patch("qwerty_cli.config.load_config",
                    return_value={"computer_use": {"no_overlay": False}}), \
              patch.object(sys, "platform", "linux"), \
              patch.dict(os.environ, {}, clear=False):
@@ -69,19 +69,19 @@ class TestNoOverlayFlag:
 
     def test_config_load_failure_falls_through_to_auto_detect(self):
         """Unreadable config => auto-detect (macOS defaults to disabled)."""
-        with patch("hermes_cli.config.load_config",
+        with patch("qwerty_cli.config.load_config",
                    side_effect=RuntimeError("boom")), \
              patch.object(sys, "platform", "darwin"):
             assert cua_backend._cua_no_overlay() is True
 
     def test_macos_explicit_false_keeps_overlay(self):
-        with patch("hermes_cli.config.load_config",
+        with patch("qwerty_cli.config.load_config",
                    return_value={"computer_use": {"no_overlay": False}}), \
              patch.object(sys, "platform", "darwin"):
             assert cua_backend._cua_no_overlay() is False
 
     def test_missing_section_falls_through_to_auto_detect(self):
-        with patch("hermes_cli.config.load_config",
+        with patch("qwerty_cli.config.load_config",
                    return_value={"other": {}}), \
              patch.object(sys, "platform", "linux"), \
              patch.dict(os.environ, {"DISPLAY": ":0"}):
@@ -131,7 +131,7 @@ class TestDriverSupportsNoOverlay:
 
 
 class TestMcpInvocationUsesResolvedCommand:
-    """Surface 8 (NousResearch/hermes-agent#47072) + sweeper feedback
+    """Surface 8 (NousResearch/qwerty-agent#47072) + sweeper feedback
     #4701565902: when the manifest surfaces a relocated executable for
     ``mcp_invocation.command``, the support probe must run against THAT
     binary, not the system-resolved ``_CUA_DRIVER_CMD``. Otherwise a

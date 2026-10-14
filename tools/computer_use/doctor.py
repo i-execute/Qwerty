@@ -1,10 +1,10 @@
 """
-`hermes computer-use doctor` — thin client for cua-driver's `health_report` MCP tool.
+`qwerty computer-use doctor` — thin client for cua-driver's `health_report` MCP tool.
 
 cua-driver owns the health model (#1908 / be761fac on `main`). This module
 just drives the stdio JSON-RPC handshake, calls `health_report`, and
 renders the structured response. When the driver gets new checks, they
-flow through here without code changes on the Hermes side — the only
+flow through here without code changes on the Qwerty side — the only
 contract is the stable `schema_version="1"` payload shape.
 
 Exit code conventions:
@@ -37,7 +37,7 @@ _OVERALL_GLYPH = {
 
 
 def _cua_child_env() -> Dict[str, str]:
-    """cua-driver child env with the Hermes telemetry policy applied.
+    """cua-driver child env with the Qwerty telemetry policy applied.
 
     Delegates to ``cua_backend.cua_driver_child_env`` (telemetry disabled by
     default unless the user opts in). Falls back to the current environment
@@ -52,7 +52,7 @@ def _cua_child_env() -> Dict[str, str]:
 
 
 def _sanitized_cua_env() -> Dict[str, str]:
-    """Telemetry-policy env with Hermes provider secrets stripped.
+    """Telemetry-policy env with Qwerty provider secrets stripped.
 
     cua-driver is a third-party binary — it must never inherit provider
     API keys (#53503/#55709/#58889 lineage). Falls back to the unsanitized
@@ -239,7 +239,7 @@ def run_doctor(
 ) -> int:
     """Resolve the cua-driver binary, call `health_report`, render the result.
 
-    Honors `HERMES_CUA_DRIVER_CMD` via the shared runtime resolver, so the
+    Honors `QWERTY_CUA_DRIVER_CMD` via the shared runtime resolver, so the
     doctor diagnoses what your `computer_use` toolset will actually invoke.
     """
     # Windows ships stdout/stderr wrapped with the system ANSI codec
@@ -259,7 +259,7 @@ def run_doctor(
     if not binary:
         looked_for = driver_cmd or "cua-driver (PATH and canonical install paths)"
         print(f"cua-driver: not installed (looked for {looked_for!r}).")
-        print("  Run: hermes computer-use install")
+        print("  Run: qwerty computer-use install")
         return 2
 
     try:

@@ -1,19 +1,19 @@
 # Beta Runtime Compatibility
 
-Use this reference when a Hermes beta branch produces a generic gateway error after a commit touching credential pools, agent initialization, or recovery.
+Use this reference when a Qwerty beta branch produces a generic gateway error after a commit touching credential pools, agent initialization, or recovery.
 
 ## Diagnostic sequence
 
 1. Inspect the live logs before changing code:
    ```bash
-   journalctl --user -u hermes-gateway.service --since '2 hours ago' --no-pager
+   journalctl --user -u qwerty-gateway.service --since '2 hours ago' --no-pager
    grep -n -E '(Traceback|ImportError|ERROR|RateLimit|credential pool|rotat)' \
-     "${HERMES_HOME:-$HOME/.hermes}"/logs/{errors,agent,gateway}.log
+     "${QWERTY_HOME:-$HOME/.qwerty}"/logs/{errors,agent,gateway}.log
    ```
 2. Confirm the running source checkout and branch:
    ```bash
-   systemctl --user show hermes-gateway.service -p MainPID -p ExecStart -p WorkingDirectory
-   readlink -f /proc/$(systemctl --user show -p MainPID --value hermes-gateway.service)/cwd
+   systemctl --user show qwerty-gateway.service -p MainPID -p ExecStart -p WorkingDirectory
+   readlink -f /proc/$(systemctl --user show -p MainPID --value qwerty-gateway.service)/cwd
    git -C <checkout> status --short --branch
    ```
 3. Compare the beta commit against its parent/main and search all references before removing a symbol:

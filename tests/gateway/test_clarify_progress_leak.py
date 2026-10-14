@@ -100,7 +100,7 @@ def _make_runner(adapter):
 
 
 def _install_fakes(monkeypatch, mode):
-    monkeypatch.setenv("HERMES_TOOL_PROGRESS_MODE", mode)
+    monkeypatch.setenv("QWERTY_TOOL_PROGRESS_MODE", mode)
 
     fake_dotenv = types.ModuleType("dotenv")
     fake_dotenv.load_dotenv = lambda *a, **k: None
@@ -128,7 +128,7 @@ async def test_clarify_tool_never_renders_progress_bubble(monkeypatch, tmp_path,
     adapter = ProgressCaptureAdapter()
     runner = _make_runner(adapter)
     gateway_run = _install_fakes(monkeypatch, mode)
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_qwerty_home", tmp_path)
 
     source = SessionSource(platform=Platform.SLACK, chat_id="C1", chat_type="dm")
 

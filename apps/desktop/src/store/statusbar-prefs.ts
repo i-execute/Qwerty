@@ -1,6 +1,6 @@
 import { Codecs, persistentAtom } from '@/lib/persisted'
 
-const STATUSBAR_HIDDEN_STORAGE_KEY = 'hermes.desktop.statusbarHidden'
+const STATUSBAR_HIDDEN_STORAGE_KEY = 'qwerty.desktop.statusbarHidden'
 
 // Items the bar hides until the user turns them on from its context menu. The
 // bar's job is to answer "is the backend healthy, where am I, what's it doing" —

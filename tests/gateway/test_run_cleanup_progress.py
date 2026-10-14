@@ -174,7 +174,7 @@ def _install_fakes(
     cleanup_platform: Platform = Platform.TELEGRAM,
 ):
     """Wire up the module stubs every _run_agent test needs."""
-    monkeypatch.setenv("HERMES_TOOL_PROGRESS_MODE", "all")
+    monkeypatch.setenv("QWERTY_TOOL_PROGRESS_MODE", "all")
 
     fake_dotenv = types.ModuleType("dotenv")
     fake_dotenv.load_dotenv = lambda *a, **k: None
@@ -213,7 +213,7 @@ async def test_cleanup_off_by_default_leaves_bubbles(monkeypatch, tmp_path):
     adapter = CleanupCaptureAdapter()
     runner = _make_runner(adapter)
     gateway_run = _install_fakes(monkeypatch, ProgressAgent, cleanup_on=False)
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_qwerty_home", tmp_path)
 
     source = SessionSource(platform=Platform.TELEGRAM, chat_id="-1001")
     session_key = "agent:main:telegram:group:-1001"
@@ -254,7 +254,7 @@ async def test_messaging_agent_forwards_checkpoint_config(monkeypatch, tmp_path)
     gateway_run = _install_fakes(
         monkeypatch, CheckpointCaptureAgent, cleanup_on=False,
     )
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_qwerty_home", tmp_path)
     monkeypatch.setattr(
         gateway_run,
         "_load_gateway_config",
@@ -291,7 +291,7 @@ async def test_cleanup_registers_callback_and_deletes_on_success(monkeypatch, tm
     adapter = CleanupCaptureAdapter()
     runner = _make_runner(adapter)
     gateway_run = _install_fakes(monkeypatch, ProgressAgent, cleanup_on=True)
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_qwerty_home", tmp_path)
 
     source = SessionSource(platform=Platform.TELEGRAM, chat_id="-1001")
     session_key = "agent:main:telegram:group:-1001"
@@ -337,7 +337,7 @@ async def test_slack_cleanup_flag_deletes_progress_bubbles(monkeypatch, tmp_path
         cleanup_on=True,
         cleanup_platform=Platform.SLACK,
     )
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_qwerty_home", tmp_path)
 
     source = SessionSource(platform=Platform.SLACK, chat_id="D123")
     session_key = "agent:main:slack:dm:D123"
@@ -371,7 +371,7 @@ async def test_cleanup_skipped_on_failed_run(monkeypatch, tmp_path):
     adapter = CleanupCaptureAdapter()
     runner = _make_runner(adapter)
     gateway_run = _install_fakes(monkeypatch, FailingAgent, cleanup_on=True)
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_qwerty_home", tmp_path)
 
     source = SessionSource(platform=Platform.TELEGRAM, chat_id="-1001")
     session_key = "agent:main:telegram:group:-1001"
@@ -404,7 +404,7 @@ async def test_cleanup_noop_on_adapter_without_delete_support(monkeypatch, tmp_p
     adapter = NoDeleteAdapter()
     runner = _make_runner(adapter)
     gateway_run = _install_fakes(monkeypatch, ProgressAgent, cleanup_on=True)
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_qwerty_home", tmp_path)
 
     source = SessionSource(platform=Platform.TELEGRAM, chat_id="-1001")
     session_key = "agent:main:telegram:group:-1001"
@@ -432,7 +432,7 @@ async def test_cleanup_chains_with_existing_callback(monkeypatch, tmp_path):
     adapter = CleanupCaptureAdapter()
     runner = _make_runner(adapter)
     gateway_run = _install_fakes(monkeypatch, ProgressAgent, cleanup_on=True)
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+    monkeypatch.setattr(gateway_run, "_qwerty_home", tmp_path)
 
     source = SessionSource(platform=Platform.TELEGRAM, chat_id="-1001")
     session_key = "agent:main:telegram:group:-1001"

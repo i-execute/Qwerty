@@ -86,7 +86,7 @@ describe('artifacts store', () => {
   it('persists the registry to localStorage', () => {
     upsertArtifact('session-1', HTML_DETECTION, '<html>persisted</html>')
 
-    expect(window.localStorage.getItem('hermes.desktop.artifacts.v1')).toContain('persisted')
+    expect(window.localStorage.getItem('qwerty.desktop.artifacts.v1')).toContain('persisted')
   })
 
   it('rejects empty sessions and empty content', () => {
@@ -154,7 +154,7 @@ describe('artifacts store', () => {
     upsertArtifact('session-1', HTML_DETECTION, '<html>v1</html>')
     upsertArtifact('session-1', HTML_DETECTION, '<html>v2</html>')
 
-    const raw = window.localStorage.getItem('hermes.desktop.artifacts.v1')!
+    const raw = window.localStorage.getItem('qwerty.desktop.artifacts.v1')!
     const parsed = JSON.parse(raw) as Record<string, unknown[]>
 
     expect(parsed['session-1']).toHaveLength(1)

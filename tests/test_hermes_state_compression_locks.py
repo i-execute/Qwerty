@@ -20,8 +20,8 @@ from types import SimpleNamespace
 
 import pytest
 
-import hermes_state
-from hermes_state import SessionDB
+import qwerty_state
+from qwerty_state import SessionDB
 
 
 @pytest.fixture
@@ -109,7 +109,7 @@ def test_non_expired_lock_from_dead_pid_is_reclaimed(
     # test_windows_uses_ttl_only_without_pid_probe). Pin the platform so this
     # exercises the probe branch on Windows dev machines too, instead of
     # silently asserting the nt early-return.
-    monkeypatch.setattr(hermes_state.os, "name", "posix")
+    monkeypatch.setattr(qwerty_state.os, "name", "posix")
     dead_holder = "pid=424242:tid=1:agent=abc:nonce=deadbeef"
     assert db.try_acquire_compression_lock(
         "sess1", dead_holder, ttl_seconds=300
@@ -122,7 +122,7 @@ def test_non_expired_lock_from_dead_pid_is_reclaimed(
         return False
 
     monkeypatch.setattr(
-        hermes_state, "psutil", SimpleNamespace(pid_exists=process_is_gone)
+        qwerty_state, "psutil", SimpleNamespace(pid_exists=process_is_gone)
     )
 
     assert db.try_acquire_compression_lock(
@@ -140,20 +140,20 @@ def test_dead_pid_reclaim_via_os_kill_fallback_when_psutil_missing(
     CTRL_C_EVENT, bpo-14484), so the production code early-returns there. Pin
     the platform to keep this branch covered on Windows dev machines.
     """
-    monkeypatch.setattr(hermes_state.os, "name", "posix")
+    monkeypatch.setattr(qwerty_state.os, "name", "posix")
     dead_holder = "pid=424242:tid=1:agent=abc:nonce=deadbeef"
     assert db.try_acquire_compression_lock(
         "sess1", dead_holder, ttl_seconds=300
     ) is True
 
-    monkeypatch.setattr(hermes_state, "psutil", None)
+    monkeypatch.setattr(qwerty_state, "psutil", None)
 
     def process_is_gone(pid: int, signal: int) -> None:
         assert pid == 424242
         assert signal == 0
         raise ProcessLookupError
 
-    monkeypatch.setattr(hermes_state.os, "kill", process_is_gone)
+    monkeypatch.setattr(qwerty_state.os, "kill", process_is_gone)
 
     assert db.try_acquire_compression_lock(
         "sess1", "pid=525252:tid=2:agent=def:nonce=fresh", ttl_seconds=300
@@ -173,7 +173,7 @@ def test_probe_doubt_keeps_lease_until_ttl(
         raise RuntimeError("transient probe failure")
 
     monkeypatch.setattr(
-        hermes_state, "psutil", SimpleNamespace(pid_exists=probe_blows_up)
+        qwerty_state, "psutil", SimpleNamespace(pid_exists=probe_blows_up)
     )
 
     assert db.try_acquire_compression_lock(
@@ -203,7 +203,7 @@ def test_same_process_holder_is_never_self_reclaimed(
     # Even if a (broken) probe were to claim our own PID is dead, the
     # same-process guard short-circuits before any probe runs.
     monkeypatch.setattr(
-        hermes_state,
+        qwerty_state,
         "psutil",
         SimpleNamespace(
             pid_exists=lambda _pid: pytest.fail(
@@ -212,7 +212,7 @@ def test_same_process_holder_is_never_self_reclaimed(
         ),
     )
     monkeypatch.setattr(
-        hermes_state.os,
+        qwerty_state.os,
         "kill",
         lambda *_args: pytest.fail("same-process holder must not be probed"),
     )
@@ -229,7 +229,7 @@ def test_unstructured_holder_waits_for_ttl(
         "sess1", "legacy_holder", ttl_seconds=300
     ) is True
     monkeypatch.setattr(
-        hermes_state,
+        qwerty_state,
         "psutil",
         SimpleNamespace(
             pid_exists=lambda _pid: pytest.fail(
@@ -238,7 +238,7 @@ def test_unstructured_holder_waits_for_ttl(
         ),
     )
     monkeypatch.setattr(
-        hermes_state.os,
+        qwerty_state.os,
         "kill",
         lambda *_args: pytest.fail("unstructured holder must not probe a PID"),
     )
@@ -260,7 +260,7 @@ def test_windows_reclaims_dead_holder_via_psutil_probe(
     assert db.try_acquire_compression_lock(
         "sess1", holder, ttl_seconds=300
     ) is True
-    monkeypatch.setattr(hermes_state.os, "name", "nt")
+    monkeypatch.setattr(qwerty_state.os, "name", "nt")
     probed: list[int] = []
 
     def _pid_exists(pid: int) -> bool:
@@ -268,10 +268,10 @@ def test_windows_reclaims_dead_holder_via_psutil_probe(
         return False  # holder process is gone
 
     monkeypatch.setattr(
-        hermes_state, "psutil", SimpleNamespace(pid_exists=_pid_exists)
+        qwerty_state, "psutil", SimpleNamespace(pid_exists=_pid_exists)
     )
     monkeypatch.setattr(
-        hermes_state.os,
+        qwerty_state.os,
         "kill",
         lambda *_args: pytest.fail("Windows must never use os.kill as a PID probe"),
     )
@@ -295,10 +295,10 @@ def test_windows_without_psutil_stays_ttl_only(
     assert db.try_acquire_compression_lock(
         "sess1", holder, ttl_seconds=300
     ) is True
-    monkeypatch.setattr(hermes_state.os, "name", "nt")
-    monkeypatch.setattr(hermes_state, "psutil", None)
+    monkeypatch.setattr(qwerty_state.os, "name", "nt")
+    monkeypatch.setattr(qwerty_state, "psutil", None)
     monkeypatch.setattr(
-        hermes_state.os,
+        qwerty_state.os,
         "kill",
         lambda *_args: pytest.fail("Windows must never use os.kill as a PID probe"),
     )

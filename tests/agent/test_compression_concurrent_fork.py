@@ -1,6 +1,6 @@
 """Regression: prevent transcript fork when two paths compress the same session_id.
 
-Damien's incident (Discord, 2026-05-28): a long Hermes session in a Discord
+Damien's incident (Discord, 2026-05-28): a long Qwerty session in a Discord
 gateway hit the compression threshold at the end of a turn.  The parent agent
 finished delivering the response and ``conversation_loop.py`` fired
 ``_spawn_background_review(...)`` — which builds a forked ``AIAgent`` that
@@ -37,7 +37,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from hermes_state import SessionDB
+from qwerty_state import SessionDB
 
 
 def _build_agent_with_db(db: SessionDB, session_id: str):
@@ -1306,12 +1306,12 @@ def _make_legacy_session_db_class() -> type:
     """Model the class retained in ``sys.modules`` before the lock API existed.
 
     During the real version-skew incident, a re-imported compression module
-    imports the same still-loaded ``hermes_state`` module, whose ``SessionDB``
+    imports the same still-loaded ``qwerty_state`` module, whose ``SessionDB``
     class is old. The test replaces that module attribute with this lockless
     class and forwards all persistence operations to a current real database.
     """
     source_path = inspect.getfile(SessionDB)
-    namespace = {"__name__": "hermes_state"}
+    namespace = {"__name__": "qwerty_state"}
     source = '''
 class SessionDB:
     def __init__(self, real_db):
@@ -1341,7 +1341,7 @@ class _NominalSessionDBImpostor:
         return getattr(self._real, name)
 
 
-_NominalSessionDBImpostor.__module__ = "hermes_state"
+_NominalSessionDBImpostor.__module__ = "qwerty_state"
 _NominalSessionDBImpostor.__name__ = "SessionDB"
 
 
@@ -1379,7 +1379,7 @@ def test_missing_lock_subsystem_fails_open_not_infinite_loop(tmp_path: Path, mon
     """A truly old in-memory SessionDB class must still make progress.
 
     A module reload can update ``conversation_compression`` while the cached
-    ``hermes_state.SessionDB`` class remains pre-lock. The compatibility path is
+    ``qwerty_state.SessionDB`` class remains pre-lock. The compatibility path is
     only valid for that exact class identity, not a proxy that merely uses the
     same name.
     """
@@ -1389,10 +1389,10 @@ def test_missing_lock_subsystem_fails_open_not_infinite_loop(tmp_path: Path, mon
 
     agent = _build_agent_with_db(db, parent_sid)
     legacy_type = _make_legacy_session_db_class()
-    import hermes_state
+    import qwerty_state
 
-    real_session_db_type = hermes_state.SessionDB
-    monkeypatch.setattr(hermes_state, "SessionDB", legacy_type)
+    real_session_db_type = qwerty_state.SessionDB
+    monkeypatch.setattr(qwerty_state, "SessionDB", legacy_type)
     try:
         # The same module now exposes its genuinely old SessionDB class; its
         # instance forwards persistence/rotation operations to a real database.
@@ -1406,7 +1406,7 @@ def test_missing_lock_subsystem_fails_open_not_infinite_loop(tmp_path: Path, mon
         messages = [{"role": "user", "content": f"m{i}"} for i in range(20)]
         compressed, _sp = agent._compress_context(messages, "sys", approx_tokens=120_000)
     finally:
-        monkeypatch.setattr(hermes_state, "SessionDB", real_session_db_type)
+        monkeypatch.setattr(qwerty_state, "SessionDB", real_session_db_type)
 
     assert agent.context_compressor.compress.call_count == 1
     assert len(compressed) < len(messages), (

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Reveal/focus a pane in the Hermes desktop GUI.
+"""Reveal/focus a pane in the Qwerty desktop GUI.
 
-Gated on ``HERMES_DESKTOP`` (like the other GUI affordances). Emits
+Gated on ``QWERTY_DESKTOP`` (like the other GUI affordances). Emits
 ``pane.reveal`` through the shared ``desktop_ui`` bridge; the renderer runs each
 pane's own reveal path and only acts on the active window (a background turn
 never moves the user's focus). To show a URL/file, use ``open_preview``.
@@ -27,20 +27,20 @@ def focus_pane_tool(pane: str) -> str:
     except Exception as exc:
         return tool_error(f"Failed to focus the {name} pane: {exc}")
     if not ok:
-        return tool_error("Pane focus is only available in the Hermes desktop app.")
+        return tool_error("Pane focus is only available in the Qwerty desktop app.")
 
     return json.dumps({"success": True, "pane": name}, ensure_ascii=False)
 
 
 def check_focus_pane_requirements() -> bool:
-    """Desktop GUI only — HERMES_DESKTOP is set on the gateway the app spawns."""
-    return env_var_enabled("HERMES_DESKTOP")
+    """Desktop GUI only — QWERTY_DESKTOP is set on the gateway the app spawns."""
+    return env_var_enabled("QWERTY_DESKTOP")
 
 
 FOCUS_PANE_SCHEMA = {
     "name": "focus_pane",
     "description": (
-        "Reveal and focus a pane in the Hermes desktop app when the user asks to "
+        "Reveal and focus a pane in the Qwerty desktop app when the user asks to "
         "see it — e.g. \"show me the terminal\", \"open the file browser\", \"show "
         "the diff\". Panes: chat (the conversation), files (project file browser), "
         "terminal (embedded shell), review (git diff), sessions (the session list). "

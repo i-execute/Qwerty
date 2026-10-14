@@ -6,7 +6,7 @@ September 2026). The rejection is a 401 whose message misleadingly tells the
 user to supply an OAuth 2 access token. ``gemini_http_error`` must append
 actionable key-migration guidance on that shape — and ONLY that shape.
 
-Port of Kilo-Org/kilocode#12162, adapted to Hermes' GeminiAPIError surface.
+Port of Kilo-Org/kilocode#12162, adapted to Qwerty' GeminiAPIError surface.
 """
 from __future__ import annotations
 

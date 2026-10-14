@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from hermes_state import SessionDB
+from qwerty_state import SessionDB
 
 
 @pytest.fixture()

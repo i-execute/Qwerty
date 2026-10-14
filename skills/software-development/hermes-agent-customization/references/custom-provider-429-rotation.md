@@ -2,7 +2,7 @@
 
 ## Behavioral contract
 
-- `hermes model` asks `Use API-key rotation? [y/N]` immediately after the custom endpoint URL.
+- `qwerty model` asks `Use API-key rotation? [y/N]` immediately after the custom endpoint URL.
 - `N` keeps one primary key in normal config.
 - `Y` collects the primary plus all additional keys in one setup pass; an empty additional key ends collection.
 - The primary config key must not become a second pool candidate when `model.api_key` mirrors `custom_providers[].api_key`.
@@ -18,8 +18,8 @@ From a clean checkout with dependencies available:
 uv run --extra dev pytest -q \
   tests/agent/test_custom_two_slot_rotation.py \
   tests/agent/test_custom_pool_mismatch_guard.py \
-  tests/hermes_cli/test_custom_provider_model_switch.py
-python -m compileall -q agent/credential_pool.py agent/agent_runtime_helpers.py hermes_cli/model_setup_flows.py
+  tests/qwerty_cli/test_custom_provider_model_switch.py
+python -m compileall -q agent/credential_pool.py agent/agent_runtime_helpers.py qwerty_cli/model_setup_flows.py
 git diff --check
 ```
 

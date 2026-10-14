@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import hermes_cli.plugins as plugins_mod
+import qwerty_cli.plugins as plugins_mod
 import tools.terminal_tool as terminal_tool_module
 from tools.environments.local import LocalEnvironment
 
@@ -53,7 +53,7 @@ def _run_terminal(
     monkeypatch.setitem(terminal_tool_module._last_activity, "default", 0.0)
 
     if invoke_hook is not _UNSET:
-        monkeypatch.setattr("hermes_cli.plugins.invoke_hook", invoke_hook)
+        monkeypatch.setattr("qwerty_cli.plugins.invoke_hook", invoke_hook)
 
     result = json.loads(terminal_tool_module.terminal_tool(command=command))
     return result, mock_env
@@ -116,7 +116,7 @@ def test_terminal_output_transform_still_truncates_long_replacement(monkeypatch,
 
 
 def test_terminal_output_transform_still_runs_strip_and_redact(monkeypatch, tmp_path):
-    # Ensure redaction is active regardless of host HERMES_REDACT_SECRETS state
+    # Ensure redaction is active regardless of host QWERTY_REDACT_SECRETS state
     # or collection-time import order (the module snapshots env at import).
     monkeypatch.setattr("agent.redact._REDACT_ENABLED", True)
 
@@ -169,7 +169,7 @@ def test_large_process_output_is_bounded_before_sudo_and_plugin_hooks(
     monkeypatch.setattr(
         terminal_tool_module, "_sudo_wrong_password_failure", _sudo_spy
     )
-    monkeypatch.setattr("hermes_cli.plugins.invoke_hook", _hook_spy)
+    monkeypatch.setattr("qwerty_cli.plugins.invoke_hook", _hook_spy)
 
     env = LocalEnvironment(cwd=str(tmp_path), timeout=10)
     monkeypatch.setitem(terminal_tool_module._active_environments, "default", env)
@@ -236,8 +236,8 @@ def test_terminal_output_transform_does_not_change_approval_or_exit_code_meaning
 def test_terminal_output_transform_integration_with_real_plugin(monkeypatch, tmp_path):
     import yaml
 
-    hermes_home = Path(os.environ["HERMES_HOME"])
-    plugins_dir = hermes_home / "plugins"
+    qwerty_home = Path(os.environ["QWERTY_HOME"])
+    plugins_dir = qwerty_home / "plugins"
     plugin_dir = plugins_dir / "terminal_transform"
     plugin_dir.mkdir(parents=True)
     (plugin_dir / "plugin.yaml").write_text("name: terminal_transform\n", encoding="utf-8")
@@ -248,7 +248,7 @@ def test_terminal_output_transform_integration_with_real_plugin(monkeypatch, tmp
         encoding="utf-8",
     )
     # Plugins are opt-in — must be listed in plugins.enabled to load.
-    cfg_path = hermes_home / "config.yaml"
+    cfg_path = qwerty_home / "config.yaml"
     cfg_path.write_text(
         yaml.safe_dump({"plugins": {"enabled": ["terminal_transform"]}}),
         encoding="utf-8",

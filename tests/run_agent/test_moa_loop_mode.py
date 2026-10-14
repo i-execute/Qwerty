@@ -13,7 +13,7 @@ def _response(content="done", *, tool_calls=None):
 
 
 def test_moa_virtual_provider_aggregator_is_actor(monkeypatch, tmp_path):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -30,7 +30,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
     calls = []
 
     def fake_call_llm(**kwargs):
@@ -72,7 +72,7 @@ moa:
 
 
 def test_moa_runtime_provider_uses_virtual_endpoint():
-    from hermes_cli.runtime_provider import resolve_runtime_provider
+    from qwerty_cli.runtime_provider import resolve_runtime_provider
 
     runtime = resolve_runtime_provider(requested="moa", target_model="review")
 
@@ -89,7 +89,7 @@ def test_moa_primary_restore_rebuilds_virtual_facade(monkeypatch, tmp_path):
     client from MoA's empty client_kwargs, raising "api_key client option must be
     set" and then "Failed to recreate closed OpenAI client".
     """
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -106,7 +106,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
 
     agent = AIAgent(
         api_key="moa-virtual-provider",
@@ -150,7 +150,7 @@ def test_moa_restored_facade_still_emits_reference_events(monkeypatch, tmp_path)
     display events for the rest of the session. The shared ``build_moa_facade``
     factory rewires the relay to ``agent.tool_progress_callback`` on restore.
     """
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -167,7 +167,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
 
     agent = AIAgent(
         api_key="moa-virtual-provider",
@@ -223,7 +223,7 @@ def test_moa_does_not_cap_output_tokens(monkeypatch, tmp_path):
     omits the parameter and each model uses its real maximum. Regression for
     the "no limit on MoA models" fix.
     """
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -241,7 +241,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
     calls = []
 
     def fake_call_llm(**kwargs):
@@ -297,7 +297,7 @@ def test_moa_slots_routed_through_resolve_runtime_provider(monkeypatch):
         }
 
     monkeypatch.setattr(
-        "hermes_cli.runtime_provider.resolve_runtime_provider", fake_resolve
+        "qwerty_cli.runtime_provider.resolve_runtime_provider", fake_resolve
     )
 
     rt = moa_loop._slot_runtime({"provider": "minimax", "model": "MiniMax-M2"})
@@ -329,7 +329,7 @@ def test_moa_codex_slot_preserves_provider_identity(monkeypatch):
         }
 
     monkeypatch.setattr(
-        "hermes_cli.runtime_provider.resolve_runtime_provider", fake_resolve
+        "qwerty_cli.runtime_provider.resolve_runtime_provider", fake_resolve
     )
 
     rt = moa_loop._slot_runtime({"provider": "openai-codex", "model": "gpt-5.5"})
@@ -378,7 +378,7 @@ def test_moa_provider_backed_slot_survives_aux_resolution(monkeypatch, provider)
         }
 
     monkeypatch.setattr(
-        "hermes_cli.runtime_provider.resolve_runtime_provider", fake_resolve
+        "qwerty_cli.runtime_provider.resolve_runtime_provider", fake_resolve
     )
 
     rt = moa_loop._slot_runtime({"provider": provider, "model": "test-model"})
@@ -621,7 +621,7 @@ def test_moa_gemini_aggregator_sanitize_uses_real_model(monkeypatch, tmp_path):
     the Gemini aggregator then 400s with "Function call is missing a
     thought_signature in functionCall parts."
     """
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -638,7 +638,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
 
     sanitize_models = []
 
@@ -711,7 +711,7 @@ def test_moa_slot_runtime_falls_back_on_resolution_error(monkeypatch):
         raise RuntimeError("unknown provider")
 
     monkeypatch.setattr(
-        "hermes_cli.runtime_provider.resolve_runtime_provider", boom
+        "qwerty_cli.runtime_provider.resolve_runtime_provider", boom
     )
 
     rt = moa_loop._slot_runtime({"provider": "mystery", "model": "x"})
@@ -732,7 +732,7 @@ def test_reference_messages_drops_system_but_renders_tools_as_text():
     from agent.moa_loop import _reference_messages
 
     messages = [
-        {"role": "system", "content": "huge hermes system prompt"},
+        {"role": "system", "content": "huge qwerty system prompt"},
         {"role": "user", "content": "do the thing"},
         {
             "role": "assistant",
@@ -749,7 +749,7 @@ def test_reference_messages_drops_system_but_renders_tools_as_text():
     assert all(m["role"] in ("user", "assistant") for m in view)
     assert all("tool_calls" not in m for m in view)
     # System prompt is gone.
-    assert all("huge hermes system prompt" not in m["content"] for m in view)
+    assert all("huge qwerty system prompt" not in m["content"] for m in view)
     # The agent's action and the tool result are PRESERVED as text.
     joined = "\n".join(m["content"] for m in view)
     assert "[called tool: f(" in joined
@@ -901,7 +901,7 @@ def test_run_reference_prepends_advisory_system_prompt(monkeypatch):
 
 
 def test_moa_facade_references_get_trimmed_messages(monkeypatch, tmp_path):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -918,7 +918,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
     calls = []
 
     def fake_call_llm(**kwargs):
@@ -966,7 +966,7 @@ moa:
 
 
 def test_moa_disabled_preset_skips_references(monkeypatch, tmp_path):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -984,7 +984,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
     calls = []
 
     def fake_call_llm(**kwargs):
@@ -1007,7 +1007,7 @@ moa:
 
 
 def test_moa_disabled_reference_is_not_called(monkeypatch, tmp_path):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -1028,7 +1028,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
     calls = []
 
     def fake_call_llm(**kwargs):
@@ -1202,9 +1202,9 @@ moa:
 def test_moa_facade_emits_reference_then_aggregating(monkeypatch, tmp_path):
     """The facade reports each reference's output, then an aggregating signal,
     so frontends can render reference blocks before the aggregator acts."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     _ref_config(home)
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
 
     def fake_call_llm(**kwargs):
         if kwargs["task"] == "moa_reference":
@@ -1242,9 +1242,9 @@ def test_moa_facade_reruns_references_on_new_tool_result(monkeypatch, tmp_path):
     create() call with the SAME state is a cache HIT (no re-run, no
     re-emit), so we don't fire on a pure no-op re-call.
     """
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     _ref_config(home, fanout="per_iteration")
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
 
     ref_runs = []
 
@@ -1282,9 +1282,9 @@ def test_moa_facade_reruns_references_on_new_tool_result(monkeypatch, tmp_path):
 
 def test_moa_facade_reruns_references_on_new_turn(monkeypatch, tmp_path):
     """A genuinely new user message invalidates the cache and re-runs refs."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     _ref_config(home)
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
 
     ref_runs = []
 
@@ -1327,7 +1327,7 @@ def test_slot_runtime_anthropic_oauth_routes_through_provider_branch(monkeypatch
         }
 
     monkeypatch.setattr(
-        "hermes_cli.runtime_provider.resolve_runtime_provider", fake_resolve
+        "qwerty_cli.runtime_provider.resolve_runtime_provider", fake_resolve
     )
 
     # _slot_runtime forwards the resolved endpoint for anthropic like any slot.
@@ -1417,7 +1417,7 @@ def test_references_parallel_sum_and_consume(monkeypatch, tmp_path):
     additional advisor spend (otherwise advisor cost multiplies by iteration
     count).
     """
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -1436,7 +1436,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
 
     def fake_call_llm(**kwargs):
         if kwargs["task"] == "moa_reference":
@@ -1501,7 +1501,7 @@ def test_moa_full_trace_written_when_enabled(monkeypatch, tmp_path):
     """
     import json
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -1521,7 +1521,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
 
     def fake_call_llm(**kwargs):
         if kwargs["task"] == "moa_reference":
@@ -1582,7 +1582,7 @@ moa:
 
 def test_moa_trace_not_written_when_disabled(monkeypatch, tmp_path):
     """Default (save_traces off) writes nothing."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -1599,7 +1599,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
 
     def fake_call_llm(**kwargs):
         if kwargs["task"] == "moa_reference":
@@ -1680,8 +1680,8 @@ def test_reference_messages_flattens_cache_decorated_content():
     from agent.prompt_caching import apply_anthropic_cache_control
 
     plain = [
-        {"role": "system", "content": "hermes system prompt"},
-        {"role": "user", "content": "Can we get codex usage resets into hermes?"},
+        {"role": "system", "content": "qwerty system prompt"},
+        {"role": "user", "content": "Can we get codex usage resets into qwerty?"},
     ]
     decorated = apply_anthropic_cache_control(plain, native_anthropic=False)
     # Premise: decoration really converts the user turn to a content-part list.
@@ -1690,7 +1690,7 @@ def test_reference_messages_flattens_cache_decorated_content():
     view = _reference_messages(decorated)
 
     assert view == [
-        {"role": "user", "content": "Can we get codex usage resets into hermes?"}
+        {"role": "user", "content": "Can we get codex usage resets into qwerty?"}
     ]
     # Invariant: decorated and undecorated transcripts produce the SAME
     # advisory view — so decoration can never change what references see,
@@ -1840,7 +1840,7 @@ def test_moa_pre_api_compression_includes_reference_guidance(monkeypatch, tmp_pa
     injected guidance cross it.  Compression must occur before the aggregator
     request and leave the rebuilt request below the threshold.
     """
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -1857,7 +1857,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
 
     events = []
     compression_inputs = []
@@ -2048,7 +2048,7 @@ def test_moa_facade_sanitizes_failures_without_breaking_accounting(monkeypatch, 
     from agent import moa_loop
     from agent.usage_pricing import CanonicalUsage
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -2069,7 +2069,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
     outputs = [
         (
             "good-model",
@@ -2215,7 +2215,7 @@ def _facade_all_failed_fixture(monkeypatch, tmp_path, policy):
     from agent import moa_loop
     from agent.usage_pricing import CanonicalUsage
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         f"""
@@ -2235,7 +2235,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
     outputs = [
         (
             "bad-model-a",
@@ -2424,7 +2424,7 @@ def test_facade_does_not_cache_interrupted_reference_results(monkeypatch, tmp_pa
     from agent import moa_loop
     from agent.usage_pricing import CanonicalUsage
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".qwerty"
     home.mkdir()
     (home / "config.yaml").write_text(
         """
@@ -2441,7 +2441,7 @@ moa:
 """.strip(),
         encoding="utf-8",
     )
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("QWERTY_HOME", str(home))
 
     interrupted_outputs = [
         (

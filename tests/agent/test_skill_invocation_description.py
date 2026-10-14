@@ -50,7 +50,7 @@ def skills(tmp_path, monkeypatch):
     _write_bundle(bundles_dir, "demo", ["work", "clean"])
 
     monkeypatch.setattr(skills_tool, "SKILLS_DIR", skills_dir)
-    monkeypatch.setenv("HERMES_BUNDLES_DIR", str(bundles_dir))
+    monkeypatch.setenv("QWERTY_BUNDLES_DIR", str(bundles_dir))
     monkeypatch.setattr(skill_commands, "_skill_commands", {})
     monkeypatch.setattr(skill_commands, "_skill_commands_platform", None)
     monkeypatch.setattr(skill_bundles, "_bundles_cache", {})
