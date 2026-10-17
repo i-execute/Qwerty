@@ -4782,6 +4782,7 @@ class TelegramAdapter(BasePlatformAdapter):
         description: str = "dangerous command",
         metadata: Optional[Dict[str, Any]] = None,
         allow_permanent: bool = True,
+        allow_session: bool = True,
         smart_denied: bool = False,
     ) -> SendResult:
         """Send an inline-keyboard approval prompt with interactive buttons.
@@ -4816,7 +4817,7 @@ class TelegramAdapter(BasePlatformAdapter):
             buttons = [
                 InlineKeyboardButton("✅ Allow Once", callback_data=f"ea:once:{approval_id}")
             ]
-            if not smart_denied:
+            if not smart_denied and allow_session:
                 buttons.append(
                     InlineKeyboardButton("✅ Session", callback_data=f"ea:session:{approval_id}")
                 )
@@ -7155,14 +7156,12 @@ class TelegramAdapter(BasePlatformAdapter):
         glyph_ids: Dict[str, str] = {}
         for emoji_id, glyph in self._GAME_EMOJI_PACK:
             glyph_ids.setdefault(glyph, emoji_id)
-        fallback_ids = [emoji_id for emoji_id, _glyph in self._GAME_EMOJI_PACK]
         if not glyph_ids:
             return entities
         if entities:
             spans = sorted((e["offset"], e["offset"] + e["length"]) for e in entities)
         else:
             spans = []
-        fb_pos = 0
         for m in self._EMOJI_ANY_RE.finditer(text):
             start, end = m.span()
             if any(s <= start and end <= t for s, t in spans):
@@ -7170,8 +7169,7 @@ class TelegramAdapter(BasePlatformAdapter):
             glyph = m.group(0)
             emoji_id = glyph_ids.get(glyph)
             if emoji_id is None:
-                emoji_id = fallback_ids[fb_pos % len(fallback_ids)]
-                fb_pos += 1
+                continue
             entities.append({
                 "_": "messageEntityCustomEmoji",
                 "offset": start,
