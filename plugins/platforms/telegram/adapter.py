@@ -732,11 +732,7 @@ class TelegramAdapter(BasePlatformAdapter):
         # Document size cap. Telegram's public Bot API caps getFile at 20MB; a
         # locally-hosted telegram-bot-api server (configured via extra.base_url)
         # raises that to 2GB, so the presence of base_url is the opt-in.
-        self._max_doc_bytes: int = (
-            2 * 1024 * 1024 * 1024
-            if self.config.extra.get("base_url")
-            else 20 * 1024 * 1024
-        )
+        self._max_doc_bytes: int = 4 * 1024 * 1024 * 1024
         # Interactive model picker state per chat
         self._model_picker_state: Dict[str, dict] = {}
         self._choice_picker_state: Dict[str, dict] = {}
@@ -2597,6 +2593,8 @@ class TelegramAdapter(BasePlatformAdapter):
         location = _mt_file_location(media, thumb)
         buf = io.BytesIO()
         await self._app.charged_download(location, buf, size=int(size or 0), media_source=media)
+        if size and len(buf.getbuffer()) != int(size):
+            raise RuntimeError("downloaded size does not match expected size")
         return buf.getvalue()
 
     def _mt_peer_dialog_to_chat_info(self, result: Any, chat_id: Any) -> Dict[str, Any]:
@@ -6236,7 +6234,7 @@ class TelegramAdapter(BasePlatformAdapter):
 
     def _telegram_media_size_allowed(self, source: Any, label: str) -> tuple[bool, Optional[str]]:
         """Validate Telegram media size before downloading into memory."""
-        max_bytes = int(getattr(self, "_max_doc_bytes", 20 * 1024 * 1024) or 20 * 1024 * 1024)
+        max_bytes = int(getattr(self, "_max_doc_bytes", 4 * 1024 * 1024 * 1024) or 4 * 1024 * 1024 * 1024)
         file_size = getattr(source, "file_size", None)
         try:
             size = int(file_size or 0)
@@ -8074,7 +8072,7 @@ class TelegramAdapter(BasePlatformAdapter):
         if source is None:
             return
 
-        max_bytes = getattr(self, "_max_doc_bytes", 20 * 1024 * 1024)
+        max_bytes = getattr(self, "_max_doc_bytes", 4 * 1024 * 1024 * 1024)
         file_size = getattr(source, "file_size", None)
         try:
             size = int(file_size or 0)
@@ -8128,7 +8126,7 @@ class TelegramAdapter(BasePlatformAdapter):
         if source is None:
             return
 
-        max_bytes = getattr(self, "_max_doc_bytes", 20 * 1024 * 1024)
+        max_bytes = getattr(self, "_max_doc_bytes", 4 * 1024 * 1024 * 1024)
         file_size = getattr(source, "file_size", None)
         try:
             size = int(file_size or 0)
@@ -8530,6 +8528,7 @@ class TelegramAdapter(BasePlatformAdapter):
                     )
                 ]
                 out.caption = raw.get("message") or None
+                out.text = None
             elif media_type == "messageMediaDocument":
                 doc = media.get("document") or {}
                 attrs = doc.get("attributes") or [] if isinstance(doc, dict) else []
@@ -8554,11 +8553,14 @@ class TelegramAdapter(BasePlatformAdapter):
                 else:
                     out.document = _MTInboundMedia(self, media, "document")
                 out.caption = raw.get("message") or None
+                out.text = None
             elif media_type == "messageMediaGeo":
                 out.location = media.get("geo") if isinstance(media.get("geo"), dict) else media
             elif media_type == "messageMediaVenue":
                 out.location = media.get("geo") if isinstance(media.get("geo"), dict) else media
                 out.venue = media
+        if out.caption is not None:
+            out.text = None
         return out
 
     def _mt_update_wrapper(self, ptb_msg: Any, update_id: int) -> Any:
