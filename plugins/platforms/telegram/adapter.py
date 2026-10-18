@@ -1976,7 +1976,7 @@ class TelegramAdapter(BasePlatformAdapter):
             "[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u2049\u203C\u2122\u2139\u2194-\u21AA]"
         )
         counters: Dict[str, int] = {}
-        fallback_pool = [emoji_id for emoji_id, _glyph in cls._GAME_EMOJI_PACK]
+        fallback_glyphs = [glyph for _eid, glyph in cls._GAME_EMOJI_PACK]
         fallback_pos = 0
 
         def replace_emoji(match: re.Match[str]) -> str:
@@ -1989,6 +1989,10 @@ class TelegramAdapter(BasePlatformAdapter):
                 occurrence = counters.get(glyph, 0)
                 counters[glyph] = occurrence + 1
                 emoji_id = uploaded_ids[occurrence % len(uploaded_ids)]
+            else:
+                glyph = fallback_glyphs[fallback_pos % len(fallback_glyphs)]
+                fallback_pos += 1
+                emoji_id = uploaded_by_glyph[glyph][0]
             return f"![{glyph}](tg://emoji?id={emoji_id})"
 
         for index, part in enumerate(parts):
@@ -7171,7 +7175,7 @@ class TelegramAdapter(BasePlatformAdapter):
         return entities
 
     _EMOJI_SUBSTITUTE_RE = re.compile(
-        "[\u2194-\u21AA\u2300-\u27BF\u2B00-\u2BFF\u2049\u203C\u2122\u2139][\ufe0f]?"
+        "[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\u2194-\u21AA\u2049\u203C\u2122\u2139][\ufe0f]?"
     )
 
     def _substitute_non_emoji_glyphs(self, text: str) -> str:
