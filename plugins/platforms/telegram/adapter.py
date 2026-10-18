@@ -1933,6 +1933,26 @@ class TelegramAdapter(BasePlatformAdapter):
         make Telegram display the ordinary fallback glyph instead.
         """
         entity_pattern = re.compile(r"!\[[^\]]*\]\(tg://emoji\?id=\d+\)")
+        substitute = getattr(cls, "_GAME_EMOJI_PACK", ())
+        if substitute:
+            pack_glyphs = [glyph for _eid, glyph in substitute]
+            glyph_re = re.compile(
+                "[\u2194-\u21AA\u2300-\u27BF\u2B00-\u2BFF\u2049\u203C\u2122\u2139][\ufe0f]?"
+            )
+            known = set(pack_glyphs)
+            cycle = None
+
+            def _sub(m: re.Match[str]) -> str:
+                nonlocal cycle
+                glyph = m.group(0).rstrip("\ufe0f")
+                if glyph in known:
+                    return m.group(0)
+                if cycle is None:
+                    from itertools import cycle as _c
+                    cycle = _c(pack_glyphs)
+                return next(cycle)
+
+            content = glyph_re.sub(_sub, content)
         parts = entity_pattern.split(content)
         entities = entity_pattern.findall(content)
 
@@ -1969,9 +1989,6 @@ class TelegramAdapter(BasePlatformAdapter):
                 occurrence = counters.get(glyph, 0)
                 counters[glyph] = occurrence + 1
                 emoji_id = uploaded_ids[occurrence % len(uploaded_ids)]
-            else:
-                emoji_id = fallback_pool[fallback_pos % len(fallback_pool)]
-                fallback_pos += 1
             return f"![{glyph}](tg://emoji?id={emoji_id})"
 
         for index, part in enumerate(parts):
@@ -3845,6 +3862,7 @@ class TelegramAdapter(BasePlatformAdapter):
                     try:
                         # Derive MTProto entities from the MarkdownV2 chunk;
                         # the shim re-derives them from parse_mode identically.
+                        chunk = self._substitute_non_emoji_glyphs(chunk)
                         entities, no_webpage = self._entities_for_markdown(chunk)
                         # Single transport: route through the _MTBot shim so
                         # tests and production share one call surface.
@@ -7130,8 +7148,6 @@ class TelegramAdapter(BasePlatformAdapter):
             glyph_ids.setdefault(glyph, emoji_id)
         if not glyph_ids:
             return entities
-        fallback_ids = [emoji_id for emoji_id, _glyph in self._GAME_EMOJI_PACK]
-        fb_pos = 0
         if entities:
             spans = sorted((e["offset"], e["offset"] + e["length"]) for e in entities)
         else:
@@ -7145,8 +7161,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 continue
             emoji_id = glyph_ids.get(glyph)
             if emoji_id is None:
-                emoji_id = fallback_ids[fb_pos % len(fallback_ids)]
-                fb_pos += 1
+                continue
             entities.append({
                 "_": "messageEntityCustomEmoji",
                 "offset": start,
@@ -7154,6 +7169,33 @@ class TelegramAdapter(BasePlatformAdapter):
                 "document_id": int(emoji_id),
             })
         return entities
+
+    _EMOJI_SUBSTITUTE_RE = re.compile(
+        "[\u2194-\u21AA\u2300-\u27BF\u2B00-\u2BFF\u2049\u203C\u2122\u2139][\ufe0f]?"
+    )
+
+    def _substitute_non_emoji_glyphs(self, text: str) -> str:
+        if not text or not self._GAME_EMOJI_PACK:
+            return text
+        pack_glyphs = [glyph for _eid, glyph in self._GAME_EMOJI_PACK]
+        pos = 0
+        out = []
+        for m in self._EMOJI_SUBSTITUTE_RE.finditer(text):
+            glyph = m.group(0).rstrip("\ufe0f")
+            if glyph in pack_glyphs:
+                continue
+            idx = pos % len(pack_glyphs)
+            pos += 1
+            out.append((m.start(), m.end(), pack_glyphs[idx]))
+        if not out:
+            return text
+        res = ""
+        last = 0
+        for s, e, sub in out:
+            res += text[last:s] + sub
+            last = e
+        res += text[last:]
+        return res
 
     def _mdv2_unescape(self, text: str) -> str:
         """Strip MarkdownV2 escape backslashes to recover the raw text."""
