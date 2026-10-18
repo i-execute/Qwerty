@@ -1970,7 +1970,8 @@ class TelegramAdapter(BasePlatformAdapter):
                 counters[glyph] = occurrence + 1
                 emoji_id = uploaded_ids[occurrence % len(uploaded_ids)]
             else:
-                return glyph
+                emoji_id = fallback_pool[fallback_pos % len(fallback_pool)]
+                fallback_pos += 1
             return f"![{glyph}](tg://emoji?id={emoji_id})"
 
         for index, part in enumerate(parts):
@@ -7129,6 +7130,8 @@ class TelegramAdapter(BasePlatformAdapter):
             glyph_ids.setdefault(glyph, emoji_id)
         if not glyph_ids:
             return entities
+        fallback_ids = [emoji_id for emoji_id, _glyph in self._GAME_EMOJI_PACK]
+        fb_pos = 0
         if entities:
             spans = sorted((e["offset"], e["offset"] + e["length"]) for e in entities)
         else:
@@ -7138,9 +7141,12 @@ class TelegramAdapter(BasePlatformAdapter):
             if any(s <= start and end <= t for s, t in spans):
                 continue
             glyph = m.group(0)
+            if glyph == "\ufe0f":
+                continue
             emoji_id = glyph_ids.get(glyph)
             if emoji_id is None:
-                continue
+                emoji_id = fallback_ids[fb_pos % len(fallback_ids)]
+                fb_pos += 1
             entities.append({
                 "_": "messageEntityCustomEmoji",
                 "offset": start,
