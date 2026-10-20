@@ -1409,6 +1409,29 @@ wheels = [
 ]
 
 [[package]]
+name = "goygram"
+version = "0.8.26"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "qrcode" },
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fc/a3/d1fa96e746b94b44d581a502326a635eef4a26390617e2b87f772cfffab8/goygram-0.8.26.tar.gz", hash = "sha256:8032ba9c7180cb267105edb5027bb801ee53b304449b1b9783ee59447dd88f0b", size = 277980, upload-time = "2026-10-20T05:36:29.08Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/c9/38fa9108267215a809105852085bd1fc052e64e84d0b86d1d123430bc2cb/goygram-0.8.26-cp38-abi3-android_24_arm64_v8a.whl", hash = "sha256:48e1558ecac7ce733c284ae22191655077fe43e8361f1a3c0ef09cfe7c29891f", size = 575525, upload-time = "2026-10-20T05:36:15.509Z" },
+    { url = "https://files.pythonhosted.org/packages/c5/aa/f3f889f294d754497246b2449e826cab450c0aea8dc87d44490744e848f2/goygram-0.8.26-cp38-abi3-android_24_x86_64.whl", hash = "sha256:3be2149f6436edf0869eb8562bb3ffdc297c5b5272b0c0aeba425e69393e8f19", size = 591849, upload-time = "2026-10-20T05:36:17.2Z" },
+    { url = "https://files.pythonhosted.org/packages/29/cd/dfaa4df1509f49a976a146fb5a6e9cfe4ca77f7a9f0e3f9264872e8c79e3/goygram-0.8.26-cp38-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:4635dd8663adb57ee68dcb017f4767d8d55ca3c4a4a3148f2e5ae373bb87519c", size = 833790, upload-time = "2026-10-20T05:36:18.655Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/5d/9ff6164364058f49581b000eb375c1a3a7a6cfc38bba3667537425c03d27/goygram-0.8.26-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:d22630aac7748f660a9b9562c7bed382d0adb6aecbd7a13d12c3b94a29c4e5d5", size = 552198, upload-time = "2026-10-20T05:36:20.064Z" },
+    { url = "https://files.pythonhosted.org/packages/52/9d/4800710cb292163b3320f3a9648c7743797081b73a345f6c3e7826362bad/goygram-0.8.26-cp38-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:11a28e3df4d70e9c4bf60810f364e9cdecffc19cc8d72c4d1772aa4c8818777b", size = 566003, upload-time = "2026-10-20T05:36:21.5Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/3b/bedc7559ecc7fc3ef424bd89053031b37b9d31ff2a8e1864553fe510c2e5/goygram-0.8.26-cp38-abi3-manylinux_2_34_x86_64.whl", hash = "sha256:344f2b51fc105ac4ac6505d40b7cee9928d1e71cf200561a186c0529bb8a13b3", size = 580746, upload-time = "2026-10-20T05:36:22.739Z" },
+    { url = "https://files.pythonhosted.org/packages/e1/23/73aa288d2b9aa98263fd7246dd5bd60c20f82b4ecc4e35db783a107d6795/goygram-0.8.26-cp38-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:fd1530b2b4032d4b919c42df9585551d9fa04e6c55c0d69540b298fb7dd863b3", size = 744909, upload-time = "2026-10-20T05:36:23.984Z" },
+    { url = "https://files.pythonhosted.org/packages/04/a6/8a7e17d88e515b405ac5a1da4da2f1c9baeb34ff3768b3feeac666497c8a/goygram-0.8.26-cp38-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:05a5332dfb46c3665fcd2df7a598ab724d7041751515083e90227e7122d6bd27", size = 792753, upload-time = "2026-10-20T05:36:25.129Z" },
+    { url = "https://files.pythonhosted.org/packages/12/30/cae572a0284443edbdb7e27bafc90f085aa84abf18b9473d0ce32fe3a5c5/goygram-0.8.26-cp38-abi3-win_amd64.whl", hash = "sha256:97e8a26487280e3b963491fbf0120250892baea9be9b11a446244620aaa40e91", size = 497382, upload-time = "2026-10-20T05:36:26.343Z" },
+    { url = "https://files.pythonhosted.org/packages/21/d6/58875a402b530ec41491665ed6a71612abade1f0eccc34fa76a2bace7afd/goygram-0.8.26-cp38-abi3-win_arm64.whl", hash = "sha256:ace19948abf849d0beb4c6310cceefd0b9ca63c65bab358901a65bdf5d7251c2", size = 483900, upload-time = "2026-10-20T05:36:27.686Z" },
+]
+
+[[package]]
 name = "greenlet"
 version = "3.5.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1515,349 +1538,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/1d/17/afa56379f94ad0fe8
 wheels = [
     { url = "https://files.pythonhosted.org/packages/69/b2/119f6e6dcbd96f9069ce9a2665e0146588dc9f88f29549711853645e736a/h2-4.3.0-py3-none-any.whl", hash = "sha256:c438f029a25f7945c69e0ccf0fb951dc3f73a5f6412981daee861431b70e2bdd", size = 61779, upload-time = "2025-08-23T18:12:17.779Z" },
 ]
-
-[[package]]
-name = "hermes-agent"
-version = "0.19.0"
-source = { editable = "." }
-dependencies = [
-    { name = "certifi" },
-    { name = "concurrent-log-handler", marker = "sys_platform == 'win32'" },
-    { name = "croniter" },
-    { name = "cryptography" },
-    { name = "fastapi" },
-    { name = "fire" },
-    { name = "httpx", extra = ["socks"] },
-    { name = "jinja2" },
-    { name = "markdown" },
-    { name = "openai" },
-    { name = "packaging" },
-    { name = "pathspec" },
-    { name = "pillow" },
-    { name = "prompt-toolkit" },
-    { name = "psutil" },
-    { name = "ptyprocess", marker = "sys_platform != 'win32'" },
-    { name = "pydantic" },
-    { name = "pyjwt", extra = ["crypto"] },
-    { name = "python-dotenv" },
-    { name = "python-multipart" },
-    { name = "pywin32", marker = "sys_platform == 'win32'" },
-    { name = "pywinpty", marker = "sys_platform == 'win32'" },
-    { name = "pyyaml" },
-    { name = "requests" },
-    { name = "rich" },
-    { name = "ruamel-yaml" },
-    { name = "tenacity" },
-    { name = "tzdata", marker = "sys_platform == 'win32'" },
-    { name = "urllib3" },
-    { name = "uvicorn", extra = ["standard"] },
-    { name = "websockets" },
-]
-
-[package.optional-dependencies]
-acp = [
-    { name = "agent-client-protocol" },
-]
-all = [
-    { name = "agent-client-protocol" },
-    { name = "aiohttp" },
-    { name = "fastapi" },
-    { name = "google-api-python-client" },
-    { name = "google-auth-httplib2" },
-    { name = "google-auth-oauthlib" },
-    { name = "mcp" },
-    { name = "python-multipart" },
-    { name = "simple-term-menu" },
-    { name = "starlette" },
-    { name = "uvicorn", extra = ["standard"] },
-    { name = "youtube-transcript-api" },
-]
-anthropic = [
-    { name = "anthropic" },
-]
-azure-identity = [
-    { name = "azure-identity" },
-]
-bedrock = [
-    { name = "boto3" },
-]
-cli = [
-    { name = "simple-term-menu" },
-]
-computer-use = [
-    { name = "mcp" },
-    { name = "starlette" },
-]
-daytona = [
-    { name = "daytona" },
-]
-dev = [
-    { name = "debugpy" },
-    { name = "mcp" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "ruff" },
-    { name = "setuptools" },
-    { name = "starlette" },
-    { name = "ty" },
-]
-dingtalk = [
-    { name = "alibabacloud-dingtalk" },
-    { name = "dingtalk-stream" },
-    { name = "qrcode" },
-]
-edge-tts = [
-    { name = "edge-tts" },
-]
-exa = [
-    { name = "exa-py" },
-]
-fal = [
-    { name = "fal-client" },
-]
-feishu = [
-    { name = "lark-oapi" },
-    { name = "qrcode" },
-]
-firecrawl = [
-    { name = "firecrawl-py" },
-]
-google = [
-    { name = "google-api-python-client" },
-    { name = "google-auth-httplib2" },
-    { name = "google-auth-oauthlib" },
-]
-hindsight = [
-    { name = "hindsight-client" },
-]
-homeassistant = [
-    { name = "aiohttp" },
-]
-honcho = [
-    { name = "honcho-ai" },
-]
-matrix = [
-    { name = "aiohttp" },
-    { name = "aiohttp-socks" },
-    { name = "aiosqlite" },
-    { name = "asyncpg" },
-    { name = "mautrix", extra = ["encryption"] },
-]
-mcp = [
-    { name = "mcp" },
-    { name = "starlette" },
-]
-mem0 = [
-    { name = "mem0ai" },
-]
-messaging = [
-    { name = "aiohttp" },
-    { name = "brotlicffi" },
-    { name = "discord-py", extra = ["voice"] },
-    { name = "python-telegram-bot", extra = ["webhooks"] },
-    { name = "qrcode" },
-    { name = "slack-bolt" },
-    { name = "slack-sdk" },
-]
-mistral = [
-    { name = "mistralai" },
-]
-modal = [
-    { name = "modal" },
-]
-nemo-relay = [
-    { name = "nemo-relay" },
-]
-parallel-web = [
-    { name = "parallel-web" },
-]
-slack = [
-    { name = "aiohttp" },
-    { name = "slack-bolt" },
-    { name = "slack-sdk" },
-]
-sms = [
-    { name = "aiohttp" },
-]
-supermemory = [
-    { name = "supermemory" },
-]
-teams = [
-    { name = "aiohttp" },
-    { name = "microsoft-teams-apps" },
-]
-termux = [
-    { name = "agent-client-protocol" },
-    { name = "honcho-ai" },
-    { name = "mcp" },
-    { name = "python-telegram-bot", extra = ["webhooks"] },
-    { name = "simple-term-menu" },
-    { name = "starlette" },
-]
-termux-all = [
-    { name = "agent-client-protocol" },
-    { name = "aiohttp" },
-    { name = "fastapi" },
-    { name = "google-api-python-client" },
-    { name = "google-auth-httplib2" },
-    { name = "google-auth-oauthlib" },
-    { name = "honcho-ai" },
-    { name = "mcp" },
-    { name = "python-multipart" },
-    { name = "python-telegram-bot", extra = ["webhooks"] },
-    { name = "simple-term-menu" },
-    { name = "starlette" },
-    { name = "uvicorn", extra = ["standard"] },
-]
-tts-premium = [
-    { name = "elevenlabs" },
-]
-vertex = [
-    { name = "google-auth" },
-]
-voice = [
-    { name = "faster-whisper" },
-    { name = "numpy" },
-    { name = "sounddevice" },
-]
-web = [
-    { name = "fastapi" },
-    { name = "python-multipart" },
-    { name = "starlette" },
-    { name = "uvicorn", extra = ["standard"] },
-]
-wecom = [
-    { name = "defusedxml" },
-]
-youtube = [
-    { name = "youtube-transcript-api" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "agent-client-protocol", marker = "extra == 'acp'", specifier = "==0.9.0" },
-    { name = "aiohttp", marker = "extra == 'homeassistant'", specifier = "==3.14.1" },
-    { name = "aiohttp", marker = "extra == 'matrix'", specifier = "==3.14.1" },
-    { name = "aiohttp", marker = "extra == 'messaging'", specifier = "==3.14.1" },
-    { name = "aiohttp", marker = "extra == 'slack'", specifier = "==3.14.1" },
-    { name = "aiohttp", marker = "extra == 'sms'", specifier = "==3.14.1" },
-    { name = "aiohttp", marker = "extra == 'teams'", specifier = "==3.14.1" },
-    { name = "aiohttp-socks", marker = "extra == 'matrix'", specifier = "==0.11.0" },
-    { name = "aiosqlite", marker = "extra == 'matrix'", specifier = "==0.22.1" },
-    { name = "alibabacloud-dingtalk", marker = "extra == 'dingtalk'", specifier = "==2.2.42" },
-    { name = "anthropic", marker = "extra == 'anthropic'", specifier = "==0.87.0" },
-    { name = "asyncpg", marker = "extra == 'matrix'", specifier = "==0.31.0" },
-    { name = "azure-identity", marker = "extra == 'azure-identity'", specifier = "==1.25.3" },
-    { name = "boto3", marker = "extra == 'bedrock'", specifier = "==1.42.89" },
-    { name = "brotlicffi", marker = "extra == 'messaging'", specifier = "==1.2.0.1" },
-    { name = "certifi", specifier = "==2026.5.20" },
-    { name = "concurrent-log-handler", marker = "sys_platform == 'win32'", specifier = "==0.9.29" },
-    { name = "croniter", specifier = "==6.0.0" },
-    { name = "cryptography", specifier = "==48.0.1" },
-    { name = "daytona", marker = "extra == 'daytona'", specifier = "==0.155.0" },
-    { name = "debugpy", marker = "extra == 'dev'", specifier = "==1.8.20" },
-    { name = "defusedxml", marker = "extra == 'wecom'", specifier = "==0.7.1" },
-    { name = "dingtalk-stream", marker = "extra == 'dingtalk'", specifier = "==0.24.3" },
-    { name = "discord-py", extras = ["voice"], marker = "extra == 'messaging'", specifier = "==2.7.1" },
-    { name = "edge-tts", marker = "extra == 'edge-tts'", specifier = "==7.2.7" },
-    { name = "elevenlabs", marker = "extra == 'tts-premium'", specifier = "==1.59.0" },
-    { name = "exa-py", marker = "extra == 'exa'", specifier = "==2.10.2" },
-    { name = "fal-client", marker = "extra == 'fal'", specifier = "==0.13.1" },
-    { name = "fastapi", specifier = ">=0.104.0,<1" },
-    { name = "fastapi", marker = "extra == 'web'", specifier = "==0.133.1" },
-    { name = "faster-whisper", marker = "extra == 'voice'", specifier = "==1.2.1" },
-    { name = "fire", specifier = "==0.7.1" },
-    { name = "firecrawl-py", marker = "extra == 'firecrawl'", specifier = "==4.17.0" },
-    { name = "google-api-python-client", marker = "extra == 'google'", specifier = "==2.194.0" },
-    { name = "google-auth", marker = "extra == 'vertex'", specifier = "==2.55.1" },
-    { name = "google-auth-httplib2", marker = "extra == 'google'", specifier = "==0.3.1" },
-    { name = "google-auth-oauthlib", marker = "extra == 'google'", specifier = "==1.3.1" },
-    { name = "hermes-agent", extras = ["acp"], marker = "extra == 'all'" },
-    { name = "hermes-agent", extras = ["acp"], marker = "extra == 'termux'" },
-    { name = "hermes-agent", extras = ["cli"], marker = "extra == 'all'" },
-    { name = "hermes-agent", extras = ["cli"], marker = "extra == 'termux'" },
-    { name = "hermes-agent", extras = ["cron"], marker = "extra == 'all'" },
-    { name = "hermes-agent", extras = ["cron"], marker = "extra == 'termux'" },
-    { name = "hermes-agent", extras = ["google"], marker = "extra == 'all'" },
-    { name = "hermes-agent", extras = ["google"], marker = "extra == 'termux-all'" },
-    { name = "hermes-agent", extras = ["homeassistant"], marker = "extra == 'all'" },
-    { name = "hermes-agent", extras = ["homeassistant"], marker = "extra == 'termux-all'" },
-    { name = "hermes-agent", extras = ["honcho"], marker = "extra == 'termux'" },
-    { name = "hermes-agent", extras = ["mcp"], marker = "extra == 'all'" },
-    { name = "hermes-agent", extras = ["mcp"], marker = "extra == 'termux'" },
-    { name = "hermes-agent", extras = ["pty"], marker = "extra == 'all'" },
-    { name = "hermes-agent", extras = ["pty"], marker = "extra == 'termux-all'" },
-    { name = "hermes-agent", extras = ["sms"], marker = "extra == 'all'" },
-    { name = "hermes-agent", extras = ["sms"], marker = "extra == 'termux-all'" },
-    { name = "hermes-agent", extras = ["termux"], marker = "extra == 'termux-all'" },
-    { name = "hermes-agent", extras = ["web"], marker = "extra == 'all'" },
-    { name = "hermes-agent", extras = ["web"], marker = "extra == 'termux-all'" },
-    { name = "hermes-agent", extras = ["youtube"], marker = "extra == 'all'" },
-    { name = "hindsight-client", marker = "extra == 'hindsight'", specifier = "==0.6.1" },
-    { name = "honcho-ai", marker = "extra == 'honcho'", specifier = "==2.2.0" },
-    { name = "httpx", extras = ["socks"], specifier = "==0.28.1" },
-    { name = "jinja2", specifier = "==3.1.6" },
-    { name = "lark-oapi", marker = "extra == 'feishu'", specifier = "==1.6.8" },
-    { name = "markdown", specifier = "==3.10.2" },
-    { name = "mautrix", extras = ["encryption"], marker = "extra == 'matrix'", specifier = "==0.21.0" },
-    { name = "mcp", marker = "extra == 'computer-use'", specifier = "==1.26.0" },
-    { name = "mcp", marker = "extra == 'dev'", specifier = "==1.26.0" },
-    { name = "mcp", marker = "extra == 'mcp'", specifier = "==1.26.0" },
-    { name = "mem0ai", marker = "extra == 'mem0'", specifier = "==2.0.10" },
-    { name = "microsoft-teams-apps", marker = "extra == 'teams'", specifier = "==2.0.13.4" },
-    { name = "mistralai", marker = "extra == 'mistral'", specifier = "==2.4.8" },
-    { name = "modal", marker = "extra == 'modal'", specifier = "==1.3.4" },
-    { name = "nemo-relay", marker = "extra == 'nemo-relay'", specifier = ">=0.5,<1.0" },
-    { name = "numpy", marker = "extra == 'voice'", specifier = "==2.4.3" },
-    { name = "openai", specifier = "==2.24.0" },
-    { name = "packaging", specifier = "==26.0" },
-    { name = "parallel-web", marker = "extra == 'parallel-web'", specifier = "==0.4.2" },
-    { name = "pathspec", specifier = "==1.1.1" },
-    { name = "pillow", specifier = "==12.2.0" },
-    { name = "prompt-toolkit", specifier = "==3.0.52" },
-    { name = "psutil", specifier = "==7.2.2" },
-    { name = "ptyprocess", marker = "sys_platform != 'win32'", specifier = ">=0.7.0,<1" },
-    { name = "pydantic", specifier = "==2.13.4" },
-    { name = "pyjwt", extras = ["crypto"], specifier = "==2.13.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = "==9.0.2" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = "==1.3.0" },
-    { name = "python-dotenv", specifier = "==1.2.2" },
-    { name = "python-multipart", specifier = ">=0.0.9,<1" },
-    { name = "python-multipart", marker = "extra == 'web'", specifier = "==0.0.32" },
-    { name = "python-telegram-bot", extras = ["webhooks"], marker = "extra == 'messaging'", specifier = "==22.6" },
-    { name = "python-telegram-bot", extras = ["webhooks"], marker = "extra == 'termux'", specifier = "==22.6" },
-    { name = "pywin32", marker = "sys_platform == 'win32'", specifier = ">=306,<312" },
-    { name = "pywinpty", marker = "sys_platform == 'win32'", specifier = ">=2.0.0,<3" },
-    { name = "pyyaml", specifier = "==6.0.3" },
-    { name = "qrcode", marker = "extra == 'dingtalk'", specifier = "==7.4.2" },
-    { name = "qrcode", marker = "extra == 'feishu'", specifier = "==7.4.2" },
-    { name = "qrcode", marker = "extra == 'messaging'", specifier = "==7.4.2" },
-    { name = "requests", specifier = "==2.33.0" },
-    { name = "rich", specifier = "==14.3.3" },
-    { name = "ruamel-yaml", specifier = "==0.18.17" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.15.10" },
-    { name = "setuptools", marker = "extra == 'dev'", specifier = "==81.0.0" },
-    { name = "simple-term-menu", marker = "extra == 'cli'", specifier = "==1.6.6" },
-    { name = "slack-bolt", marker = "extra == 'messaging'", specifier = "==1.29.0" },
-    { name = "slack-bolt", marker = "extra == 'slack'", specifier = "==1.29.0" },
-    { name = "slack-sdk", marker = "extra == 'messaging'", specifier = "==3.43.0" },
-    { name = "slack-sdk", marker = "extra == 'slack'", specifier = "==3.43.0" },
-    { name = "sounddevice", marker = "extra == 'voice'", specifier = "==0.5.5" },
-    { name = "starlette", marker = "extra == 'computer-use'", specifier = "==1.3.1" },
-    { name = "starlette", marker = "extra == 'dev'", specifier = "==1.3.1" },
-    { name = "starlette", marker = "extra == 'mcp'", specifier = "==1.3.1" },
-    { name = "starlette", marker = "extra == 'web'", specifier = "==1.3.1" },
-    { name = "supermemory", marker = "extra == 'supermemory'", specifier = "==3.50.0" },
-    { name = "tenacity", specifier = "==9.1.4" },
-    { name = "ty", marker = "extra == 'dev'", specifier = "==0.0.21" },
-    { name = "tzdata", marker = "sys_platform == 'win32'", specifier = "==2025.3" },
-    { name = "urllib3", specifier = ">=2.7.0,<3" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0,<1" },
-    { name = "uvicorn", extras = ["standard"], marker = "extra == 'web'", specifier = "==0.41.0" },
-    { name = "websockets", specifier = "==15.0.1" },
-    { name = "youtube-transcript-api", marker = "extra == 'youtube'", specifier = "==1.2.4" },
-]
-provides-extras = ["anthropic", "exa", "firecrawl", "parallel-web", "fal", "edge-tts", "modal", "daytona", "hindsight", "dev", "messaging", "cron", "slack", "matrix", "wecom", "cli", "tts-premium", "voice", "honcho", "supermemory", "mem0", "vision", "pty", "mcp", "nemo-relay", "homeassistant", "sms", "teams", "computer-use", "acp", "mistral", "bedrock", "vertex", "azure-identity", "termux", "termux-all", "dingtalk", "feishu", "google", "youtube", "web", "all"]
 
 [[package]]
 name = "hf-xet"
@@ -3491,23 +3171,6 @@ wheels = [
 ]
 
 [[package]]
-name = "python-telegram-bot"
-version = "22.6"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "httpx" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/cd/9b/8df90c85404166a6631e857027866263adb27440d8af1dbeffbdc4f0166c/python_telegram_bot-22.6.tar.gz", hash = "sha256:50ae8cc10f8dff01445628687951020721f37956966b92a91df4c1bf2d113742", size = 1503761, upload-time = "2026-01-24T13:57:00.269Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/13/97/7298f0e1afe3a1ae52ff4c5af5087ed4de319ea73eb3b5c8c4dd4e76e708/python_telegram_bot-22.6-py3-none-any.whl", hash = "sha256:e598fe171c3dde2dfd0f001619ee9110eece66761a677b34719fb18934935ce0", size = 737267, upload-time = "2026-01-24T13:56:58.06Z" },
-]
-
-[package.optional-dependencies]
-webhooks = [
-    { name = "tornado" },
-]
-
-[[package]]
 name = "pytz"
 version = "2025.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3612,6 +3275,349 @@ sdist = { url = "https://files.pythonhosted.org/packages/30/35/ad6d4c5a547fe9a5b
 wheels = [
     { url = "https://files.pythonhosted.org/packages/24/79/aaf0c1c7214f2632badb2771d770b1500d3d7cbdf2590ae62e721ec50584/qrcode-7.4.2-py3-none-any.whl", hash = "sha256:581dca7a029bcb2deef5d01068e39093e80ef00b4a61098a2182eac59d01643a", size = 46197, upload-time = "2023-02-05T22:11:43.4Z" },
 ]
+
+[[package]]
+name = "qwerty-agent"
+version = "0.19.1"
+source = { editable = "." }
+dependencies = [
+    { name = "certifi" },
+    { name = "concurrent-log-handler", marker = "sys_platform == 'win32'" },
+    { name = "croniter" },
+    { name = "cryptography" },
+    { name = "fastapi" },
+    { name = "fire" },
+    { name = "httpx", extra = ["socks"] },
+    { name = "jinja2" },
+    { name = "markdown" },
+    { name = "openai" },
+    { name = "packaging" },
+    { name = "pathspec" },
+    { name = "pillow" },
+    { name = "prompt-toolkit" },
+    { name = "psutil" },
+    { name = "ptyprocess", marker = "sys_platform != 'win32'" },
+    { name = "pydantic" },
+    { name = "pyjwt", extra = ["crypto"] },
+    { name = "python-dotenv" },
+    { name = "python-multipart" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
+    { name = "pywinpty", marker = "sys_platform == 'win32'" },
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "rich" },
+    { name = "ruamel-yaml" },
+    { name = "tenacity" },
+    { name = "tzdata", marker = "sys_platform == 'win32'" },
+    { name = "urllib3" },
+    { name = "uvicorn", extra = ["standard"] },
+    { name = "websockets" },
+]
+
+[package.optional-dependencies]
+acp = [
+    { name = "agent-client-protocol" },
+]
+all = [
+    { name = "agent-client-protocol" },
+    { name = "aiohttp" },
+    { name = "fastapi" },
+    { name = "google-api-python-client" },
+    { name = "google-auth-httplib2" },
+    { name = "google-auth-oauthlib" },
+    { name = "mcp" },
+    { name = "python-multipart" },
+    { name = "simple-term-menu" },
+    { name = "starlette" },
+    { name = "uvicorn", extra = ["standard"] },
+    { name = "youtube-transcript-api" },
+]
+anthropic = [
+    { name = "anthropic" },
+]
+azure-identity = [
+    { name = "azure-identity" },
+]
+bedrock = [
+    { name = "boto3" },
+]
+cli = [
+    { name = "simple-term-menu" },
+]
+computer-use = [
+    { name = "mcp" },
+    { name = "starlette" },
+]
+daytona = [
+    { name = "daytona" },
+]
+dev = [
+    { name = "debugpy" },
+    { name = "mcp" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "ruff" },
+    { name = "setuptools" },
+    { name = "starlette" },
+    { name = "ty" },
+]
+dingtalk = [
+    { name = "alibabacloud-dingtalk" },
+    { name = "dingtalk-stream" },
+    { name = "qrcode" },
+]
+edge-tts = [
+    { name = "edge-tts" },
+]
+exa = [
+    { name = "exa-py" },
+]
+fal = [
+    { name = "fal-client" },
+]
+feishu = [
+    { name = "lark-oapi" },
+    { name = "qrcode" },
+]
+firecrawl = [
+    { name = "firecrawl-py" },
+]
+google = [
+    { name = "google-api-python-client" },
+    { name = "google-auth-httplib2" },
+    { name = "google-auth-oauthlib" },
+]
+hindsight = [
+    { name = "hindsight-client" },
+]
+homeassistant = [
+    { name = "aiohttp" },
+]
+honcho = [
+    { name = "honcho-ai" },
+]
+matrix = [
+    { name = "aiohttp" },
+    { name = "aiohttp-socks" },
+    { name = "aiosqlite" },
+    { name = "asyncpg" },
+    { name = "mautrix", extra = ["encryption"] },
+]
+mcp = [
+    { name = "mcp" },
+    { name = "starlette" },
+]
+mem0 = [
+    { name = "mem0ai" },
+]
+messaging = [
+    { name = "aiohttp" },
+    { name = "brotlicffi" },
+    { name = "discord-py", extra = ["voice"] },
+    { name = "goygram", marker = "python_full_version >= '3.13'" },
+    { name = "qrcode" },
+    { name = "slack-bolt" },
+    { name = "slack-sdk" },
+]
+mistral = [
+    { name = "mistralai" },
+]
+modal = [
+    { name = "modal" },
+]
+nemo-relay = [
+    { name = "nemo-relay" },
+]
+parallel-web = [
+    { name = "parallel-web" },
+]
+slack = [
+    { name = "aiohttp" },
+    { name = "slack-bolt" },
+    { name = "slack-sdk" },
+]
+sms = [
+    { name = "aiohttp" },
+]
+supermemory = [
+    { name = "supermemory" },
+]
+teams = [
+    { name = "aiohttp" },
+    { name = "microsoft-teams-apps" },
+]
+termux = [
+    { name = "agent-client-protocol" },
+    { name = "goygram", marker = "python_full_version >= '3.13'" },
+    { name = "honcho-ai" },
+    { name = "mcp" },
+    { name = "simple-term-menu" },
+    { name = "starlette" },
+]
+termux-all = [
+    { name = "agent-client-protocol" },
+    { name = "aiohttp" },
+    { name = "fastapi" },
+    { name = "google-api-python-client" },
+    { name = "google-auth-httplib2" },
+    { name = "google-auth-oauthlib" },
+    { name = "goygram", marker = "python_full_version >= '3.13'" },
+    { name = "honcho-ai" },
+    { name = "mcp" },
+    { name = "python-multipart" },
+    { name = "simple-term-menu" },
+    { name = "starlette" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+tts-premium = [
+    { name = "elevenlabs" },
+]
+vertex = [
+    { name = "google-auth" },
+]
+voice = [
+    { name = "faster-whisper" },
+    { name = "numpy" },
+    { name = "sounddevice" },
+]
+web = [
+    { name = "fastapi" },
+    { name = "python-multipart" },
+    { name = "starlette" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+wecom = [
+    { name = "defusedxml" },
+]
+youtube = [
+    { name = "youtube-transcript-api" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "agent-client-protocol", marker = "extra == 'acp'", specifier = "==0.9.0" },
+    { name = "aiohttp", marker = "extra == 'homeassistant'", specifier = "==3.14.1" },
+    { name = "aiohttp", marker = "extra == 'matrix'", specifier = "==3.14.1" },
+    { name = "aiohttp", marker = "extra == 'messaging'", specifier = "==3.14.1" },
+    { name = "aiohttp", marker = "extra == 'slack'", specifier = "==3.14.1" },
+    { name = "aiohttp", marker = "extra == 'sms'", specifier = "==3.14.1" },
+    { name = "aiohttp", marker = "extra == 'teams'", specifier = "==3.14.1" },
+    { name = "aiohttp-socks", marker = "extra == 'matrix'", specifier = "==0.11.0" },
+    { name = "aiosqlite", marker = "extra == 'matrix'", specifier = "==0.22.1" },
+    { name = "alibabacloud-dingtalk", marker = "extra == 'dingtalk'", specifier = "==2.2.42" },
+    { name = "anthropic", marker = "extra == 'anthropic'", specifier = "==0.87.0" },
+    { name = "asyncpg", marker = "extra == 'matrix'", specifier = "==0.31.0" },
+    { name = "azure-identity", marker = "extra == 'azure-identity'", specifier = "==1.25.3" },
+    { name = "boto3", marker = "extra == 'bedrock'", specifier = "==1.42.89" },
+    { name = "brotlicffi", marker = "extra == 'messaging'", specifier = "==1.2.0.1" },
+    { name = "certifi", specifier = "==2026.5.20" },
+    { name = "concurrent-log-handler", marker = "sys_platform == 'win32'", specifier = "==0.9.29" },
+    { name = "croniter", specifier = "==6.0.0" },
+    { name = "cryptography", specifier = "==48.0.1" },
+    { name = "daytona", marker = "extra == 'daytona'", specifier = "==0.155.0" },
+    { name = "debugpy", marker = "extra == 'dev'", specifier = "==1.8.20" },
+    { name = "defusedxml", marker = "extra == 'wecom'", specifier = "==0.7.1" },
+    { name = "dingtalk-stream", marker = "extra == 'dingtalk'", specifier = "==0.24.3" },
+    { name = "discord-py", extras = ["voice"], marker = "extra == 'messaging'", specifier = "==2.7.1" },
+    { name = "edge-tts", marker = "extra == 'edge-tts'", specifier = "==7.2.7" },
+    { name = "elevenlabs", marker = "extra == 'tts-premium'", specifier = "==1.59.0" },
+    { name = "exa-py", marker = "extra == 'exa'", specifier = "==2.10.2" },
+    { name = "fal-client", marker = "extra == 'fal'", specifier = "==0.13.1" },
+    { name = "fastapi", specifier = ">=0.104.0,<1" },
+    { name = "fastapi", marker = "extra == 'web'", specifier = "==0.133.1" },
+    { name = "faster-whisper", marker = "extra == 'voice'", specifier = "==1.2.1" },
+    { name = "fire", specifier = "==0.7.1" },
+    { name = "firecrawl-py", marker = "extra == 'firecrawl'", specifier = "==4.17.0" },
+    { name = "google-api-python-client", marker = "extra == 'google'", specifier = "==2.194.0" },
+    { name = "google-auth", marker = "extra == 'vertex'", specifier = "==2.55.1" },
+    { name = "google-auth-httplib2", marker = "extra == 'google'", specifier = "==0.3.1" },
+    { name = "google-auth-oauthlib", marker = "extra == 'google'", specifier = "==1.3.1" },
+    { name = "goygram", marker = "python_full_version >= '3.13' and extra == 'messaging'", specifier = "==0.8.26" },
+    { name = "goygram", marker = "python_full_version >= '3.13' and extra == 'termux'", specifier = "==0.8.26" },
+    { name = "hindsight-client", marker = "extra == 'hindsight'", specifier = "==0.6.1" },
+    { name = "honcho-ai", marker = "extra == 'honcho'", specifier = "==2.2.0" },
+    { name = "httpx", extras = ["socks"], specifier = "==0.28.1" },
+    { name = "jinja2", specifier = "==3.1.6" },
+    { name = "lark-oapi", marker = "extra == 'feishu'", specifier = "==1.6.8" },
+    { name = "markdown", specifier = "==3.10.2" },
+    { name = "mautrix", extras = ["encryption"], marker = "extra == 'matrix'", specifier = "==0.21.0" },
+    { name = "mcp", marker = "extra == 'computer-use'", specifier = "==1.26.0" },
+    { name = "mcp", marker = "extra == 'dev'", specifier = "==1.26.0" },
+    { name = "mcp", marker = "extra == 'mcp'", specifier = "==1.26.0" },
+    { name = "mem0ai", marker = "extra == 'mem0'", specifier = "==2.0.10" },
+    { name = "microsoft-teams-apps", marker = "extra == 'teams'", specifier = "==2.0.13.4" },
+    { name = "mistralai", marker = "extra == 'mistral'", specifier = "==2.4.8" },
+    { name = "modal", marker = "extra == 'modal'", specifier = "==1.3.4" },
+    { name = "nemo-relay", marker = "extra == 'nemo-relay'", specifier = ">=0.5,<1.0" },
+    { name = "numpy", marker = "extra == 'voice'", specifier = "==2.4.3" },
+    { name = "openai", specifier = "==2.24.0" },
+    { name = "packaging", specifier = "==26.0" },
+    { name = "parallel-web", marker = "extra == 'parallel-web'", specifier = "==0.4.2" },
+    { name = "pathspec", specifier = "==1.1.1" },
+    { name = "pillow", specifier = "==12.2.0" },
+    { name = "prompt-toolkit", specifier = "==3.0.52" },
+    { name = "psutil", specifier = "==7.2.2" },
+    { name = "ptyprocess", marker = "sys_platform != 'win32'", specifier = ">=0.7.0,<1" },
+    { name = "pydantic", specifier = "==2.13.4" },
+    { name = "pyjwt", extras = ["crypto"], specifier = "==2.13.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = "==9.0.2" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = "==1.3.0" },
+    { name = "python-dotenv", specifier = "==1.2.2" },
+    { name = "python-multipart", specifier = ">=0.0.9,<1" },
+    { name = "python-multipart", marker = "extra == 'web'", specifier = "==0.0.32" },
+    { name = "pywin32", marker = "sys_platform == 'win32'", specifier = ">=306,<312" },
+    { name = "pywinpty", marker = "sys_platform == 'win32'", specifier = ">=2.0.0,<3" },
+    { name = "pyyaml", specifier = "==6.0.3" },
+    { name = "qrcode", marker = "extra == 'dingtalk'", specifier = "==7.4.2" },
+    { name = "qrcode", marker = "extra == 'feishu'", specifier = "==7.4.2" },
+    { name = "qrcode", marker = "extra == 'messaging'", specifier = "==7.4.2" },
+    { name = "qwerty-agent", extras = ["acp"], marker = "extra == 'all'" },
+    { name = "qwerty-agent", extras = ["acp"], marker = "extra == 'termux'" },
+    { name = "qwerty-agent", extras = ["cli"], marker = "extra == 'all'" },
+    { name = "qwerty-agent", extras = ["cli"], marker = "extra == 'termux'" },
+    { name = "qwerty-agent", extras = ["cron"], marker = "extra == 'all'" },
+    { name = "qwerty-agent", extras = ["cron"], marker = "extra == 'termux'" },
+    { name = "qwerty-agent", extras = ["google"], marker = "extra == 'all'" },
+    { name = "qwerty-agent", extras = ["google"], marker = "extra == 'termux-all'" },
+    { name = "qwerty-agent", extras = ["homeassistant"], marker = "extra == 'all'" },
+    { name = "qwerty-agent", extras = ["homeassistant"], marker = "extra == 'termux-all'" },
+    { name = "qwerty-agent", extras = ["honcho"], marker = "extra == 'termux'" },
+    { name = "qwerty-agent", extras = ["mcp"], marker = "extra == 'all'" },
+    { name = "qwerty-agent", extras = ["mcp"], marker = "extra == 'termux'" },
+    { name = "qwerty-agent", extras = ["pty"], marker = "extra == 'all'" },
+    { name = "qwerty-agent", extras = ["pty"], marker = "extra == 'termux-all'" },
+    { name = "qwerty-agent", extras = ["sms"], marker = "extra == 'all'" },
+    { name = "qwerty-agent", extras = ["sms"], marker = "extra == 'termux-all'" },
+    { name = "qwerty-agent", extras = ["termux"], marker = "extra == 'termux-all'" },
+    { name = "qwerty-agent", extras = ["web"], marker = "extra == 'all'" },
+    { name = "qwerty-agent", extras = ["web"], marker = "extra == 'termux-all'" },
+    { name = "qwerty-agent", extras = ["youtube"], marker = "extra == 'all'" },
+    { name = "requests", specifier = "==2.33.0" },
+    { name = "rich", specifier = "==14.3.3" },
+    { name = "ruamel-yaml", specifier = "==0.18.17" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.15.10" },
+    { name = "setuptools", marker = "extra == 'dev'", specifier = "==81.0.0" },
+    { name = "simple-term-menu", marker = "extra == 'cli'", specifier = "==1.6.6" },
+    { name = "slack-bolt", marker = "extra == 'messaging'", specifier = "==1.29.0" },
+    { name = "slack-bolt", marker = "extra == 'slack'", specifier = "==1.29.0" },
+    { name = "slack-sdk", marker = "extra == 'messaging'", specifier = "==3.43.0" },
+    { name = "slack-sdk", marker = "extra == 'slack'", specifier = "==3.43.0" },
+    { name = "sounddevice", marker = "extra == 'voice'", specifier = "==0.5.5" },
+    { name = "starlette", marker = "extra == 'computer-use'", specifier = "==1.3.1" },
+    { name = "starlette", marker = "extra == 'dev'", specifier = "==1.3.1" },
+    { name = "starlette", marker = "extra == 'mcp'", specifier = "==1.3.1" },
+    { name = "starlette", marker = "extra == 'web'", specifier = "==1.3.1" },
+    { name = "supermemory", marker = "extra == 'supermemory'", specifier = "==3.50.0" },
+    { name = "tenacity", specifier = "==9.1.4" },
+    { name = "ty", marker = "extra == 'dev'", specifier = "==0.0.21" },
+    { name = "tzdata", marker = "sys_platform == 'win32'", specifier = "==2025.3" },
+    { name = "urllib3", specifier = ">=2.7.0,<3" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0,<1" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'web'", specifier = "==0.41.0" },
+    { name = "websockets", specifier = "==15.0.1" },
+    { name = "youtube-transcript-api", marker = "extra == 'youtube'", specifier = "==1.2.4" },
+]
+provides-extras = ["anthropic", "exa", "firecrawl", "parallel-web", "fal", "edge-tts", "modal", "daytona", "hindsight", "dev", "messaging", "cron", "slack", "matrix", "wecom", "cli", "tts-premium", "voice", "honcho", "supermemory", "mem0", "vision", "pty", "mcp", "nemo-relay", "homeassistant", "sms", "teams", "computer-use", "acp", "mistral", "bedrock", "vertex", "azure-identity", "termux", "termux-all", "dingtalk", "feishu", "google", "youtube", "web", "all"]
 
 [[package]]
 name = "referencing"
@@ -4098,23 +4104,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f", size = 22253, upload-time = "2020-11-01T01:40:22.204Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b", size = 16588, upload-time = "2020-11-01T01:40:20.672Z" },
-]
-
-[[package]]
-name = "tornado"
-version = "6.5.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f8/f1/3173dfa4a18db4a9b03e5d55325559dab51ee653763bb8745a75af491286/tornado-6.5.5.tar.gz", hash = "sha256:192b8f3ea91bd7f1f50c06955416ed76c6b72f96779b962f07f911b91e8d30e9", size = 516006, upload-time = "2026-03-10T21:31:02.067Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/59/8c/77f5097695f4dd8255ecbd08b2a1ed8ba8b953d337804dd7080f199e12bf/tornado-6.5.5-cp39-abi3-macosx_10_9_universal2.whl", hash = "sha256:487dc9cc380e29f58c7ab88f9e27cdeef04b2140862e5076a66fb6bb68bb1bfa", size = 445983, upload-time = "2026-03-10T21:30:44.28Z" },
-    { url = "https://files.pythonhosted.org/packages/ab/5e/7625b76cd10f98f1516c36ce0346de62061156352353ef2da44e5c21523c/tornado-6.5.5-cp39-abi3-macosx_10_9_x86_64.whl", hash = "sha256:65a7f1d46d4bb41df1ac99f5fcb685fb25c7e61613742d5108b010975a9a6521", size = 444246, upload-time = "2026-03-10T21:30:46.571Z" },
-    { url = "https://files.pythonhosted.org/packages/b2/04/7b5705d5b3c0fab088f434f9c83edac1573830ca49ccf29fb83bf7178eec/tornado-6.5.5-cp39-abi3-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:e74c92e8e65086b338fd56333fb9a68b9f6f2fe7ad532645a290a464bcf46be5", size = 447229, upload-time = "2026-03-10T21:30:48.273Z" },
-    { url = "https://files.pythonhosted.org/packages/34/01/74e034a30ef59afb4097ef8659515e96a39d910b712a89af76f5e4e1f93c/tornado-6.5.5-cp39-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:435319e9e340276428bbdb4e7fa732c2d399386d1de5686cb331ec8eee754f07", size = 448192, upload-time = "2026-03-10T21:30:51.22Z" },
-    { url = "https://files.pythonhosted.org/packages/be/00/fe9e02c5a96429fce1a1d15a517f5d8444f9c412e0bb9eadfbe3b0fc55bf/tornado-6.5.5-cp39-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:3f54aa540bdbfee7b9eb268ead60e7d199de5021facd276819c193c0fb28ea4e", size = 448039, upload-time = "2026-03-10T21:30:53.52Z" },
-    { url = "https://files.pythonhosted.org/packages/82/9e/656ee4cec0398b1d18d0f1eb6372c41c6b889722641d84948351ae19556d/tornado-6.5.5-cp39-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:36abed1754faeb80fbd6e64db2758091e1320f6bba74a4cf8c09cd18ccce8aca", size = 447445, upload-time = "2026-03-10T21:30:55.541Z" },
-    { url = "https://files.pythonhosted.org/packages/5a/76/4921c00511f88af86a33de770d64141170f1cfd9c00311aea689949e274e/tornado-6.5.5-cp39-abi3-win32.whl", hash = "sha256:dd3eafaaeec1c7f2f8fdcd5f964e8907ad788fe8a5a32c4426fbbdda621223b7", size = 448582, upload-time = "2026-03-10T21:30:57.142Z" },
-    { url = "https://files.pythonhosted.org/packages/2c/23/f6c6112a04d28eed765e374435fb1a9198f73e1ec4b4024184f21faeb1ad/tornado-6.5.5-cp39-abi3-win_amd64.whl", hash = "sha256:6443a794ba961a9f619b1ae926a2e900ac20c34483eea67be4ed8f1e58d3ef7b", size = 448990, upload-time = "2026-03-10T21:30:58.857Z" },
-    { url = "https://files.pythonhosted.org/packages/b7/c8/876602cbc96469911f0939f703453c1157b0c826ecb05bdd32e023397d4e/tornado-6.5.5-cp39-abi3-win_arm64.whl", hash = "sha256:2c9a876e094109333f888539ddb2de4361743e5d21eece20688e3e351e4990a6", size = 448016, upload-time = "2026-03-10T21:31:00.43Z" },
 ]
 
 [[package]]
