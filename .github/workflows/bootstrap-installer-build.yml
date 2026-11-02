@@ -45,7 +45,7 @@ jobs:
     environment: release-signing
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v5  # v1
+      - uses: actions/checkout@v7  # v1
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
@@ -155,7 +155,7 @@ jobs:
     environment: release-signing
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v5  # v1
+      - uses: actions/checkout@v7  # v1
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0

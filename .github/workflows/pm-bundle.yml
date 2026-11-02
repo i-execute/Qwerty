@@ -81,7 +81,7 @@ jobs:
           - label: win32-arm64
             runner: windows-11-arm
     steps:
-      - uses: actions/checkout@v5  # v1
+      - uses: actions/checkout@v7  # v1
         with:
           # Default to the exact candidate commit (github.sha); inputs.ref
           # remains an escape hatch for a focused manual reproduction.
