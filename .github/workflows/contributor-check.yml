@@ -22,7 +22,7 @@ jobs:
     outputs:
       review_status: ${{ steps.check-emails.outputs.review_status }}
     steps:
-      - uses: actions/checkout@v5  # v1
+      - uses: actions/checkout@v7  # v1
         with:
           ref: ${{ inputs.commit }}
           fetch-depth: 0  # Full history needed for git log

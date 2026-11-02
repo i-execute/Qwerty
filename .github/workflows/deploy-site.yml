@@ -57,7 +57,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v5  # v1
+      - uses: actions/checkout@v7  # v1
         with:
           fetch-depth: 0  # extract-plugins.py derives each catalog entry's added/updated dates from git log
 
