@@ -350,7 +350,7 @@ jobs:
           rg --version
 
       - name: Install uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # 8.2.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # 10.3.3
         with:
           # Pin the uv version: unpinned, setup-uv resolves "latest" by
           # fetching a manifest from raw.githubusercontent.com on EVERY job —
