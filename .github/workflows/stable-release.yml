@@ -53,7 +53,7 @@ jobs:
       lanes: ${{ steps.admit.outputs.lanes }}
       jobs: ${{ steps.admit.outputs.jobs }}
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -302,7 +302,7 @@ jobs:
       macos: ${{ steps.plan.outputs.macos }}
       baseline: ${{ steps.plan.outputs.baseline }}
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -338,7 +338,7 @@ jobs:
       macos: ${{ steps.plan.outputs.macos }}
       baseline: ${{ steps.plan.outputs.baseline }}
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -374,7 +374,7 @@ jobs:
       macos: ${{ steps.plan.outputs.macos }}
       baseline: ${{ steps.plan.outputs.baseline }}
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -425,7 +425,7 @@ jobs:
       CLOUDFLARE_R2_BUCKET: ${{ vars.CLOUDFLARE_R2_BUCKET }}
       CLOUDFLARE_R2_PUBLIC_URL: ${{ vars.CLOUDFLARE_R2_PUBLIC_URL }}
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -500,7 +500,7 @@ jobs:
     if: fromJSON(needs.admit.outputs.jobs)['bootstrap-version']
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ needs.admit.outputs.commit }}
       - name: Stamp and verify the Cargo and Tauri release identity
@@ -539,7 +539,7 @@ jobs:
             bootstrap-version]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ github.sha }}
       - uses: ./.github/actions/setup-pm
@@ -594,7 +594,7 @@ jobs:
     needs: [admit, acceptance, publish-docker, publish-bundles]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ github.sha }}
       - uses: ./.github/actions/setup-pm
@@ -619,7 +619,7 @@ jobs:
       contents: write
       actions: read
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0

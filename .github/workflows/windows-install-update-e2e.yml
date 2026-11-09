@@ -54,7 +54,7 @@ jobs:
     timeout-minutes: 75
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
           # serve.git is a bare clone of this checkout: the installer's treeless clone and

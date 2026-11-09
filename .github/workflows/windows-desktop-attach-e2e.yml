@@ -28,7 +28,7 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
 
       - name: Prepare locked Desktop build and test toolchain
         id: pm

@@ -35,7 +35,7 @@ jobs:
     outputs:
       review_status: ${{ steps.merge-base-check.outputs.review_status }}
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
           fetch-depth: 0 # full history both sides for merge-base

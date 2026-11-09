@@ -51,7 +51,7 @@ jobs:
           - cell: update-concurrency
             specs: e2e/update/update-concurrency.spec.ts
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
           # The seeded install clones this checkout through a local bare origin.

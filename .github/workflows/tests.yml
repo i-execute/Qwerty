@@ -51,7 +51,7 @@ jobs:
         slice: [1, 2]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
 
@@ -146,7 +146,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
 
@@ -276,7 +276,7 @@ jobs:
       shards: ${{ steps.plan.outputs.shards }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
           # The clean-worktree step below loads its action from the checkout.
@@ -322,7 +322,7 @@ jobs:
         shard: ${{ fromJSON(needs.e2e-upgrade-plan.outputs.shards) }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
           # N-1 = `git describe --tags --abbrev=0 HEAD~1`.

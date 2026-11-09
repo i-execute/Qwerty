@@ -93,7 +93,7 @@ jobs:
       e2e_desktop_update: ${{ steps.gate-lanes.outputs.e2e_desktop_update }}
       event_name: ${{ github.event_name }}
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
           sparse-checkout: |
@@ -467,7 +467,7 @@ jobs:
     outputs:
       needs-json: ${{ steps.evaluate.outputs.needs-json }}
     steps:
-      - uses: actions/checkout@v7  # v1
+      - uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit || github.sha }}
       - name: Evaluate job results
@@ -504,7 +504,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
 

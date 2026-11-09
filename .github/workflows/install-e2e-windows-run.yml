@@ -115,7 +115,7 @@ jobs:
     runs-on: ${{ inputs.bundle-arch == 'arm64' && 'windows-11-arm' || 'windows-latest-32-core' }}
     timeout-minutes: ${{ inputs.timeout-minutes }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.commit || github.sha }}
       - name: Set up driver tools only
@@ -199,7 +199,7 @@ jobs:
       # Full history: the driver bare-clones this checkout as the repo the
       # installer/updater talk to, and both OLD and HEAD must be reachable
       # in that clone. A shallow checkout cannot serve either need.
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.commit || github.sha }}
           fetch-depth: 0

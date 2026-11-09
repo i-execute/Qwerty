@@ -43,7 +43,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
           fetch-depth: 0 # need full history for merge-base + worktree
@@ -150,7 +150,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
 
@@ -188,7 +188,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
           fetch-depth: 2 # the merge commit and its first parent (the base branch tip)
@@ -224,7 +224,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
 

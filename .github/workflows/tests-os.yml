@@ -107,7 +107,7 @@ jobs:
             slice: 2/2
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
 
@@ -249,7 +249,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7  # v1
+        uses: actions/checkout@v7.0.1  # v1
         with:
           ref: ${{ inputs.commit }}
 
