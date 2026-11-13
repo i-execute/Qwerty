@@ -105,7 +105,7 @@ jobs:
     outputs:
       build: ${{ steps.gate.outputs.build }}
     steps:
-      - uses: actions/checkout@v5  # v1
+      - uses: actions/checkout@v7  # v1
         with:
           ref: ${{ inputs.commit }}
 
@@ -169,7 +169,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5  # v1
+        uses: actions/checkout@v7  # v1
         with:
           # Stable dispatches from the default branch and names the claim commit.
           # Pin it, never a mutable branch ref.
@@ -358,7 +358,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout trusted source
-        uses: actions/checkout@v5  # v1
+        uses: actions/checkout@v7  # v1
         with:
           ref: ${{ inputs.commit }}
           fetch-depth: 0
@@ -549,7 +549,7 @@ jobs:
       SUFFIX: ${{ matrix.variant == 'desktop' && '-desktop' || '' }}
     steps:
       - name: Checkout release code (helper scripts only, no build)
-        uses: actions/checkout@v5  # v1
+        uses: actions/checkout@v7  # v1
         with:
           ref: ${{ inputs.commit || github.sha }}
 
@@ -643,7 +643,7 @@ jobs:
       RELEASE_TAG: ${{ inputs.tag }}
     steps:
       - name: Checkout release code (helper scripts only)
-        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7.0.1
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v7.0.1
         with:
           ref: ${{ inputs.commit || github.sha }}
 

@@ -41,7 +41,7 @@ jobs:
       run:
         working-directory: apps/bootstrap-installer/src-tauri
     steps:
-      - uses: actions/checkout@v5  # v1
+      - uses: actions/checkout@v7  # v1
         with:
           ref: ${{ inputs.commit }}
 
